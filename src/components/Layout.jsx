@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 
 const navLinks = [
   { to: '/about', label: 'About' },
+  { to: '/powered', label: 'Powered' },
   { to: '/privacy', label: 'Privacy' },
   { to: '/terms', label: 'Terms' },
 ]
