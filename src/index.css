@@ -2,15 +2,18 @@
 
 @theme {
   --color-surface: #ffffff;
-  --color-surface-raised: #f8f8fa;
-  --color-surface-overlay: #f0f0f4;
+  --color-surface-raised: #f7f8f7;
+  --color-surface-overlay: #eef0ee;
+  --color-surface-dark: #0e1a12;
   --color-text-primary: #1a1a2e;
   --color-text-secondary: #4a4a5a;
   --color-text-muted: #8a8a9a;
   --color-accent: #1a8a4a;
   --color-accent-dim: #14703c;
   --color-accent-light: #edf8f2;
-  --color-border: #e8e8ee;
+  --color-accent-bright: #22c55e;
+  --color-border: #e4e6e4;
+  --color-border-light: #f0f2f0;
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "DM Sans", system-ui, sans-serif;
 }
@@ -39,9 +42,61 @@ body {
   color: #ffffff;
 }
 
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
   }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease-out both;
+}
+.animate-fade-up-delay-1 {
+  animation: fadeUp 0.5s ease-out 0.1s both;
+}
+.animate-fade-up-delay-2 {
+  animation: fadeUp 0.5s ease-out 0.2s both;
+}
+
+.legal-content h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.legal-content h2:first-child {
+  margin-top: 0;
+}
+.legal-content p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+.legal-content ul {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+}
+.legal-content li {
+  margin-bottom: 0.35rem;
 }
