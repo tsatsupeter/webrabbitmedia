@@ -97,7 +97,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="bg-surface-dark text-white mt-20">
+      <footer className="bg-surface-dark text-white border-t border-white/5">
         <div className="max-w-[1200px] mx-auto px-6 py-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-14">
             {/* Brand col */}
