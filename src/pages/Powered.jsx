@@ -1,5 +1,17 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import ScrollReveal from '../components/ScrollReveal'
+
+// Registry of verified projects built/powered by Web Rabbit Media
+const verifiedProjects = [
+  {
+    name: 'Web Rabbit Marketplace',
+    url: 'https://webrabbitmedia.com',
+    type: 'SaaS / B2B Platform',
+    status: 'In Development',
+    year: 2025,
+  },
+  // Add more verified projects here as they launch
+]
 
 const badgeVariants = [
   {
@@ -62,6 +74,24 @@ function CopyButton({ text }) {
 
 export default function Powered() {
   const [selectedSize, setSelectedSize] = useState('default')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [hasSearched, setHasSearched] = useState(false)
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    const q = searchQuery.toLowerCase().trim()
+    return verifiedProjects.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.url.toLowerCase().includes(q) ||
+        p.type.toLowerCase().includes(q)
+    )
+  }, [searchQuery])
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    setHasSearched(true)
+  }
 
   return (
     <>
@@ -70,15 +100,131 @@ export default function Powered() {
         <div className="max-w-[900px] mx-auto px-6 pt-16 pb-12 md:pt-24 md:pb-16">
           <ScrollReveal>
             <span className="font-display font-medium text-accent text-sm tracking-[0.04em] uppercase mb-4 block">
-              Brand Kit
+              Brand Kit & Verification
             </span>
             <h1 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-4">
               Powered by Web Rabbit Media
             </h1>
             <p className="text-white/55 text-[1rem] leading-relaxed max-w-[560px]">
-              Show the world your product was built by Web Rabbit Media. Download our logo, grab an embeddable badge, or use the HTML snippet — whatever works for your stack.
+              Verify if a product was built by us, download our logo, or grab an embeddable badge for your project.
             </p>
           </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Verify Section */}
+      <section className="bg-surface-dark border-t border-white/[0.06]">
+        <div className="max-w-[900px] mx-auto px-6 py-14 md:py-20">
+          <ScrollReveal>
+            <h2 className="font-display font-bold text-[1.4rem] tracking-[-0.02em] text-white mb-2">
+              Verify a product
+            </h2>
+            <p className="text-white/45 text-[0.9rem] mb-2 max-w-[600px]">
+              Search our registry to confirm whether a project was built or powered by Web Rabbit Media. Only projects listed here are officially verified.
+            </p>
+            <p className="text-white/30 text-[0.8rem] mb-8 max-w-[600px]">
+              If a product claims to be built by Web Rabbit Media but does not appear in this registry, it has not been verified or approved by us. Contact us if you have concerns.
+            </p>
+          </ScrollReveal>
+
+          {/* Search bar */}
+          <ScrollReveal>
+            <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+              <div className="flex-1 relative">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setHasSearched(false) }}
+                  placeholder="Search by product name or URL..."
+                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl pl-11 pr-4 py-3.5 text-[0.9rem] text-white placeholder:text-white/30 outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all duration-150"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-5 py-3.5 bg-white text-surface-dark font-medium text-[0.85rem] rounded-xl hover:bg-white/90 transition-colors cursor-pointer"
+              >
+                Verify
+              </button>
+            </form>
+          </ScrollReveal>
+
+          {/* Search results */}
+          {hasSearched && (
+            <div className="animate-fade-up">
+              {searchResults.length > 0 ? (
+                <div className="space-y-3">
+                  {searchResults.map((project, i) => (
+                    <div key={i} className="bg-green-500/[0.06] border border-green-500/20 rounded-xl p-5 flex items-start gap-4">
+                      <div className="w-9 h-9 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round">
+                          <polyline points="5,12 10,17 19,8" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-display font-semibold text-white text-[0.95rem]">{project.name}</h3>
+                          <span className="text-[0.7rem] font-medium text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">Verified</span>
+                        </div>
+                        <p className="text-white/45 text-[0.82rem] mt-1">{project.type} &middot; {project.status} &middot; {project.year}</p>
+                        <a href={project.url} target="_blank" rel="noopener" className="text-accent text-[0.8rem] no-underline hover:underline mt-1 inline-block">{project.url}</a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-red-500/[0.05] border border-red-500/15 rounded-xl p-5 flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-lg bg-red-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><circle cx="12" cy="16.5" r="0.5" fill="#ef4444" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-display font-semibold text-white text-[0.95rem] mb-1">Not found in our registry</h3>
+                    <p className="text-white/45 text-[0.82rem] leading-relaxed max-w-[480px]">
+                      "{searchQuery}" does not match any verified project built or powered by Web Rabbit Media. If a product claims to be built by us but is not listed here, it has <strong className="text-white/70">not been approved or verified</strong> by Web Rabbit Media.
+                    </p>
+                    <p className="text-white/30 text-[0.78rem] mt-2">
+                      Think this is a mistake? <a href="mailto:hello@webrabbitmedia.com" className="text-accent no-underline hover:underline">Contact us</a> to report it.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* All verified projects list */}
+          <div className="mt-10">
+            <ScrollReveal>
+              <h3 className="text-white/60 text-[0.85rem] font-medium uppercase tracking-[0.04em] mb-4">All verified projects</h3>
+            </ScrollReveal>
+            {verifiedProjects.length > 0 ? (
+              <div className="space-y-3">
+                {verifiedProjects.map((project, i) => (
+                  <ScrollReveal key={i} delay={i * 60}>
+                    <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round">
+                            <polyline points="5,12 10,17 19,8" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-white font-medium text-[0.9rem] block truncate">{project.name}</span>
+                          <span className="text-white/35 text-[0.78rem]">{project.type}</span>
+                        </div>
+                      </div>
+                      <span className="text-white/25 text-[0.75rem] shrink-0">{project.status}</span>
+                    </div>
+                  </ScrollReveal>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/30 text-[0.85rem]">No projects registered yet.</p>
+            )}
+          </div>
         </div>
       </section>
 
