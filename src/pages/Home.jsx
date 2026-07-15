@@ -49,23 +49,23 @@ export default function Home() {
         <div className="relative max-w-[1200px] mx-auto px-6 pt-28 pb-24 md:pt-44 md:pb-40">
           <div className="max-w-[650px]">
             <h1 className="font-display font-bold text-[clamp(2.6rem,6vw,4.5rem)] leading-[1.05] tracking-[-0.04em] text-white mb-6 animate-fade-up">
-              Build your digital future
+              Building. Learning. Shipping.
             </h1>
-            <p className="text-white/60 text-[1.1rem] leading-relaxed max-w-[480px] mb-8 animate-fade-up-delay-1">
-              Web Rabbit Media designs websites, builds software, develops mobile apps, and runs media marketing for businesses ready to grow.
+            <p className="text-white/60 text-[1.1rem] leading-relaxed max-w-[520px] mb-8 animate-fade-up-delay-1">
+              Web Rabbit Media connects founders, developers, indie hackers, and entrepreneurs to build SaaS/B2B platforms together. Stuck on a project? Let's build it.
             </p>
             <div className="flex flex-wrap gap-3 animate-fade-up-delay-2">
               <a
                 href="mailto:hello@webrabbitmedia.com"
                 className="inline-flex items-center gap-2 font-display font-medium text-surface-dark bg-white px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors duration-150"
               >
-                Start a project
+                Let's connect
               </a>
               <Link
                 to="/about"
                 className="inline-flex items-center font-display font-medium text-white/80 border border-white/20 px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/5 hover:border-white/30 transition-all duration-150"
               >
-                Learn more
+                What we build
               </Link>
             </div>
           </div>
@@ -76,12 +76,12 @@ export default function Home() {
       <section className="border-b border-border">
         <div className="max-w-[1200px] mx-auto px-6 py-12">
           <h2 className="font-display font-bold text-[1.25rem] tracking-[-0.02em] text-text-primary text-center mb-8">
-            Explore our services
+            What we're into
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               {
-                label: "Web Design",
+                label: "SaaS & Startups",
                 icon: (
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="5" y="7" width="30" height="22" rx="3" />
@@ -92,7 +92,7 @@ export default function Home() {
                 ),
               },
               {
-                label: "Software",
+                label: "AI & Dev Tools",
                 icon: (
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="12,13 5,20 12,27" />
@@ -102,7 +102,7 @@ export default function Home() {
                 ),
               },
               {
-                label: "Mobile Apps",
+                label: "Full-Stack",
                 icon: (
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="11" y="4" width="18" height="32" rx="4" />
@@ -113,7 +113,7 @@ export default function Home() {
                 ),
               },
               {
-                label: "Marketing",
+                label: "Growth",
                 icon: (
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M8 20V32H14V20" />
@@ -162,9 +162,9 @@ export default function Home() {
               </div>
               {/* Text overlay */}
               <div className="relative p-8 md:p-12 max-w-[500px]">
-                <span className="text-white/50 text-sm font-medium mb-2 block">Crafted for your business</span>
+                <span className="text-white/50 text-sm font-medium mb-2 block">For founders and builders</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                  Web Design & Development
+                  SaaS & Product Building
                 </h2>
                 <div className="flex flex-wrap gap-3">
                   <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
@@ -208,9 +208,9 @@ export default function Home() {
                 </svg>
               </div>
               <div className="relative p-8 md:p-12 max-w-[500px]">
-                <span className="text-white/50 text-sm font-medium mb-2 block">Built to scale</span>
+                <span className="text-white/50 text-sm font-medium mb-2 block">Ship faster with AI</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                  Software Development
+                  AI Tools & Vibe Coding
                 </h2>
                 <div className="flex flex-wrap gap-3">
                   <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
@@ -236,7 +236,7 @@ export default function Home() {
                 <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
                   <svg viewBox="0 0 400 480" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
                     {/* Phone */}
-                    <rect x="130" y="40" width="140" height="260" rx="24" fill="white" opacity="0.06" stroke="white" strokeWidth="1" opacity="0.08" />
+                    <rect x="130" y="40" width="140" height="260" rx="24" fill="white" opacity="0.06" stroke="white" strokeWidth="1" />
                     <rect x="143" y="62" width="114" height="210" rx="4" fill="white" opacity="0.03" />
                     <rect x="175" y="48" width="50" height="6" rx="3" fill="white" opacity="0.08" />
                     {/* App UI */}
@@ -256,9 +256,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="relative p-7 md:p-10">
-                  <span className="text-white/45 text-sm font-medium mb-1.5 block">iOS & Android</span>
+                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Full-stack engineering</span>
                   <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
-                    Mobile Apps
+                    Software & Apps
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
                     <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
@@ -298,9 +298,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="relative p-7 md:p-10">
-                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Grow your brand</span>
+                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Scale what works</span>
                   <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
-                    Media Marketing
+                    Growth & Marketing
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
                     <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
@@ -322,14 +322,14 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-20">
           <ScrollReveal>
             <h2 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] tracking-[-0.02em] text-text-primary text-center mb-10">
-              Why work with Web Rabbit Media
+              Why builders connect with us
             </h2>
           </ScrollReveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
             {[
               {
-                title: "End-to-end delivery",
-                desc: "From concept to deployment and beyond. We handle design, engineering, testing, and maintenance under one roof.",
+                title: "Builder-first mindset",
+                desc: "We're founders and developers ourselves. We get the urgency of shipping, the pain of technical debt, and the thrill of launch day.",
                 icon: (
                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="4" y="4" width="28" height="28" rx="6" />
@@ -338,8 +338,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "Modern stack",
-                desc: "React, Next.js, React Native, Node.js, cloud infrastructure. We use proven tools — no legacy baggage.",
+                title: "AI-native workflow",
+                desc: "GenAI, vibe coding, AI agents — we use the latest tools to ship faster. System design meets rapid prototyping.",
                 icon: (
                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 4L4 10v12l14 10 14-10V10L18 4z" />
@@ -350,8 +350,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "Built for scale",
-                desc: "Architecture that grows with your users. We design systems for 10 users that work at 10,000.",
+                title: "Ship in public",
+                desc: "We build alongside you, not behind a curtain. Weekly progress, open communication, real accountability.",
                 icon: (
                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M6 28V18" /><path d="M14 28V12" /><path d="M22 28V8" /><path d="M30 28V14" />
@@ -360,8 +360,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "Transparent process",
-                desc: "Clear timelines, honest estimates, weekly updates. You always know where your project stands.",
+                title: "For the people",
+                desc: "Not just for tech — for anyone with an idea. Tell us what you're building, we'll figure out how to make it real.",
                 icon: (
                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="18" cy="18" r="14" />
@@ -387,10 +387,10 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-24">
           <ScrollReveal>
             <h2 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] tracking-[-0.02em] text-text-primary text-center mb-4">
-              Our projects
+              What we're building
             </h2>
-            <p className="text-text-secondary text-[0.95rem] text-center max-w-[480px] mx-auto mb-10">
-              Beyond client work, we build our own SaaS/B2B platforms to support digital business operations.
+            <p className="text-text-secondary text-[0.95rem] text-center max-w-[520px] mx-auto mb-10">
+              We don't just build for clients — we build our own SaaS products. Platforms for founders, indie hackers, and teams who ship.
             </p>
           </ScrollReveal>
 
@@ -415,7 +415,7 @@ export default function Home() {
                 </div>
                 <div className="relative p-7 md:p-8">
                   <h3 className="font-display font-bold text-[1.3rem] text-white mb-1">Web Rabbit Marketplace</h3>
-                  <p className="text-white/45 text-[0.85rem]">SaaS/B2B platform for digital business operations</p>
+                  <p className="text-white/45 text-[0.85rem]">B2B platform connecting builders, founders, and teams who ship products</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -434,8 +434,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="relative p-7 md:p-8">
-                  <h3 className="font-display font-bold text-[1.3rem] text-text-primary mb-1">What's next</h3>
-                  <p className="text-text-secondary text-[0.85rem]">New products in development — stay tuned</p>
+                  <h3 className="font-display font-bold text-[1.3rem] text-text-primary mb-1">Drop your project</h3>
+                  <p className="text-text-secondary text-[0.85rem]">Got an idea? We want to hear it. Let's build together.</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -448,16 +448,16 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-24 text-center">
           <ScrollReveal>
             <h2 className="font-display font-bold text-[clamp(1.6rem,3.5vw,2.4rem)] tracking-[-0.02em] text-white mb-3">
-              Ready to build something?
+              What are you building?
             </h2>
             <p className="text-white/50 text-[0.95rem] leading-relaxed max-w-[440px] mx-auto mb-8">
-              Tell us what you need — a website, an app, a software system, or marketing support. We respond within 24 hours.
+              Whether you're a founder, developer, entrepreneur, or indie hacker — if you're obsessed with building cool stuff, we want to connect.
             </p>
             <a
               href="mailto:hello@webrabbitmedia.com"
               className="inline-flex items-center gap-2 font-display font-medium text-surface-dark bg-white px-8 py-4 text-sm rounded-full no-underline hover:bg-white/90 transition-colors duration-150"
             >
-              Start a project
+              Let's connect
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="8" x2="13" y2="8" /><polyline points="9,4 13,8 9,12" />
               </svg>

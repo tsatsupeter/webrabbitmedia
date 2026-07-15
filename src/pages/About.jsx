@@ -4,37 +4,37 @@ import { Link } from 'react-router-dom'
 
 const principles = [
   {
-    title: "Build with purpose",
-    body: "Every product we ship solves a real problem for a real market. We don't build features for the sake of it. Requirements come from business needs, user research, and measurable gaps — not trends or assumptions.",
+    title: "Build with the people, for the people",
+    body: "We exist because someone had an idea they couldn't build alone. Founders, indie hackers, entrepreneurs — tell us what you're working on. We bring ideas into production, together.",
   },
   {
-    title: "Ship quality, not promises",
-    body: "Working software beats polished decks. We deliver production-ready code, tested across devices and real user conditions. If it's not ready to deploy, it's not ready to show.",
+    title: "Ship fast, learn faster",
+    body: "Building in public means iterating in real-time. We don't hide behind months of planning. We prototype, test, deploy, and improve — because the only way to validate is to ship.",
   },
   {
-    title: "Serve every stage",
-    body: "Whether you're a solo founder with an idea, a startup with traction, or an established business expanding online — we meet you where you are and build what you need, at the standard you deserve.",
+    title: "AI-native by default",
+    body: "GenAI, AI agents, vibe coding, AIML research — these aren't buzzwords to us, they're daily tools. We integrate AI into how we build and what we build. System design meets rapid experimentation.",
   },
   {
-    title: "Own the full lifecycle",
-    body: "We don't hand off half-built projects. From architecture and design through deployment, monitoring, and iteration — we stay accountable for the entire product journey.",
+    title: "Obsessed with building cool stuff",
+    body: "SaaS, dev tools, marketplaces, AI products — we care about what we make. This isn't contract work done at arm's length. We get invested in every project because building is what drives us.",
   },
   {
-    title: "Grow businesses, not vanity metrics",
-    body: "Our marketing work targets revenue, conversions, and operational efficiency. We measure what matters to your bottom line, not follower counts or impressions with no business outcome.",
+    title: "Connect, collaborate, grow",
+    body: "Stuck on a project? Looking for a technical co-builder? We connect founders, developers, and business folks to get things off the ground. Web Rabbit Media is a network, not just a service.",
   },
   {
-    title: "Stay transparent",
-    body: "Clear timelines, honest estimates, and straightforward communication. No scope surprises, no hidden fees, no jargon. You always know where your project stands.",
+    title: "Full-stack, end-to-end",
+    body: "From system design and product architecture through deployment and growth marketing. We cover SaaS, startups, AI tools, software engineering, and everything in between.",
   },
 ]
 
 const companyInfo = [
   { label: "Company Name", value: "Web Rabbit Media" },
-  { label: "Business Type", value: "Technology and Digital Services" },
-  { label: "Industry", value: "Information Technology / Digital Marketing" },
-  { label: "Principal Activity", value: "Web Design, Software Development, Mobile App Development, Media Marketing" },
-  { label: "Services", value: "Web designing and website development, Software development, Mobile app development, Media marketing and digital promotion, SaaS/B2B project development" },
+  { label: "Business Type", value: "Builder-first technology company" },
+  { label: "Focus", value: "SaaS / B2B platforms, AI tools, product building" },
+  { label: "Who we work with", value: "Founders, developers, entrepreneurs, indie hackers, startups, business folks" },
+  { label: "What we do", value: "Full-stack development, AI/ML integration, SaaS product building, vibe coding, growth marketing, system design" },
 ]
 
 export default function About() {
@@ -94,9 +94,12 @@ export default function About() {
                 <span className="font-display font-medium text-accent text-sm tracking-[0.04em] uppercase mb-4 block">
                   Our Mission
                 </span>
-                <h1 className="font-display font-bold text-[clamp(1.8rem,3.5vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-0">
-                  Build the future with modern digital tools and build what you need
+                <h1 className="font-display font-bold text-[clamp(1.8rem,3.5vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-4">
+                  Building. Learning. Shipping.
                 </h1>
+                <p className="text-text-secondary text-[0.95rem] leading-relaxed">
+                  We connect founders, developers, indie hackers, and entrepreneurs who are obsessed with building cool stuff. SaaS, AI, startups, dev tools — if you're shipping, we're in.
+                </p>
               </div>
             </ScrollReveal>
           </div>
@@ -112,7 +115,7 @@ export default function About() {
                 Our principles
               </h2>
               <p className="text-text-secondary text-[0.95rem] leading-relaxed">
-                Web Rabbit Media is building modern digital SaaS/B2B solutions that solve your problems — connecting people, interests, and experiences that matter to you. Our principles embody what we stand for and guide our approach to how we build.
+                Web Rabbit Media is for builders — founders, developers, indie hackers, and anyone with an idea worth pursuing. Our principles define how we work, what we build, and who we build with.
               </p>
             </div>
           </ScrollReveal>
@@ -220,13 +223,13 @@ export default function About() {
             <ScrollReveal delay={100}>
               <div>
                 <h2 className="font-display font-bold text-[clamp(1.5rem,2.5vw,2rem)] tracking-[-0.02em] text-text-primary mb-4">
-                  Web Design & Development
+                  SaaS & Product Building
                 </h2>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75] mb-4">
-                  We design and build websites — from single-page marketing sites to complex web applications with user accounts, payments, and admin dashboards. Every site is responsive, fast, and built on modern frameworks.
+                  We build SaaS platforms, marketplaces, and B2B products from zero to launch. Whether you're a solo founder with a sketch or a startup with traction — we turn ideas into production-ready products.
                 </p>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75]">
-                  Our web projects cover landing pages, e-commerce platforms, client portals, booking systems, and internal business tools. We work with React, Next.js, and custom stacks depending on what the project demands.
+                  React, Next.js, full-stack TypeScript, cloud infrastructure. We ship landing pages, dashboards, user portals, payment systems, and API integrations. Whatever the product needs.
                 </p>
               </div>
             </ScrollReveal>
@@ -237,13 +240,13 @@ export default function About() {
             <ScrollReveal className="order-2 md:order-1">
               <div>
                 <h2 className="font-display font-bold text-[clamp(1.5rem,2.5vw,2rem)] tracking-[-0.02em] text-text-primary mb-4">
-                  Software Development
+                  AI Tools & Vibe Coding
                 </h2>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75] mb-4">
-                  Custom software for business operations. Inventory management, CRM platforms, booking systems, data dashboards — whatever the workflow demands. We handle architecture, development, deployment, and maintenance.
+                  We use AI to ship faster — GenAI for prototyping, AI agents for automation, ML models for product features. Whether you need an AI-powered product or want to integrate AI into an existing system, we build it.
                 </p>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75]">
-                  We build systems that integrate with existing tools, scale with your team, and reduce the manual work holding your business back. Every solution is tested, documented, and built for long-term operation.
+                  System design, AIML research, dev tools, and rapid experimentation. We combine vibe coding speed with engineering rigor to deliver products that actually work in production.
                 </p>
               </div>
             </ScrollReveal>
@@ -334,13 +337,13 @@ export default function About() {
             <ScrollReveal delay={100}>
               <div>
                 <h2 className="font-display font-bold text-[clamp(1.5rem,2.5vw,2rem)] tracking-[-0.02em] text-text-primary mb-4">
-                  Mobile App Development
+                  Full-Stack Software & Apps
                 </h2>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75] mb-4">
-                  iOS and Android applications. We build native and cross-platform apps from initial wireframes through App Store and Play Store submission, including backend APIs and push notification infrastructure.
+                  Web apps, mobile apps, APIs, databases, infrastructure — the full stack. We build native and cross-platform apps, custom backends, and integrated systems that work together.
                 </p>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75]">
-                  From consumer-facing apps to internal workforce tools, we handle the full mobile stack — UI/UX design, development, testing across devices, analytics integration, and ongoing updates.
+                  Whether it's a React Native app, a Node.js microservice, or a complete platform — we handle architecture, development, deployment, and iteration. Built for founders who need things done right.
                 </p>
               </div>
             </ScrollReveal>
@@ -351,13 +354,13 @@ export default function About() {
             <ScrollReveal className="order-2 md:order-1">
               <div>
                 <h2 className="font-display font-bold text-[clamp(1.5rem,2.5vw,2rem)] tracking-[-0.02em] text-text-primary mb-4">
-                  Media Marketing
+                  Growth & Marketing
                 </h2>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75] mb-4">
-                  Digital marketing strategy, content creation, social media management, and paid advertising. We focus on measurable outcomes — traffic, conversions, and revenue — not vanity metrics.
+                  You built the product — now scale it. We handle growth marketing for SaaS products and startups: user acquisition, content strategy, social presence, and paid campaigns that drive real users.
                 </p>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75]">
-                  We handle brand strategy, campaign execution, performance tracking, and creative production. Every campaign ties back to a clear business objective with reporting you can actually use.
+                  Building in public, community growth, product launches, and demand generation. We approach marketing like builders — measure everything, iterate fast, and focus on revenue.
                 </p>
               </div>
             </ScrollReveal>
@@ -448,16 +451,16 @@ export default function About() {
             <ScrollReveal delay={100}>
               <div>
                 <span className="font-display font-medium text-accent text-sm tracking-[0.04em] uppercase mb-3 block">
-                  Beyond client work
+                  We build our own stuff too
                 </span>
                 <h2 className="font-display font-bold text-[clamp(1.5rem,2.5vw,2rem)] tracking-[-0.02em] text-text-primary mb-4">
                   Web Rabbit Marketplace
                 </h2>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75] mb-4">
-                  We also build and operate our own products. The Web Rabbit Marketplace is a SaaS/B2B platform currently in development — designed to support digital business operations and service delivery at scale.
+                  A B2B platform connecting founders, builders, and business folks who need to get products shipped. Think of it as the hub for people who build — find collaborators, discover tools, and launch together.
                 </p>
                 <p className="text-text-secondary text-[0.95rem] leading-[1.75] mb-6">
-                  Our core business remains client services. Internal products are built with the same standards and the same team.
+                  We're not just a service company. We're builders shipping our own SaaS products with the same energy we bring to every project.
                 </p>
                 <span className="inline-flex items-center gap-2 text-xs font-medium text-accent bg-accent-light px-3 py-1.5 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent-bright" />
@@ -476,16 +479,16 @@ export default function About() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div>
                 <h2 className="font-display font-bold text-[clamp(1.5rem,2.5vw,2rem)] tracking-[-0.02em] text-white mb-4">
-                  Work with us
+                  What are you building this weekend?
                 </h2>
                 <p className="text-white/55 text-[0.95rem] leading-relaxed max-w-[420px] mb-6">
-                  Whether you need a website, a mobile app, custom software, or a marketing strategy — we build what your business needs to operate and grow digitally.
+                  Founder, developer, entrepreneur, indie hacker — drop your project. We're always looking to connect with people who ship.
                 </p>
                 <a
                   href="mailto:hello@webrabbitmedia.com"
                   className="inline-flex items-center gap-2 font-display font-medium text-surface-dark bg-white px-6 py-3 text-sm rounded no-underline hover:bg-white/90 transition-colors duration-150"
                 >
-                  Start a project
+                  Let's connect
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="3" y1="8" x2="13" y2="8" /><polyline points="9,4 13,8 9,12" />
                   </svg>

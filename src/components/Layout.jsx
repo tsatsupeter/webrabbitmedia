@@ -113,18 +113,18 @@ export default function Layout() {
                 <span className="font-display font-medium text-[0.95rem]">Web Rabbit Media</span>
               </div>
               <p className="text-[0.85rem] text-white/50 leading-relaxed max-w-[260px]">
-                Technology and digital services. Web design, software, mobile apps, media marketing.
+                Building. Learning. Shipping. Connecting founders, developers, and indie hackers to build SaaS/B2B products.
               </p>
             </div>
 
             {/* Services col */}
             <div>
-              <h4 className="font-display font-medium text-[0.85rem] text-white/40 uppercase tracking-[0.06em] mb-4">Services</h4>
+              <h4 className="font-display font-medium text-[0.85rem] text-white/40 uppercase tracking-[0.06em] mb-4">What We Build</h4>
               <ul className="list-none p-0 m-0 space-y-2">
-                <li><span className="text-[0.85rem] text-white/65">Web Design</span></li>
-                <li><span className="text-[0.85rem] text-white/65">Software Development</span></li>
-                <li><span className="text-[0.85rem] text-white/65">Mobile Apps</span></li>
-                <li><span className="text-[0.85rem] text-white/65">Media Marketing</span></li>
+                <li><span className="text-[0.85rem] text-white/65">SaaS & Startups</span></li>
+                <li><span className="text-[0.85rem] text-white/65">AI Tools & Dev Tools</span></li>
+                <li><span className="text-[0.85rem] text-white/65">Full-Stack Software</span></li>
+                <li><span className="text-[0.85rem] text-white/65">Growth & Marketing</span></li>
               </ul>
             </div>
 
