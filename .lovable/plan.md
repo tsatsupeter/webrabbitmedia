@@ -1,35 +1,37 @@
-## Problem
+## Wire Merchant Home to real data
 
-Merchant pages use inconsistent outer containers, so some feel cramped while others sprawl:
+Replace the mocked arrays in `src/merchant/pages/MerchantHome.jsx` with live data from Supabase, mode-aware (test/live) and business-scoped, matching the reference layout.
 
-| Page | Current wrapper |
-|---|---|
-| MerchantHome, GetStarted, Analytics | `max-w-[1400px] mx-auto px-4 md:px-8` |
-| Verification | `max-w-[1200px] mx-auto` |
-| ProductInformation, Identity, Bank, Business Verification | `max-w-[1100px] mx-auto` |
-| Sales / Collect | `max-w-2xl` (very narrow — the main complaint) |
-| Payments, ApiKeys | `w-full px-4 md:px-8 py-6` |
-| Payouts, Balances, History | `p-6 md:p-8` (no horizontal cap, different padding) |
+### Data sources (already in DB)
+- `transactions` — `created_at, status, gross_amount, fee_amount, net_amount, mode, business_id`
+- `payouts` — `initiated_at, completed_at, net_amount, status, mode, business_id`
 
-## Fix — one shared container
+### Today section
+- **Net Volume Today** chart: hour-by-hour cumulative `SUM(net_amount)` for approved/success txns where `created_at` is today, plus a compare series for yesterday. Header value = today's cumulative total in GHS.
+- **Cash Position** tile: available balance = `SUM(net_amount of approved txns) − SUM(net_amount of payouts not failed)`. Currency GHS (matches the rest of the app).
+- **Next Payout** tile: sum of the same available balance (what's owed). Sub-label shows next scheduled date = next Tuesday (weekly cadence placeholder); if balance is `0`, show "No payout scheduled".
 
-Introduce two standard wrappers and apply them everywhere:
+### Overview section
+- Fetch last 4 weeks + previous 4 weeks for compare.
+- **Gross Volume** card: cumulative daily `SUM(gross_amount)` for approved txns; header = total; delta vs previous period.
+- **Payments** card: cumulative daily count of approved txns; header = count; delta vs previous.
+- Reuse `bucket.js` helpers (`daysBetween`, `cumulativeSeries`, `dailySeries`, `SUCCESS_STATUSES`) and follow the Analytics page pattern (`useMerchantMode` for business + mode).
+- Currency formatter switched to `GHS` throughout (no `$`).
 
-1. **Dashboard/table pages** (fill available space):
-   `w-full px-4 md:px-8 py-6 space-y-6`
-   → MerchantHome, GetStarted, Analytics, Payments, ApiKeys, Payouts, Balances, History, Sales/Collect (form gets an inner `max-w-3xl` card but the page itself is full width so it doesn't look tiny in the middle of a wide viewport).
+### Filter chips
+- **Last 4 weeks** chip becomes a working selector (7 / 30 / 90 days), same UX as Analytics.
+- **Compare: Previous Period** chip becomes a toggle (on/off) that shows/hides the dashed compare series and delta.
+- **All Products** and **Customise** chips stay as visual-only (no product catalog in this app) so the layout matches the screenshots.
 
-2. **Verification / form flows** (readable line length, but consistent):
-   `w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-6`
-   → Verification, ProductInformation, IdentityVerification, BusinessVerification, BankVerification.
+### Loading / empty states
+- Skeleton pulses in place of numbers while loading.
+- If no business selected: "Select a business to view Home." (same tone as Analytics).
+- Empty data → tiles render `GHS 0.00` and flat lines (no crash).
 
-## Changes
+### Files touched
+- `src/merchant/pages/MerchantHome.jsx` — full rewrite to consume the hook and helpers.
+- No new tables, no edge functions, no schema changes.
 
-- Update outer `<div>` on each page listed above to the matching wrapper.
-- `Collect.jsx`: switch outer from `max-w-2xl` to full-width; wrap the form card in `max-w-3xl` so inputs stay usable but header/breakdown span the page like other pages.
-- Normalize `p-6 md:p-8` on payouts pages to `px-4 md:px-8 py-6` so vertical/horizontal rhythm matches Payments/Analytics.
-- No changes to sidebar, topbar, drawers, or business logic.
-
-## Out of scope
-
-Sentra (intentional full-bleed chat canvas) and drawers/modals keep their current widths.
+### Out of scope
+- Refunds, New Customers, Top Customers, AOV cards from the screenshots — those live on Analytics and aren't part of this Home request.
+- Storefront/Entitlements/Products (already removed).
