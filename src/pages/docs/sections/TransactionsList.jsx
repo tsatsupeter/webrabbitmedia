@@ -35,7 +35,7 @@ export default function TransactionsList() {
       "mode": "test",
       "type": "collection",
       "channel": "momo",
-      "subscriber_number": "0248980332",
+      "subscriber_number": "0240000000",
       "account_number": null,
       "r_switch": "MTN",
       "description": "Invoice A104",

@@ -18,11 +18,11 @@ export default function TestData() {
 
       <h2 id="momo">Test Mobile Money numbers</h2>
       <p className="text-sm text-white/60 mb-3">
-        Accepted phone formats: local <code>0248980332</code> or international <code>233248980332</code>.
+        Accepted phone formats: local <code>0240000000</code> or international <code>233240000000</code>.
       </p>
       <ParamTable
         rows={[
-          { name: '0248980332', type: 'MTN · approved', desc: 'Happy-path approval within ~5 seconds.' },
+          { name: '0240000000', type: 'MTN · approved', desc: 'Happy-path approval within ~5 seconds.' },
           { name: '0240000000', type: 'MTN · pending', desc: 'Stays pending — use to test polling / webhooks (once live).' },
           { name: '0509999999', type: 'VDF · failed (101)', desc: 'Simulates insufficient funds.' },
         ]}
@@ -47,7 +47,7 @@ export default function TestData() {
   -H "Idempotency-Key: test-$(date +%s)" \\
   -d '{
     "amount": 1.00,
-    "subscriber_number": "0248980332",
+    "subscriber_number": "0240000000",
     "network": "MTN",
     "desc": "Smoke test"
   }'`}

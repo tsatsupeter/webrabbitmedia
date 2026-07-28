@@ -21,8 +21,8 @@ export default function CollectMomo() {
         <code>GMY</code> (G-Money).
       </Callout>
       <p className="text-sm text-white/60 mt-2">
-        <code>subscriber_number</code> accepts either the local format <code>0248980332</code> or the
-        international format <code>233248980332</code>. <code>amount</code> is decimal <strong>GHS</strong> —
+        <code>subscriber_number</code> accepts either the local format <code>0240000000</code> or the
+        international format <code>233240000000</code>. <code>amount</code> is decimal <strong>GHS</strong> —
         no pesewa padding. See <a href="/docs/test-data" className="text-primary hover:underline">test numbers</a>.
       </p>
 
@@ -30,7 +30,7 @@ export default function CollectMomo() {
       <ParamTable
         rows={[
           { name: 'amount', type: 'number', required: true, desc: 'Amount in GHS. Accepts number or numeric string, e.g. 10.50.' },
-          { name: 'subscriber_number', type: 'string', required: true, desc: 'Customer phone number, 10–12 digits, e.g. "0248980332".' },
+          { name: 'subscriber_number', type: 'string', required: true, desc: 'Customer phone number, 10–12 digits, e.g. "0240000000".' },
           { name: 'network', type: 'enum', required: true, desc: 'One of MTN, VDF, ATL, TGO, ZPY, GMY.' },
           { name: 'desc', type: 'string', desc: 'Description shown in your dashboard. Max 100 chars.' },
           { name: 'customer_email', type: 'string', desc: 'Optional email captured with the transaction.' },
@@ -53,7 +53,7 @@ export default function CollectMomo() {
   -H "Idempotency-Key: 8f4b7c1e-invoice-a104" \\
   -d '{
     "amount": 10.50,
-    "subscriber_number": "0248980332",
+    "subscriber_number": "0240000000",
     "network": "MTN",
     "desc": "Invoice A104",
     "customer_email": "customer@example.com"
@@ -72,7 +72,7 @@ export default function CollectMomo() {
   },
   body: JSON.stringify({
     amount: 10.50,
-    subscriber_number: "0248980332",
+    subscriber_number: "0240000000",
     network: "MTN",
     desc: "Invoice A104",
     customer_email: "customer@example.com",

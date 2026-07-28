@@ -38,7 +38,7 @@ export default function Quickstart() {
   -H "Idempotency-Key: order-1024" \\
   -d '{
     "amount": 1.00,
-    "subscriber_number": "0248980332",
+    "subscriber_number": "0240000000",
     "network": "MTN",
     "desc": "Order 1024"
   }'`,
@@ -56,7 +56,7 @@ export default function Quickstart() {
   },
   body: JSON.stringify({
     amount: 1.00,
-    subscriber_number: "0248980332",
+    subscriber_number: "0240000000",
     network: "MTN",
     desc: "Order 1024",
   }),
@@ -79,7 +79,7 @@ curl_setopt_array($ch, [
   ],
   CURLOPT_POSTFIELDS => json_encode([
     "amount" => 1.00,
-    "subscriber_number" => "0248980332",
+    "subscriber_number" => "0240000000",
     "network" => "MTN",
     "desc" => "Order 1024",
   ]),
