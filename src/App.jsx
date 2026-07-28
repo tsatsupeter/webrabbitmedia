@@ -66,6 +66,7 @@ function App() {
           <Route path="transactions/disputes" element={<Disputes />} />
           <Route path="payouts" element={<Payouts />} />
           <Route path="payouts/balances" element={<Balances />} />
+          <Route path="payouts/history" element={<History />} />
         </Route>
       </Routes>
     </BrowserRouter>
