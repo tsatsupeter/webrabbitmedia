@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
     if (!(amount > 0)) throw new HttpError(400, 'amount must be > 0')
     if (!SCHEMES.has(scheme)) throw new HttpError(400, 'scheme invalid (VIS|MAS)')
     if (!/^\d{12,19}$/.test(pan)) throw new HttpError(400, 'pan invalid')
+    if (redirect_url) {
+      try {
+        const u = new URL(redirect_url)
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error()
+      } catch {
+        throw new HttpError(400, 'redirect_url must be a valid http(s) URL')
+      }
+    }
 
     const mode = auth.key.mode
     const provider_transaction_id = newTxnId()
@@ -50,13 +58,12 @@ Deno.serve(async (req) => {
       account_number: pan.slice(-4).padStart(pan.length, '*'),
     })
 
-    const { json } = await payswitchPost(mode, '/v1.1/transaction/process', {
+    const upstreamBody: Record<string, unknown> = {
       processing_code: '000000',
       'r-switch': scheme,
       transaction_id: provider_transaction_id,
       merchant_id: merchantId,
       pan,
-      '3d_url_response': redirect_url,
       exp_month,
       exp_year,
       cvv,
@@ -65,7 +72,9 @@ Deno.serve(async (req) => {
       currency,
       card_holder,
       customer_email,
-    })
+    }
+    if (redirect_url) upstreamBody['3d_url_response'] = redirect_url
+    const { json } = await payswitchPost(mode, '/v1.1/transaction/process', upstreamBody)
 
     const approved = json?.code === '000' || json?.status === 'approved'
     const vbv = json?.status === 'vbv required'
