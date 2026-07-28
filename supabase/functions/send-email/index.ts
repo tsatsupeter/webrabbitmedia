@@ -5,7 +5,6 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { renderEmail, type EmailEvent } from '../_shared/email/template.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const EMAIL_HOOK_SECRET = Deno.env.get('EMAIL_HOOK_SECRET')
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -17,11 +16,18 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   try {
-    if (!EMAIL_HOOK_SECRET) return json({ error: 'email_hook_secret_missing' }, 500)
     if (!RESEND_API_KEY) return json({ error: 'resend_api_key_missing' }, 500)
 
+    const db = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+
+    const { data: secret } = await db.rpc('get_email_hook_secret')
+    if (!secret) return json({ error: 'email_hook_secret_missing' }, 500)
+
     const provided = req.headers.get('x-webrabbit-email-secret') || ''
-    if (provided !== EMAIL_HOOK_SECRET) return json({ error: 'unauthorized' }, 401)
+    if (provided !== secret) return json({ error: 'unauthorized' }, 401)
 
     const body = await req.json().catch(() => ({}))
     const event = body?.event as EmailEvent | undefined
