@@ -9,7 +9,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const { user } = useAuth()
-  const initials = (user?.email || 'WR').slice(0, 2).toUpperCase()
 
   const [searchValue, setSearchValue] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -17,6 +16,26 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
 
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef(null)
+
+  useEffect(() => {
+    function onDoc(e) {
+      if (!accountRef.current?.contains(e.target)) setAccountOpen(false)
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') setAccountOpen(false)
+    }
+    if (accountOpen) {
+      document.addEventListener('mousedown', onDoc)
+      document.addEventListener('keydown', onKey)
+    }
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [accountOpen])
 
   // Sync search input from URL when on payments page
   useEffect(() => {
@@ -155,12 +174,12 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
         <button
           type="button"
           onClick={() => setNotificationsOpen((v) => !v)}
-          className="relative w-9 h-9 min-w-9 min-h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06]"
+          className="relative w-10 h-10 min-w-10 min-h-10 flex items-center justify-center rounded-lg text-white/70 hover:text-white bg-white/[0.02] hover:bg-white/[0.06] border border-transparent hover:border-merchant-border"
           aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
         >
-          <Icon name="bell" size={17} />
+          <Icon name="bell" size={20} />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-merchant-danger text-white text-[0.6rem] font-semibold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-merchant-danger text-white text-[0.6rem] font-semibold flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -168,15 +187,87 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
         <NotificationsPopover open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
       </div>
 
-      <button
-        type="button"
-        onClick={signOut}
-        title={user?.email ? `Sign out (${user.email})` : 'Sign out'}
-        className="w-9 h-9 min-w-9 min-h-9 rounded-full bg-gradient-to-br from-accent to-accent-bright text-white text-[0.75rem] font-semibold flex items-center justify-center"
-        aria-label="Sign out"
-      >
-        {initials}
-      </button>
+      {/* Account */}
+      <div ref={accountRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setAccountOpen((v) => !v)}
+          title={user?.email || 'Account'}
+          className="w-10 h-10 min-w-10 min-h-10 flex items-center justify-center rounded-lg text-white/70 hover:text-white bg-white/[0.02] hover:bg-white/[0.06] border border-transparent hover:border-merchant-border"
+          aria-label="Account options"
+          aria-expanded={accountOpen}
+        >
+          <Icon name="user" size={20} />
+        </button>
+
+        {accountOpen && (
+          <div className="absolute right-0 top-full mt-2 z-40 w-60 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-merchant-border">
+              <div className="text-[0.85rem] font-semibold text-white">Account Options</div>
+              {user?.email && (
+                <div className="text-[0.7rem] text-white/45 truncate mt-0.5">{user.email}</div>
+              )}
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem
+                icon="user"
+                label="Profile"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/merchant')
+                }}
+              />
+              <MenuItem
+                icon="pencil"
+                label="Edit Business"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/merchant/verification')
+                }}
+              />
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem
+                icon="globe"
+                label="Language"
+                trailing={<Icon name="chevron" size={14} className="text-white/40" />}
+              />
+              <MenuItem
+                icon="help"
+                label="Help"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/docs')
+                }}
+              />
+            </div>
+            <div className="py-1.5">
+              <MenuItem
+                icon="logout"
+                label="Log out"
+                onClick={() => {
+                  setAccountOpen(false)
+                  signOut()
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </header>
+  )
+}
+
+function MenuItem({ icon, label, onClick, trailing }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[0.85rem] text-white/85 hover:bg-white/[0.05] transition-colors"
+    >
+      <Icon name={icon} size={16} className="text-white/60" />
+      <span className="flex-1">{label}</span>
+      {trailing}
+    </button>
   )
 }
