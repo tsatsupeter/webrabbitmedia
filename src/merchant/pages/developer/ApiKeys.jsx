@@ -181,11 +181,11 @@ export default function ApiKeys() {
                   <td className="px-5 py-4 text-right">
                     <button
                       type="button"
-                      onClick={() => revoke(r.id)}
+                      onClick={() => setPendingDelete({ id: r.id, name: r.name })}
                       className="w-8 h-8 inline-flex items-center justify-center rounded-md text-white/45 hover:text-red-400 hover:bg-white/[0.05]"
                       aria-label="Delete key"
                     >
-                      <Icon name="x" size={16} />
+                      <Icon name="trash" size={16} />
                     </button>
                   </td>
                 </tr>
