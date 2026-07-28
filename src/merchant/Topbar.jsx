@@ -87,8 +87,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('wr.compactSidebar', String(next))
     }
-    // Dispatch a custom event so the sidebar can react if it chooses to later.
-    window.dispatchEvent(new CustomEvent('wr-sidebar-compact', { detail: next }))
   }
 
   async function signOut() {
