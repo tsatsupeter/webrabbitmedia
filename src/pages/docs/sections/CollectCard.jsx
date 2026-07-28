@@ -7,7 +7,11 @@ import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 export default function CollectCard() {
   return (
     <>
-      <p>Charge a Visa or Mastercard. 3-D Secure is handled by the upstream provider when the issuer requires it — the customer is redirected to their bank's ACS page, then back to your app. Poll <code>GET /v1/transactions/{'{id}'}</code> to observe the final state.</p>
+      <p>
+        Charge a Visa or Mastercard. When the issuer requires 3-D Secure, the customer is redirected to their
+        bank's ACS page and then back to your <code>redirect_url</code>. Always confirm the final state with{' '}
+        <code>GET /v1/transactions/{'{id}'}</code> — never trust the query params on the redirect alone.
+      </p>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/card`} />
@@ -20,13 +24,17 @@ export default function CollectCard() {
       <h2 id="request">Request</h2>
       <ParamTable
         rows={[
-          { name: 'amount', type: 'number', required: true, desc: 'Amount in GHS.' },
-          { name: 'card_number', type: 'string', required: true, desc: 'Full PAN, digits only.' },
+          { name: 'amount', type: 'number', required: true, desc: 'Amount in GHS as a decimal (e.g. 50.00).' },
+          { name: 'scheme', type: 'string', required: true, desc: 'Card scheme — "VIS" for Visa or "MAS" for Mastercard.' },
+          { name: 'pan', type: 'string', required: true, desc: 'Full PAN, digits only (12–19).' },
           { name: 'exp_month', type: 'string', required: true, desc: 'Two-digit month, e.g. "09".' },
           { name: 'exp_year', type: 'string', required: true, desc: 'Two-digit year, e.g. "27".' },
           { name: 'cvv', type: 'string', required: true, desc: 'Card verification value.' },
+          { name: 'card_holder', type: 'string', desc: 'Name on card.' },
           { name: 'customer_email', type: 'string', desc: 'Optional email captured with the transaction.' },
-          { name: 'desc', type: 'string', desc: 'Description shown in your dashboard.' },
+          { name: 'currency', type: 'string', desc: 'Defaults to "GHS".' },
+          { name: 'desc', type: 'string', desc: 'Description shown in your dashboard (max 100 chars).' },
+          { name: 'redirect_url', type: 'string', desc: 'HTTPS URL the customer returns to after the 3-DS challenge. Required if you expect 3-DS-enrolled cards.' },
         ]}
       />
 
@@ -41,11 +49,14 @@ export default function CollectCard() {
   -H "Content-Type: application/json" \\
   -d '{
     "amount": 50.00,
-    "card_number": "4242424242424242",
+    "scheme": "VIS",
+    "pan": "4242424242424242",
     "exp_month": "09",
     "exp_year": "27",
     "cvv": "123",
-    "customer_email": "customer@example.com"
+    "card_holder": "Ada Lovelace",
+    "customer_email": "customer@example.com",
+    "redirect_url": "https://your-app.com/pay/return"
   }'`,
           },
         ]}
@@ -66,6 +77,23 @@ export default function CollectCard() {
   "currency": "GHS"
 }`}
       />
+
+      <h2 id="three-d-secure">3-D Secure redirect flow</h2>
+      <p>
+        If the card is enrolled in 3-D Secure, the upstream provider issues a browser redirect to the
+        cardholder's bank. When the challenge completes the customer is sent to your <code>redirect_url</code>
+        with the outcome appended as query parameters:
+      </p>
+      <CodeBlock
+        lang="text"
+        filename="Return URL"
+        code={`https://your-app.com/pay/return?code=000&status=successful&reason=Transaction%20Successful&transaction_id=521888812345`}
+      />
+      <Callout type="warn" title="Verify server-side before fulfilling">
+        Query params on the redirect are visible in the browser and can be tampered with. On landing, call{' '}
+        <code>GET /v1/transactions/{'{transaction_id}'}</code> from your server and use the authoritative{' '}
+        <code>resolved_status</code> before crediting the customer.
+      </Callout>
     </>
   )
 }

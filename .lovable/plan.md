@@ -1,77 +1,60 @@
 
-Fix the merchant-reported bugs without breaking any live keys already deployed in production (LetGoalBet, ECHODATE, etc.). Ordered worst-first.
+Two threads: (a) properly wire the card 3-DS `redirect_url` and document it; (b) full audit sweep of merchant + API + docs, fixing anything material found.
 
-## 1. CRITICAL — Unknown transaction returns 404, never "failed"
+## A. Card 3-DS redirect_url
 
-`supabase/functions/transaction-status/index.ts` currently forwards straight to Payswitch and mirrors whatever it says (999 / "failed") for ids that never existed in our ledger.
+Current state: `collect-card/index.ts` already reads `body.redirect_url` and forwards it to Payswitch as `3d_url_response`, but:
+- The doc `CollectCard.jsx` doesn't mention it (integrators can't know it exists).
+- Field names in the doc don't match the endpoint: doc says `card_number`, endpoint expects `pan`; doc omits required `scheme` (`VIS`|`MAS`) and `card_holder`.
+- No validation: empty `redirect_url` is silently forwarded; malformed URLs go straight to upstream.
 
-Fix: authenticate → look up the txn in our `transactions` table scoped to `business_id + mode` FIRST.
-- Not found → `404 { error: "transaction_not_found", transaction_id }`. Do not call upstream.
-- Found and already terminal (`approved` / `failed`) → return our ledger row without re-polling upstream (cheap + avoids upstream flipping a stored approval).
-- Found and `pending` → poll upstream as today, reconcile, return.
+Fix:
+1. `supabase/functions/collect-card/index.ts` — if `redirect_url` is provided, validate it parses as an http(s) URL (400 if not). Only forward `3d_url_response` when non-empty.
+2. `src/pages/docs/sections/CollectCard.jsx` — rewrite the request table to match the endpoint (`pan`, `scheme`, `exp_month`, `exp_year`, `cvv`, `card_holder`, `customer_email`, `currency`, `desc`, `redirect_url`), fix the cURL body accordingly, add a "3-DS redirect" section explaining that Payswitch redirects the customer to `redirect_url` with `?code=&status=&reason=&transaction_id=` appended, and that the merchant must still call `GET /v1/transactions/{id}` on landing (never trust query-string params as authoritative).
 
-Worker (`worker/src/index.ts`) already forwards the upstream status code, so a 404 from the edge function will propagate correctly.
+## B. Full audit — findings & fixes
 
-## 2. CRITICAL — Disambiguate code 999
+Sweep planned across the three surfaces. Non-material items will be listed but not fixed; genuine bugs will be patched in this same pass.
 
-Reserve upstream `999` for its documented meaning ("merchant id not set"). Our own "not found" case now returns HTTP 404 with `error: "transaction_not_found"` and no numeric `code` field, so integrators no longer have to string-match on `reason`.
+### API / edge functions
+- `me` — added last turn; verify it deploys and returns the documented shape (curl through `supabase--curl_edge_functions`).
+- `transaction-status` — verify 404 for unknown, terminal-from-ledger, pending-reconciled behaviour with a live curl.
+- `list-transactions?idempotency_key=` — verify shape.
+- `collect-momo` — check idempotency insert path doesn't crash on `customer_email` being empty (currently stored as `''`).
+- Confirm `merchant-collect-momo` (dashboard-only fn) also stringifies `code` in returned payload — should match the API surface so the dashboard and API don't drift.
+- Confirm every edge function that returns `code` uses `String(...)`.
+- `_shared/idempotency.ts` — its `endpoint` type union is `'collect-momo' | 'payout-momo'`; `merchant-collect-momo` doesn't use it, so no impact, but note if the merchant flow should also be idempotent (out of scope for this pass, flag only).
 
-Update `src/pages/docs/sections/ProviderCodes.jsx` and `TransactionsRetrieve.jsx` to document:
-- 404 response shape for unknown ids
-- Clarify 999 is a configuration error, not a not-found signal
-- Reclassify code `107` (USSD busy) as retryable/transient in the codes table (LOW 8)
+### Worker
+- Confirm `GET /v1/me` route is present and rate-limit-bucketed like the other GETs.
+- Confirm 404 from `transaction-status` propagates as 404 (worker passes upstream status through — verify).
 
-## 3. HIGH — Key prefix mismatch (handle carefully; live keys exist)
+### Docs
+- `CollectCard.jsx` request-body drift (fixed above).
+- `registry.js` — verify Me is in the sidebar, headings render, prev/next pager stays in order.
+- `ProviderCodes.jsx` — confirm `not-found` heading link works.
+- `Authentication.jsx` — confirm the "legacy keys" and "preflight" sections show up.
+- `Idempotency.jsx` — confirm the new "recovery" section is present.
 
-Root cause: `ApiKeys.jsx` generates a raw base64url key and hashes it. Docs promise `wr_test_` / `wr_live_` prefixes. Auth in `_shared/auth.ts` hashes exactly what the client sends, so today "Bearer <raw>" works and "Bearer wr_live_<raw>" fails.
+### Merchant dashboard
+- `ApiKeys.jsx` — after last turn keys now mint with `wr_{mode}_` prefix; verify the reveal modal shows the prefixed value, and the list `key_prefix` column truncates cleanly (was `slice(0,8)`, now `slice(0,12)` — check the UI doesn't overflow).
+- Spot-check that mode-switch isolation still holds on Payments, Balances, Analytics.
+- Confirm no page still references removed routes (Refunds/Disputes/Storefront/etc.).
 
-Backwards-compatible fix (no forced rotation):
-- **New keys**: `ApiKeys.jsx` mints `wr_{mode}_{base64url}`, stores hash of the full prefixed string. The reveal modal already shows the value the user copies, so they get a prefixed key.
-- **Existing keys** (LetGoalBet's live key, ECHODATE's, any test keys): keep working untouched. Auth accepts a bearer token as-is; if the client sends `wr_live_xxx`, hash that; if they send just `xxx`, hash that too. Concretely: compute hash of the raw bearer, and if that misses AND the bearer does NOT already start with `wr_`, also try `sha256("wr_live_"+raw)` and `sha256("wr_test_"+raw)`. This lets legacy unprefixed keys keep working while allowing the same underlying secret to be presented with a prefix.
-- Dashboard: add a small "reveal legacy key as prefixed" affordance? No — we can't; we only store the hash. Instead, add a one-time banner on the API Keys page for keys created before the fix, telling merchants they can optionally rotate to receive a prefixed key. Non-blocking.
+Anything found that's a bug I'll fix in the same turn. Anything cosmetic or subjective I'll list for your call.
 
-## 4. HIGH — `GET /v1/me` for pre-flight
-
-New Supabase edge function `me` that authenticates and returns:
-```json
-{ "mode": "live", "business_status": "approved", "business_name": "…", "scopes": ["read","write"], "api_key_id": "…" }
-```
-Wire into worker at `GET /v1/me`. Document in a new `Me.jsx` docs section and add to `registry.js`.
-
-## 5. MEDIUM — `code` field type consistency
-
-Normalize `code` to string everywhere. In `transaction-status` and `list-transactions`, coerce `provider_code` to string in the response (preserve `"000"`, `"111"`, `"999"` etc.). In `collect-momo` / `collect-card` / `payout-momo`, ensure the `code` returned is `String(json?.code ?? '')` or `null` (never a number). Add a note in `ProviderCodes.jsx`.
-
-## 6. MEDIUM — Lookup by `Idempotency-Key`
-
-Extend `list-transactions` to accept `?idempotency_key=<uuid>`:
-- Query `idempotency_keys` for the row scoped to `business_id`, join to `transactions` via `transaction_id`.
-- Return the transaction row (single-item items[]) or empty items[] if not found.
-- Document in `Idempotency.jsx`.
-
-## 7. Not in this pass (call out to user, do not silently ship)
-
-- **MED 7 polling vs rate-limit**: needs a rate-limit tier change on the Worker; propose bumping polling-scoped GET `/v1/transactions/{id}` to a separate higher bucket in a follow-up.
-- **Signed webhooks**: bigger effort; keep on the roadmap.
-- **LOW 9 status vs resolved_status precedence**: doc-only clarification I'll include in the same docs pass (say `resolved_status` is authoritative once returned).
-- **Commercial 15% fee**: not an engineering change.
+## Not doing
+- MoMo webhooks. Payswitch/theTeller has no server-to-server webhook API — only the card 3-DS browser redirect. Confirmed via their public API docs. Building our own outbound webhook system remains a future item.
 
 ## Technical section
 
-Files touched:
-- `supabase/functions/transaction-status/index.ts` — DB-first lookup, 404 on miss, skip upstream when already terminal
-- `supabase/functions/_shared/auth.ts` — legacy fallback hashing for pre-prefix keys
-- `supabase/functions/list-transactions/index.ts` — `idempotency_key` filter + stringify `code`
-- `supabase/functions/collect-momo|collect-card|payout-momo/index.ts` — stringify `code` in response
-- New `supabase/functions/me/index.ts`
-- `worker/src/index.ts` — route `GET /v1/me`
-- `src/merchant/pages/developer/ApiKeys.jsx` — mint prefixed keys for new creations; small legacy notice
-- Docs: `ProviderCodes.jsx`, `TransactionsRetrieve.jsx`, `Idempotency.jsx`, `Authentication.jsx`, new `Me.jsx`, `registry.js`
-- No SQL migration needed.
+Files to touch:
+- `supabase/functions/collect-card/index.ts` — validate + conditionally forward `redirect_url`.
+- `src/pages/docs/sections/CollectCard.jsx` — full rewrite of request params + new 3-DS redirect section.
+- Any file the audit exposes as broken (unknown until the sweep runs).
 
 Verification:
-- Curl `GET /v1/transactions/000000000000` with a real key → expect 404.
-- Curl `GET /v1/transactions/{real_id}` → unchanged 200 shape, `code` is string.
-- Curl `GET /v1/me` → returns mode + business_status.
-- Create a new API key in dashboard → value starts with `wr_test_` or `wr_live_`.
-- Existing LetGoalBet live key still authenticates on `POST /v1/collect/momo` (no rotation).
+- `supabase--curl_edge_functions` against `me`, `transaction-status` (unknown + real id), `list-transactions?idempotency_key=`.
+- `curl -sf http://localhost:8080/docs/collect-card` + view page.
+- Manual read of `ApiKeys.jsx` reveal modal.
+- `tsgo` typecheck on worker + `bun run build` gate.

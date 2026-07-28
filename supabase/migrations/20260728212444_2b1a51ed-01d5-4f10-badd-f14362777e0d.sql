@@ -1,0 +1,1 @@
+UPDATE public.api_keys SET revoked_at = now() WHERE name = '__audit_temp_2026_07_28';
