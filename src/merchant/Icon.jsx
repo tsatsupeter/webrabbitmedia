@@ -26,6 +26,8 @@ const paths = {
   link: <path d="M9 15l6-6M8 13l-2 2a3 3 0 004 4l2-2m0-10l2-2a3 3 0 014 4l-2 2" />,
   layers: <path d="M12 3l9 5-9 5-9-5 9-5zm-9 9l9 5 9-5m-18 4l9 5 9-5" />,
   brackets: <path d="M8 4l-4 8 4 8m8-16l4 8-4 8" />,
+  mail: <path d="M3 6h18v12H3V6zm0 0l9 7 9-7" />,
+  globe: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-9 9h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {
