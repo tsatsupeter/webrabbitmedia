@@ -1,50 +1,49 @@
-## Product Information form page
 
-When the user clicks Submit on the "Product Information" row in Verification, navigate to a new full-page form matching the reference screenshots.
+## Problem
 
-### Route
-- Add `/merchant/verification/product-information` inside the protected merchant route group in `src/App.jsx`.
-- In `src/merchant/pages/Verification.jsx`, change the Product Information row's Submit handler to `navigate('/merchant/verification/product-information')` instead of marking complete locally. Completion will be marked when the form is submitted (see below).
+Two issues on `/merchant/verification/product-information`:
 
-### New page: `src/merchant/pages/ProductInformation.jsx`
-Layout matches uploaded screenshots (dark, full-width form inside the merchant layout):
+1. **Checkboxes don't toggle.** The `Checkbox` and confirmation controls wrap a hidden `<input type="checkbox">` inside a `<label>` AND put an `onClick` handler on the visible span. Clicking the span fires `onChange(!checked)` once, then the label's default behavior also toggles the hidden input which fires `onChange` again — net effect is no change. This blocks the Submit button from ever enabling.
+2. **Nothing is saved.** Submit only writes to `localStorage`. The user wants real persistence and a real success toast on submit.
 
-- Header row: green-outlined square back button (chevron-left) → navigates back to `/merchant/verification`. Title "Product Information" beside it.
-- Subtitle: "Tell us about your product so we can get you ready to accept payments. Takes about 2 minutes."
-- Card container (bg-merchant-panel, border, rounded) with these fields in order:
-  1. **Websites** * — repeatable rows. Each row: `https://` prefix pill + URL input. "Add website" button appends another row. Minimum 1.
-  2. **Briefly describe what your product does** * — textarea, placeholder "E.g. Web Rabbit Payments is a Merchant of Record solution."
-  3. **Which category best describes your product?** * — select. Options: SaaS, Digital goods, Online course, E-book, Template, Membership, Consulting, Other.
-  4. **How do customers receive the product after payment? (Select all that apply.)** * — checkbox group: Instant access, Email delivery, Manual fulfilment, Ongoing subscription access. Plus a "Describe the flow briefly" textarea below.
-  5. **Which option best describes how your product or service is delivered?** * — select. Options: Fully automated, Mostly automated, Manual with automation, Fully manual.
-  6. **Does your product involve any of the following? (Select all that apply.)** — checkboxes: Crypto/blockchain, Health/medical/wellness claims, Legal/regulated services, Adult/18+, Gambling/betting, Illegal goods, None of the above.
-  7. **How do you intend to integrate with Web Rabbit Payments?** * — checkboxes: Payment links, Inline/Overlay checkout, API/SDK/Adapters, Not sure / haven't decided.
-  8. **How do you acquire customers?** * — checkboxes: Website & SEO, Social Media, Ads, Email Marketing, Others (Please specify). When Others checked, show a small text input.
-  9. **Social Media Links (Product & Founder)** * — repeatable URL rows with `https://` prefix and "Add social media link" button.
-  10. **How far along are you with your product?** * — select: Idea, Building, Beta, Live and selling.
-  11. **Which payment platform are you currently using? If not using any, specify NONE.** * — text input.
+## Fix
 
-- Confirmation checkbox row: "I confirm that the information provided above accurately describes my product. I understand that Web Rabbit Payments may suspend payouts or terminate access to the platform if the product is later found to violate the [Acceptance Policy](#)."
-- Footer actions (right-aligned): **Save as Draft** (ghost) and **Submit & Proceed** (white/black primary, disabled until required fields filled + confirmation checked).
+### 1. Fix the checkbox controls (UI only)
+In `src/merchant/pages/ProductInformation.jsx`:
+- Rewrite `Checkbox` as a single controlled `<input type="checkbox">` visually hidden with a styled span sibling — no duplicate `onClick` on the span.
+- Same fix for the confirmation checkbox at the bottom.
 
-### Behavior
-- Local component state only for now (no new table). On Submit & Proceed:
-  - Show sonner toast: "Product information submitted".
-  - Mark Product Information step complete on the Verification page. Since `completedSteps` currently lives in the Verification component's local state, lift it to `localStorage` keyed by business id (`wr.verif.completedSteps.<businessId>`) so it persists across the navigation. Read/write in both pages via a tiny helper (inline in each file or a small util `src/merchant/verificationProgress.js`).
-  - Navigate back to `/merchant/verification`.
-- Save as Draft: toast "Draft saved" and navigate back (no completion mark).
-- Required-field validation with inline red asterisk labels and disabled Submit until valid + checkbox ticked. Use `sonner` for errors.
+### 2. Persist the form to Supabase
+Create a `public.product_information` table keyed by `business_id` (one row per business, upsert):
 
-### Styling
-- Reuse existing tokens: `bg-merchant-panel`, `border-merchant-border`, `text-white/60`, green accent (`accent-bright`) for the back button outline and focus rings on inputs — matching the current Verification/Auth styling for consistency.
-- Icons via existing `Icon` component (add `chevronLeft` and `plus` if missing).
+```
+id uuid pk, business_id uuid unique fk → businesses, user_id uuid,
+websites text[], description text, category text,
+receive_methods text[], receive_flow text,
+delivery_level text, risks text[],
+integrations text[], acquisitions text[], other_acquisition text,
+socials text[], stage text, payment_platform text,
+status text default 'submitted',   -- 'draft' | 'submitted'
+confirmed_at timestamptz,
+created_at, updated_at
+```
+- RLS: owner-only via `user_id = auth.uid()` (matches `businesses` pattern).
+- GRANTs to `authenticated` + `service_role`.
+- `updated_at` trigger reusing existing `update_updated_at_column()`.
 
-### Files touched
-- `src/App.jsx` — new route.
-- `src/merchant/pages/Verification.jsx` — Submit on Product row navigates; read completedSteps from localStorage helper.
-- `src/merchant/pages/ProductInformation.jsx` — new file, the form.
-- `src/merchant/verificationProgress.js` — small get/set helper for per-business completed steps.
-- `src/merchant/Icon.jsx` — add `chevronLeft`, `plus` if not present.
+### 3. Wire the page to the table
+In `ProductInformation.jsx`:
+- On mount, load existing row for `active.id` and hydrate state (so returning users see their data).
+- **Save as Draft**: upsert with `status='draft'` → toast `"Draft saved"` → back to `/merchant/verification`.
+- **Submit & Proceed**: upsert with `status='submitted'`, `confirmed_at=now()` → on success `markStepComplete(active.id, 'product')` → `toast.success('Product information submitted', { description: "We'll review it shortly." })` → navigate back.
+- Surface Supabase errors via `toast.error(error.message)`.
+- Disable both buttons while the request is in flight.
 
-### No database changes
-UI + localStorage only for this step, consistent with the current Verification progress approach. Real persistence can be added later when the backend schema for verification steps is designed.
+### 4. Verification page sync
+`Verification.jsx` already reads completed steps from `localStorage` on `active.id` change — no change needed; the product row will show as Completed after submit and Identity Verification will unlock.
+
+## Files touched
+- `supabase/migrations/*` — new `product_information` table (via migration tool).
+- `src/merchant/pages/ProductInformation.jsx` — checkbox fix + load/save/submit against Supabase.
+
+No other pages change.
