@@ -8,9 +8,18 @@ import ModeSwitchOverlay from './components/ModeSwitchOverlay'
 const titleByPath = {
   '/merchant': 'Get Started',
   '/merchant/verification': 'Verification',
+  '/merchant/verification/product-information': 'Product Information',
+  '/merchant/verification/identity': 'Identity Verification',
+  '/merchant/verification/business': 'Business Verification',
+  '/merchant/verification/bank': 'Bank Verification',
   '/merchant/home': 'Home',
   '/merchant/analytics': 'Analytics',
   '/merchant/developer/api-keys': 'API Keys',
+  '/merchant/sales/collect': 'Collect Payment',
+  '/merchant/transactions/payments': 'Payments',
+  '/merchant/payouts': 'Payouts',
+  '/merchant/payouts/balances': 'Account Statement',
+  '/merchant/payouts/history': 'Payout History',
 }
 
 export default function MerchantLayout() {

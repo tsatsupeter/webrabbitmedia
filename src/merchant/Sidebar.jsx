@@ -28,45 +28,51 @@ function ExpandableItem({ item, onNavigate }) {
           className={`text-white/40 transition-transform ${open ? 'rotate-90' : ''}`}
         />
       </button>
-      {open && (
-        <div className="relative pl-6 mt-0.5 mb-1">
-          <span className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
-          <div className="space-y-0.5">
-            {item.children.map((child) => {
-              const base =
-                'relative flex items-center gap-2 pl-3 pr-3 py-1.5 rounded-md text-[0.82rem] no-underline before:absolute before:left-0 before:top-1/2 before:w-2 before:h-px before:bg-white/10'
-              if (child.to) {
-                return (
-                  <NavLink
-                    key={child.key}
-                    to={child.to}
-                    end
-                    onClick={onNavigate}
-                    className={({ isActive }) =>
-                      `${base} ${
-                        isActive
-                          ? 'bg-white/[0.07] text-white font-medium'
-                          : 'text-white/55 hover:text-white/85 hover:bg-white/[0.03]'
-                      }`
-                    }
-                  >
-                    {child.label}
-                  </NavLink>
-                )
-              }
-              return (
-                <button
-                  key={child.key}
-                  type="button"
-                  className={`${base} text-white/45 hover:text-white/70 cursor-default w-full text-left`}
-                >
-                  {child.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+          {open && (
+            <div className="relative pl-6 mt-0.5 mb-1">
+              <span className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
+              <div className="space-y-0.5">
+                {item.children.map((child) => {
+                  const base =
+                    'relative flex items-center gap-2 pl-3 pr-3 py-1.5 rounded-md text-[0.82rem] no-underline before:absolute before:left-0 before:top-1/2 before:w-2 before:h-px before:bg-white/10'
+                  if (child.to && !child.comingSoon) {
+                    return (
+                      <NavLink
+                        key={child.key}
+                        to={child.to}
+                        end
+                        onClick={onNavigate}
+                        className={({ isActive }) =>
+                          `${base} ${
+                            isActive
+                              ? 'bg-white/[0.07] text-white font-medium'
+                              : 'text-white/55 hover:text-white/85 hover:bg-white/[0.03]'
+                          }`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    )
+                  }
+                  return (
+                    <button
+                      key={child.key}
+                      type="button"
+                      title={child.comingSoon ? 'Coming soon' : undefined}
+                      className={`${base} text-white/45 hover:text-white/70 w-full text-left ${
+                        child.comingSoon ? 'cursor-not-allowed opacity-60' : 'cursor-default'
+                      }`}
+                    >
+                      {child.label}
+                      {child.comingSoon && (
+                        <span className="ml-auto text-[0.65rem] text-white/30">Soon</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
     </div>
   )
 }
