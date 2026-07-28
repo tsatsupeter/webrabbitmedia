@@ -239,7 +239,7 @@ export default function GetStarted() {
             icon="brackets"
             title="API documentation"
             desc="Reference for the Collect endpoints, authentication with your API keys and webhook payloads."
-            to="#"
+            to="/docs"
             cta="Read the docs"
           />
           <ActionCard
