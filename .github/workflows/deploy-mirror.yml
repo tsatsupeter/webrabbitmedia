@@ -17,6 +17,9 @@ concurrency:
 
 jobs:
   build:
+    # Guard: this file gets mirrored into tsatsupeter/webrabbitmedia, where
+    # it must not run (no secrets there; Actions are disabled as well).
+    if: github.repository == 'tsatsupeter/WEBRABBITMEDIA-COMPANY'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
