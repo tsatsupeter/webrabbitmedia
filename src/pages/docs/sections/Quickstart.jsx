@@ -22,8 +22,9 @@ export default function Quickstart() {
 
       <h2 id="step-2-make-your-first-charge">Step 2 — Make your first charge</h2>
       <p>
-        Send a <code>POST</code> to <code>/collect/momo</code>. Amount is in <strong>GHS</strong>, as a string with
-        two decimals.
+        Send a <code>POST</code> to <code>/collect/momo</code>. <code>amount</code> is decimal{' '}
+        <strong>GHS</strong> (e.g. <code>1.00</code>) — we handle any pesewa-string conversion required by
+        the upstream provider.
       </p>
       <CodeTabs
         samples={[

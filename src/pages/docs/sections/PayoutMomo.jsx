@@ -29,6 +29,11 @@ export default function PayoutMomo() {
         ]}
       />
       <p className="text-sm text-white/60 mt-4">
+        <code>amount</code> is decimal <strong>GHS</strong> — we handle pesewa conversion for the upstream
+        provider. <code>account_number</code> accepts local (<code>0248980332</code>) or international
+        (<code>233248980332</code>) format.
+      </p>
+      <p className="text-sm text-white/60 mt-2">
         Always send an <code>Idempotency-Key</code> for payouts. If your request times out you can safely
         retry with the same key — see <a href="/docs/idempotency" className="text-primary hover:underline">Idempotency</a>.
       </p>
