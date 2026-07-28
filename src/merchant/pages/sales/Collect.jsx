@@ -21,7 +21,7 @@ function money(n) {
 
 export default function Collect() {
   const { active } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [amount, setAmount] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [network, setNetwork] = useState('MTN')
@@ -34,6 +34,8 @@ export default function Collect() {
 
   const canSubmit =
     !!active &&
+    modeReady &&
+    !!mode &&
     amt > 0 &&
     /^\d{10,12}$/.test(phone.trim()) &&
     NETWORKS.some((n) => n.value === network) &&
@@ -91,7 +93,7 @@ export default function Collect() {
                 : 'bg-orange-500/15 text-orange-400 border-orange-500/30'
             }`}
           >
-            {liveMode ? 'LIVE' : 'TEST'}
+            {!modeReady ? 'LOADING' : liveMode ? 'LIVE' : 'TEST'}
           </span>
         </div>
         <p className="text-white/60 mb-6 text-sm">

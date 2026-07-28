@@ -132,7 +132,7 @@ function ActivateBanner() {
 }
 
 export default function GetStarted() {
-  const { mode, business } = useMerchantMode()
+  const { mode, modeReady, business } = useMerchantMode()
   const isLive = mode === 'live'
   const approved = business?.status === 'approved'
   const completed = business?.id ? getCompletedSteps(business.id) : []
@@ -140,21 +140,22 @@ export default function GetStarted() {
 
   return (
     <div className="w-full px-4 md:px-8 py-6 space-y-10">
-      {/* Mode pill */}
-      <div className="flex justify-center">
-        <div
-          className={`px-4 py-2 rounded-lg border text-[0.8rem] flex items-center gap-2 ${
-            isLive
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-              : 'bg-red-500/10 border-red-500/30 text-red-300'
-          }`}
-        >
-          <span>You are in {isLive ? 'Live' : 'Test'} Mode.</span>
-          <Link to="/merchant/verification" className="text-white font-medium hover:underline">
-            Learn More
-          </Link>
+      {modeReady && (
+        <div className="flex justify-center">
+          <div
+            className={`px-4 py-2 rounded-lg border text-[0.8rem] flex items-center gap-2 ${
+              isLive
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : 'bg-red-500/10 border-red-500/30 text-red-300'
+            }`}
+          >
+            <span>You are in {isLive ? 'Live' : 'Test'} Mode.</span>
+            <Link to="/merchant/verification" className="text-white font-medium hover:underline">
+              Learn More
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {!approved && <ActivateBanner />}
 

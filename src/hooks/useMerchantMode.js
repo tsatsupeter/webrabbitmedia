@@ -1,22 +1,25 @@
-import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useCallback, useLayoutEffect, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { useBusinesses } from './useBusinesses'
 
 const key = (id) => `wr.merchantMode.${id}`
-const LAST_KEY = 'wr.merchantMode.last'
+const ACTIVE_BUSINESS_KEY = 'wr.activeBusinessId'
 const SWITCH_MS = 650
 const TAIL_MS = 150
 
-function initialMode() {
-  if (typeof window === 'undefined') return 'test'
-  const hint = localStorage.getItem(LAST_KEY)
-  return hint === 'live' ? 'live' : 'test'
+function initialStoredMode() {
+  if (typeof window === 'undefined') return null
+  const activeId = localStorage.getItem(ACTIVE_BUSINESS_KEY)
+  if (!activeId) return null
+  const stored = localStorage.getItem(key(activeId))
+  return stored === 'live' || stored === 'test' ? stored : null
 }
 
 // Module-scoped shared store so every consumer (sidebar, overlay, pages)
 // sees the same `switching`/`pendingMode` state during a mode change.
 const state = {
-  mode: initialMode(),
+  mode: initialStoredMode(),
+  hydrated: false,
   switching: false,
   pendingMode: null,
   activeId: null,
@@ -42,10 +45,21 @@ function getSnapshot() {
   return snapshot
 }
 
+function clearTimers() {
+  if (switchTimer) clearTimeout(switchTimer)
+  if (tailTimer) clearTimeout(tailTimer)
+  switchTimer = null
+  tailTimer = null
+}
+
 function hydrate(activeId, canUseLive) {
-  if (state.activeId === activeId && state.canUseLive === canUseLive) return
+  if (state.hydrated && state.activeId === activeId && state.canUseLive === canUseLive) return
+  clearTimers()
   state.activeId = activeId
   state.canUseLive = canUseLive
+  state.switching = false
+  state.pendingMode = null
+  state.hydrated = true
   if (!activeId) {
     state.mode = 'test'
     emit()
@@ -60,13 +74,12 @@ function hydrate(activeId, canUseLive) {
     }
     state.mode = 'test'
   }
-  if (typeof window !== 'undefined') localStorage.setItem(LAST_KEY, state.mode)
   emit()
 }
 
 
 function requestMode(next) {
-  if (!state.activeId) return
+  if (!state.activeId || !state.hydrated || !state.mode) return
   if (next === state.mode || state.pendingMode === next) return
   if (next === 'live' && !state.canUseLive) {
     toast.info('Live Mode unlocks after your business is approved.')
@@ -76,14 +89,12 @@ function requestMode(next) {
   state.switching = true
   emit()
 
-  if (switchTimer) clearTimeout(switchTimer)
-  if (tailTimer) clearTimeout(tailTimer)
+  clearTimers()
 
   switchTimer = setTimeout(() => {
     state.mode = next
     if (typeof window !== 'undefined') {
       if (state.activeId) localStorage.setItem(key(state.activeId), next)
-      localStorage.setItem(LAST_KEY, next)
     }
     emit()
 
@@ -106,17 +117,22 @@ export function useMerchantMode() {
   const canUseLive = active?.status === 'approved'
   const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (loading) return
     hydrate(active?.id ?? null, canUseLive)
-  }, [active?.id, canUseLive])
+  }, [active?.id, canUseLive, loading])
 
   const setMode = useCallback((next) => requestMode(next), [])
+  const modeReady = !loading && snap.hydrated && Boolean(snap.mode)
+  const mode = modeReady ? snap.mode : null
 
   return {
-    mode: snap.mode,
+    mode,
     setMode,
     canUseLive,
     loading,
+    modeReady,
+    hydrated: snap.hydrated,
     business: active,
     switching: snap.switching,
     pendingMode: snap.pendingMode,

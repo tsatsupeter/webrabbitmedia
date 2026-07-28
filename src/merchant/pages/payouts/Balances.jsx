@@ -72,7 +72,7 @@ function Popover({ open, onClose, children, align = 'right' }) {
 
 export default function Balances() {
   const { active } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [txs, setTxs] = useState([])
   const [payouts, setPayouts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -108,7 +108,10 @@ export default function Balances() {
   const [openPop, setOpenPop] = useState(null) // 'filters' | 'date' | 'channel' | 'cols'
 
   useEffect(() => {
-    if (!active?.id) return
+    if (!active?.id || !modeReady || !mode) {
+      setLoading(Boolean(active?.id))
+      return
+    }
     let cancel = false
     ;(async () => {
       setLoading(true)
@@ -137,7 +140,7 @@ export default function Balances() {
     return () => {
       cancel = true
     }
-  }, [active?.id, mode])
+  }, [active?.id, mode, modeReady])
 
   // Build full ledger with running balance
   const { fullRows, breakdown, channels } = useMemo(() => {
