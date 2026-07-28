@@ -40,6 +40,9 @@ const paths = {
   plus: <path d="M12 5v14M5 12h14" />,
   history: <path d="M4 5v5h5M4.6 10A8 8 0 114 14m8-6v4l3 2" />,
   pencil: <path d="M4 20l1-4L16 5l3 3L8 19l-4 1zm10-13l3 3" />,
+  info: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 5h.01M11 12h1v5h1" />,
+  logout: <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l-5-5 5-5m-5 5h13" />,
+  userPlus: <path d="M12 4a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0113-6.3M18 14v6m-3-3h6" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {
