@@ -35,6 +35,20 @@ export default function Authentication() {
       />
       <p>Requests without a valid key return <code>401 Unauthorized</code>.</p>
 
+      <h2 id="preflight">Preflight — check mode & approval</h2>
+      <p>
+        Before you charge a real customer, call <code>GET /v1/me</code> to confirm the key's mode, scopes, and
+        that the business is approved for live rails. See{' '}
+        <a href="/docs/me" className="text-primary hover:underline">Me</a>.
+      </p>
+
+      <h2 id="legacy-keys">Legacy keys without a prefix</h2>
+      <p>
+        Keys issued before prefixed-key rollout have no <code>wr_test_</code> / <code>wr_live_</code> prefix
+        and continue to authenticate as-is — no rotation required. If you'd like a prefixed replacement,
+        create a new key from <strong>Developer → API Keys</strong> and revoke the old one when you cut over.
+      </p>
+
       <h2 id="rotating-keys">Rotating keys</h2>
       <p>
         If a key is exposed, revoke it from the dashboard and create a new one. Rotation is instant — the

@@ -7,9 +7,9 @@ export default function TransactionsRetrieve() {
   return (
     <>
       <p>
-        Fetch the live status of a single transaction by its <code>transaction_id</code>. This endpoint
-        polls the upstream provider and reconciles our ledger before responding, so it always returns the
-        freshest state.
+        Fetch the live status of a single transaction by its <code>transaction_id</code>. If the transaction
+        is still pending we poll the upstream provider and reconcile our ledger before responding; terminal
+        transactions (approved or failed) are served straight from our ledger.
       </p>
 
       <h2 id="endpoint">Endpoint</h2>
@@ -32,9 +32,33 @@ export default function TransactionsRetrieve() {
       />
       <p className="text-sm text-white/60 mt-4">
         <code>resolved_status</code> is our normalised status (<code>approved</code> · <code>pending</code> · <code>failed</code>)
-        after reconciling the upstream response with our ledger. While signed webhooks are on the way, poll
-        this endpoint every ~3 seconds for up to 60 seconds — see the pattern in{' '}
-        <a href="/docs/webhooks" className="text-primary hover:underline">Webhooks</a>.
+        after reconciling with our ledger and is the field you should trust for merchant decisions.
+        The bare <code>status</code> field mirrors whatever string the upstream provider returned this call
+        and can lag behind the ledger by one poll.
+      </p>
+
+      <h2 id="not-found">Unknown transaction — HTTP 404</h2>
+      <p>
+        If the id does not exist for your business + mode, we return <strong>HTTP 404</strong> — never a
+        synthetic <code>failed</code> body. Treat 404 as "no record yet"; if you have an
+        <code> Idempotency-Key </code> for the request, look it up before assuming the payment did not happen.
+      </p>
+      <CodeBlock
+        lang="json"
+        filename="Response · 404"
+        code={`{
+  "error": "transaction_not_found",
+  "transaction_id": "000000000000"
+}`}
+      />
+
+      <h2 id="polling">Polling pattern</h2>
+      <p className="text-sm text-white/70">
+        Poll every ~3 seconds for up to 60 seconds. If you're still <code>pending</code> after that, keep the
+        transaction open in your UI and continue polling at a slower cadence (e.g. every 10s) — MoMo prompts
+        can take longer than a minute to approve. See{' '}
+        <a href="/docs/webhooks" className="text-primary hover:underline">Webhooks</a> for the recommended
+        loop. Signed webhook delivery is on the roadmap.
       </p>
     </>
   )
