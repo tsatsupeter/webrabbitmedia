@@ -117,7 +117,7 @@ export default function GetStarted() {
   const isLive = mode === 'live'
   const approved = business?.status === 'approved'
   return (
-    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-10">
+    <div className="w-full px-4 md:px-8 py-6 space-y-10">
       {/* Mode pill */}
       <div className="flex justify-center">
         <div

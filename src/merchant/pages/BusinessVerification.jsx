@@ -284,7 +284,7 @@ export default function BusinessVerification() {
   }
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
+    <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-center gap-4">
         <button type="button" onClick={() => navigate('/merchant/verification')}
           className="w-10 h-10 rounded-lg border-2 border-accent-bright flex items-center justify-center text-white hover:bg-accent/10"

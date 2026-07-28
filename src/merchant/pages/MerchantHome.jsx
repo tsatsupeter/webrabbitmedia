@@ -34,7 +34,7 @@ function StatTile({ title, value, sub, updated }) {
 
 export default function MerchantHome() {
   return (
-    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-10">
+    <div className="w-full px-4 md:px-8 py-6 space-y-10">
       {/* Today */}
       <section>
         <h2 className="font-display text-[1.3rem] font-semibold text-white">Today</h2>

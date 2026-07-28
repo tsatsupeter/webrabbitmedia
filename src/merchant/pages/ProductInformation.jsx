@@ -275,7 +275,7 @@ export default function ProductInformation() {
   }
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
+    <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-center gap-4">
         <button
           type="button"

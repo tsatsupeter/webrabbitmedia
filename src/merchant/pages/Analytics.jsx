@@ -132,14 +132,14 @@ export default function Analytics() {
 
   if (!business) {
     return (
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 text-white/60">
+      <div className="w-full px-4 md:px-8 py-6 text-white/60">
         Select a business to view analytics.
       </div>
     )
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+    <div className="w-full px-4 md:px-8 py-6">
       <div className="flex items-center gap-6 border-b border-merchant-border mb-8 overflow-x-auto">
         {TABS.map((t) => (
           <button
