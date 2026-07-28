@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Icon from './Icon'
+import ModeSwitchOverlay from './components/ModeSwitchOverlay'
 
 const titleByPath = {
   '/merchant': 'Get Started',
@@ -21,6 +22,7 @@ export default function MerchantLayout() {
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex">
+      <ModeSwitchOverlay />
       {/* Desktop sidebar */}
       <div className="hidden md:block h-screen sticky top-0">
         <Sidebar />

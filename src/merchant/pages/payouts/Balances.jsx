@@ -288,18 +288,32 @@ export default function Balances() {
           <div className="flex-1 min-w-[180px]">
             <div className="text-xs text-white/50">
               Total Balance {channelFilter !== 'ALL' && <span className="text-white/40">· {channelFilter}</span>}
+              <span className={`ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                mode === 'live'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-orange-500/10 text-orange-400 border-orange-500/30'
+              }`}>
+                <span className={`w-1 h-1 rounded-full ${mode === 'live' ? 'bg-emerald-400' : 'bg-orange-400'}`} />
+                {mode === 'live' ? 'Live' : 'Test'}
+              </span>
             </div>
-            <div className="text-3xl font-semibold text-white mt-0.5">
-              {fmt(totalBalance, 'GHS')}
-            </div>
+            {loading ? (
+              <div className="h-8 w-40 mt-1.5 rounded bg-white/[0.06] animate-pulse" />
+            ) : (
+              <div className="text-3xl font-semibold text-white mt-0.5">
+                {fmt(totalBalance, 'GHS')}
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowBreakdown((v) => !v)}
-            className="px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 text-sm font-medium"
+            disabled={loading}
+            className="px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             {showBreakdown ? 'Hide Breakdown' : 'View Breakdown'}
           </button>
         </div>
+
 
         {showBreakdown && (
           <div className="mt-5 rounded-lg border border-white/10 overflow-hidden">
@@ -308,9 +322,20 @@ export default function Balances() {
               <div className="text-right">Transactions</div>
               <div className="text-right min-w-[100px]">Value</div>
             </div>
-            {breakdown.length === 0 ? (
-              <div className="px-4 py-6 text-center text-sm text-white/50">
-                No channel activity yet.
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="grid grid-cols-[1fr,auto,auto] gap-4 px-4 py-3 items-center border-b border-white/5 last:border-b-0">
+                  <div className="h-4 w-40 rounded bg-white/5 animate-pulse" />
+                  <div className="h-4 w-8 rounded bg-white/5 animate-pulse" />
+                  <div className="h-4 w-20 rounded bg-white/5 animate-pulse" />
+                </div>
+              ))
+            ) : breakdown.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-white/50">
+                No channel activity yet in {mode === 'live' ? 'Live' : 'Test'} mode.
+                <div className="text-xs text-white/40 mt-1">
+                  Successful payments will show a per-channel breakdown here.
+                </div>
               </div>
             ) : (
               breakdown.map((b) => {
@@ -321,7 +346,6 @@ export default function Balances() {
                     className="grid grid-cols-[1fr,auto,auto] gap-4 px-4 py-3 items-center border-b border-white/5 last:border-b-0"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xl leading-none">{meta.flag}</span>
                       <div>
                         <div className={`text-sm font-medium ${meta.color}`}>{b.channel}</div>
                         <div className="text-xs text-white/50">{meta.sub}</div>
@@ -336,6 +360,7 @@ export default function Balances() {
                 )
               })
             )}
+
           </div>
         )}
       </section>
@@ -401,11 +426,12 @@ export default function Balances() {
                   <button
                     key={c}
                     onClick={() => { setChannelFilter(c); setOpenPop(null) }}
-                    className={`w-full text-left px-2 py-1.5 rounded text-sm inline-flex items-center gap-2 ${channelFilter === c ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
+                    className={`w-full text-left px-2 py-1.5 rounded text-sm ${channelFilter === c ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
                   >
-                    <span>{(CHANNEL_META[c] || { flag: '💠' }).flag}</span> {c}
+                    {c}
                   </button>
                 ))}
+
               </div>
             </Popover>
           </div>

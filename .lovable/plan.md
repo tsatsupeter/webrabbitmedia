@@ -1,58 +1,41 @@
 ## Goal
-Replace the mock "Create a product / Integrate Payments" sections on `/merchant` Get Started with quick-action cards that actually route to features we've built (Collect, API keys, Verification, Payouts, Transactions, Analytics). Keep the mode pill + Activate banner behavior we already have.
+Guarantee Test and Live data never mix, polish every page's loading/empty states so nothing renders as blank or misleading zeros, and add a smooth "Switching to Live Mode…" / "Switching to Test Mode…" transition when the sidebar mode toggle is used.
 
-## Scope (file changed)
-`src/merchant/pages/GetStarted.jsx` only. No routing, schema, or backend changes.
+## 1. Mode-isolation audit (Test ↔ Live)
 
-## Layout
+Verify every read/write path filters by the active `mode`. Confirmed already-filtered pages: Home, Analytics, Payments, Payouts, Balances, History, Collect, edge functions (`merchant-collect-momo`, `collect-momo`). Pages to re-check and harden:
 
-```text
-[ Mode pill: Test/Live ]
-[ Activate live payments banner ]        (hidden when business.status === 'approved')
+- `ApiKeys` — ensure list is filtered by `mode` and the "Create key" modal stamps `mode` from `useMerchantMode()` (not a hardcoded value).
+- `useAnalyticsData` — confirm all sub-queries (transactions, payouts, customers, success/failure) include `.eq('mode', mode)` and the compare-period query uses the same mode.
+- `GetStarted` quick actions — Withdraw and any KPI hints must read only current-mode data.
+- Edge functions — `merchant-create-payout`, `admin-*`, `payout-momo`, `transaction-status` must accept/require `mode` and write it consistently; block live calls when `business.status !== 'approved'` (already done in collect — extend to payout).
+- Add a defensive guard in `useMerchantMode`: if `canUseLive` becomes false (e.g. business un-approved) while mode was `live`, immediately downgrade to `test` and clear the stored key.
 
-Quick actions
-┌──────────────┬──────────────┬──────────────┐
-│ Collect      │ API keys     │ Withdraw     │
-│ payment      │              │ funds        │
-└──────────────┴──────────────┴──────────────┘
+## 2. Loading + empty states across merchant pages
 
-Manage your business
-┌──────────────┬──────────────┬──────────────┐
-│ Verification │ Transactions │ Analytics    │
-└──────────────┴──────────────┴──────────────┘
+Standardise so pages never show `GHS 0.00` / blank rows when data is still loading or when the mode has zero records.
 
-Resources
-┌────────────────────────┬────────────────────────┐
-│ API documentation      │ Support / Contact      │
-└────────────────────────┴────────────────────────┘
-```
+- Add a shared `<StatSkeleton />`, `<ChartSkeleton />`, `<EmptyState title description />` in `src/merchant/components/`.
+- Wire skeletons + empty states on: MerchantHome (Today chart, Cash Position, Next Payout, Gross/Payments cards), Analytics (all 4 tabs — Revenue, Customers, Success Rate, Recovery — including breakdown bars), Balances (ledger table + channel breakdown), Payouts (balance cards, growth chart, linked banks), History (payout table), Payments (KPI cards + table), ApiKeys (list), Collect (submit button spinner already present — extend to fee preview while typing).
+- Empty-state copy must reflect the active mode, e.g. "No transactions in Test mode yet — run a test charge to see data here." with a CTA button where relevant (Go to Collect, Create API key, etc.).
+- Never render numeric zeros while `loading === true`; always show skeletons instead.
 
-## Quick action cards (all real routes)
+## 3. Mode-switch transition animation
 
-**Section 1 – Quick actions**
-- **Collect a payment** → `/merchant/sales/collect` — icon `wallet`, "Charge a customer on MTN, Vodafone, AirtelTigo or G-Money right from the dashboard." CTA: *Open collect*.
-- **API keys** → `/merchant/developer/api-keys` — icon `key`, "Create test and live keys to accept payments from your app or website." CTA: *Manage keys*.
-- **Withdraw funds** → `/merchant/payouts` — icon `bank`, "Move your available balance to a linked bank account (min GHS 2,000)." CTA: *Go to payouts*. Disabled-look + "Complete verification first" hint when `!approved`.
+- Create `src/merchant/components/ModeSwitchOverlay.jsx`: a full-screen fixed overlay (dark backdrop, blur, centered card) that fades in for ~700 ms showing an animated pulsing dot + text "Switching to Live Mode…" (emerald) or "Switching to Test Mode…" (orange).
+- Extend `useMerchantMode` with a `switching` boolean and a small transition delay: when `setMode` is called, set `switching = true`, persist the new mode after ~600 ms, then set `switching = false`. Also emit a toast confirmation after transition.
+- Mount `<ModeSwitchOverlay />` inside `MerchantLayout` so it covers all merchant pages.
+- Add a subtle Framer-Motion-free CSS fade/scale on the sidebar mode pill so the color change feels intentional.
+- While `switching === true`, all page data hooks should treat state as loading (skeletons visible) so users don't briefly see stale-mode data.
 
-**Section 2 – Manage your business**
-- **Verification** → `/merchant/verification` — shows small progress `X / 4 steps` computed from `verificationProgress`. CTA: *Continue* (or *Verified* badge when approved).
-- **Transactions** → `/merchant/transactions/payments` — "See every charge, fee split and net earned."
-- **Analytics** → `/merchant/analytics` — "Track gross/net volume, success rate and top customers."
+## 4. QA pass
 
-**Section 3 – Resources**
-- **API documentation** (external `#` for now) — icon `brackets`.
-- **Contact support** → `mailto:support@webrabbit...` or `/merchant/support` if it exists; otherwise `#`. Icon `lifeBuoy`.
+- Manual sweep of every merchant route in Test then Live: confirm counts, tables, and charts change and are never mixed.
+- Confirm empty-state copy on a brand-new business.
+- Confirm live mode is blocked and hidden when business isn't approved.
+- Confirm no console errors and no flash of wrong-mode data during the switch.
 
-## Data / behavior
-- Reuse `useMerchantMode()` for `mode` + `business`.
-- Compute verification step count with the existing `verificationProgress` helper (already in `src/merchant/verificationProgress.js`) by querying the same tables the Verification page uses; if that helper isn't easy to reuse standalone, show the CTA without the counter (no new queries invented).
-- Withdraw card: when `!approved`, render muted styling and swap CTA to a subtle "Verification required" line — no navigation to a broken flow.
-- Keep existing `ActivateBanner`, mode pill and `Card`/`IconTile` visual language for consistency.
-
-## Removed
-- "Create a product" section (One-time / Subscription / Usage-based) — we don't have a products system.
-- "Integrate Web Rabbit Payments" section (Non-code checkout, Inline overlay, Full SDK) — none of those exist.
-
-## Out of scope
-- No new pages, no schema changes, no new edge functions.
-- No changes to sidebar, Home, or any other route.
+## Technical notes
+- Files touched: `src/hooks/useMerchantMode.js`, `src/merchant/MerchantLayout.jsx`, `src/merchant/Sidebar.jsx`, `src/merchant/components/{ModeSwitchOverlay,StatSkeleton,ChartSkeleton,EmptyState}.jsx` (new), and each page listed above.
+- Edge functions: verify `mode` param is required and validated; add `business.status` check to `merchant-create-payout` for live.
+- No schema changes required.
