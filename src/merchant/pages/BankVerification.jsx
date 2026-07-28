@@ -121,6 +121,8 @@ export default function BankVerification() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { active } = useBusinesses()
+  const readOnly = active?.status === 'approved'
+
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -260,7 +262,7 @@ export default function BankVerification() {
         Add the bank account where you'd like to receive payouts. Make sure the account name matches your verified identity or business.
       </p>
 
-      <div className={`bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
+      <div className={`bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8 ${loading ? 'opacity-60 pointer-events-none' : ''} ${readOnly ? 'pointer-events-none opacity-90 select-none' : ''}`}>
         {/* Holder */}
         <div className="space-y-5">
           <h3 className="text-white text-[0.95rem] font-medium">Account holder</h3>
@@ -353,14 +355,23 @@ export default function BankVerification() {
       </div>
 
       <div className="flex justify-end gap-3">
-        <button type="button" onClick={handleDraft} disabled={saving}
-          className="h-11 px-5 rounded-lg bg-white/[0.06] border border-white/10 text-white/80 text-[0.85rem] hover:bg-white/10 disabled:opacity-40">
-          Save as Draft
-        </button>
-        <button type="button" onClick={handleSubmit} disabled={!canSubmit}
-          className="h-11 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed">
-          {saving ? 'Saving…' : 'Submit & Proceed'}
-        </button>
+        {readOnly ? (
+          <button type="button" onClick={() => navigate('/merchant/verification')}
+            className="h-11 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90">
+            Back to verification
+          </button>
+        ) : (
+          <>
+            <button type="button" onClick={handleDraft} disabled={saving}
+              className="h-11 px-5 rounded-lg bg-white/[0.06] border border-white/10 text-white/80 text-[0.85rem] hover:bg-white/10 disabled:opacity-40">
+              Save as Draft
+            </button>
+            <button type="button" onClick={handleSubmit} disabled={!canSubmit}
+              className="h-11 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed">
+              {saving ? 'Saving…' : 'Submit & Proceed'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
