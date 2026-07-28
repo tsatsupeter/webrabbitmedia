@@ -41,6 +41,7 @@ function ExpandableItem({ item, onNavigate }) {
                   <NavLink
                     key={child.key}
                     to={child.to}
+                    end
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       `${base} ${
