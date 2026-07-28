@@ -3,6 +3,13 @@ name: Deploy (mirror to webrabbitmedia → Cloudflare Pages)
 # Cloudflare Pages auto-deploys the tsatsupeter/webrabbitmedia repo
 # (webrabbitmedia.com). This workflow keeps that repo in sync with main
 # here, so every commit — including Lovable edits — goes live.
+#
+# Lovable edits package.json with bun and never updates package-lock.json,
+# and Cloudflare's build runs `npm ci`, which hard-fails on a stale lock.
+# So this job runs `npm install` on Linux (same platform as Cloudflare,
+# which also matters for npm's platform-specific optional deps), commits
+# the refreshed lockfile back when it drifts, and only then mirrors.
+#
 # Auth: MIRROR_SSH_KEY secret, paired with a write deploy key on the
 # webrabbitmedia repo.
 
@@ -15,30 +22,35 @@ concurrency:
   group: deploy-mirror
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  deploy:
     # Guard: this file gets mirrored into tsatsupeter/webrabbitmedia, where
     # it must not run (no secrets there; Actions are disabled as well).
     if: github.repository == 'tsatsupeter/WEBRABBITMEDIA-COMPANY'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      # npm install, not ci: Lovable commits package.json changes without
-      # updating package-lock.json (it uses bun), which makes npm ci fail.
       - run: npm install --no-audit --no-fund
       - run: npm run build
-
-  mirror:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Commit lockfile sync if package.json drifted
+        run: |
+          if ! git diff --quiet package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "chore: sync package-lock.json with package.json [skip ci]"
+            # Tolerate a race with a concurrent Lovable push; the next run re-syncs.
+            git push origin main || echo "push-back skipped: main moved"
+          fi
       - name: Push to deploy mirror
         env:
           SSH_KEY: ${{ secrets.MIRROR_SSH_KEY }}
