@@ -95,6 +95,7 @@ export default function ApiKeys() {
         key_prefix: fullKey.slice(0, 8),
         key_hash,
         access: enableWrite ? 'write' : 'read',
+        mode,
       })
       if (error) throw error
       setCreateOpen(false)
