@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../integrations/supabase/client'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { toast } from 'sonner'
 import Icon from '../Icon'
+import { getCompletedSteps, markStepComplete } from '../verificationProgress'
 
 function StatusPills() {
   return (
@@ -126,15 +128,20 @@ function DetailRow({ icon, title, desc, last, status, onSubmit }) {
 
 
 export default function Verification() {
+  const navigate = useNavigate()
   const { active, refresh, loading } = useBusinesses()
   const [mode, setMode] = useState('view') // 'view' | 'edit'
   const [choice, setChoice] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [completedSteps, setCompletedSteps] = useState([])
+  const [completedSteps, setCompletedStepsState] = useState([])
 
   useEffect(() => {
     setChoice(active?.business_type ?? null)
   }, [active?.id, active?.business_type])
+
+  useEffect(() => {
+    if (active?.id) setCompletedStepsState(getCompletedSteps(active.id))
+  }, [active?.id])
 
   const state = !active?.business_type ? 'basics' : mode === 'edit' ? 'editType' : 'overview'
 
@@ -168,8 +175,15 @@ export default function Verification() {
   }
 
   function completeStep(key) {
-    setCompletedSteps((prev) => (prev.includes(key) ? prev : [...prev, key]))
+    if (key === 'product') {
+      navigate('/merchant/verification/product-information')
+      return
+    }
+    if (!active?.id) return
+    const next = markStepComplete(active.id, key)
+    setCompletedStepsState(next)
   }
+
 
 
   if (loading && !active) {
