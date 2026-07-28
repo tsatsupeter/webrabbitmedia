@@ -1,36 +1,23 @@
-## Fix hover cursor across merchant app
+## Fix: mode switch overlay never shows because state isn't shared
 
-Cursor stays as the default arrow when hovering buttons, tabs, chips, dropdown triggers, table row actions, sidebar items, etc. Browsers only apply `cursor: pointer` to `<a href>` by default — every `<button>`, clickable `<div>`, `<label>` toggle and `[role=button]` needs it explicitly.
+### Root cause
 
-### Approach — one global rule, no per-component edits
+`useMerchantMode` keeps `switching` and `pendingMode` in per-component `useState`. When the Sidebar toggle calls `setMode('live')`, only the Sidebar's own instance flips to `switching=true`. `ModeSwitchOverlay`, pages, and every other consumer each hold their own separate copy, so the overlay never renders and pages don't re-fetch during the transition — they jump straight to live-mode data.
 
-Add a base-layer rule in `src/index.css` so every interactive element in the app (not just merchant) gets the pointer cursor, and disabled elements get the not-allowed cursor.
+### Fix — lift the hook state into a module-level store
 
-```css
-@layer base {
-  button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  summary,
-  label[for],
-  input[type="checkbox"],
-  input[type="radio"],
-  input[type="submit"],
-  input[type="button"],
-  select {
-    cursor: pointer;
-  }
+Convert `useMerchantMode` into a tiny global store (module-scoped state + `useSyncExternalStore` subscription) so every consumer reads the same `mode`, `switching`, and `pendingMode`.
 
-  button:disabled,
-  [role="button"][aria-disabled="true"],
-  [disabled] {
-    cursor: not-allowed;
-  }
-}
-```
-
-This fixes every merchant page in one shot: sidebar toggles, mode switch, business switcher, tab pills, table sort headers, drawer close buttons, filter chips, action menu items, "View Breakdown", withdraw/edit/delete icon buttons, etc.
+- File: `src/hooks/useMerchantMode.js`
+- Keep the public API identical: `{ mode, setMode, canUseLive, loading, business, switching, pendingMode }` — no consumer changes needed.
+- Internals:
+  - Module-scoped `state = { mode, switching, pendingMode, activeId, canUseLive }` + `listeners: Set`.
+  - `subscribe(fn)` / `getSnapshot()` for `useSyncExternalStore`.
+  - `setMode(next)` runs on the module (not per instance): guards against `next === mode`, blocks live when unapproved (toast), sets `switching+pendingMode`, after `SWITCH_MS` commits the new mode and writes to `localStorage`, then clears `switching` and toasts success.
+  - Hydration effect (runs once per active business): reads `localStorage` and downgrades to test when live is not allowed.
 
 ### Verification
 
-- Hover the mode toggle, sidebar section headers, `View Breakdown`, filter chips, close/delete icons, and disabled `Submit` buttons — pointer on enabled, not-allowed on disabled.
-- Confirm no regression on inputs (text/date/number keep the I-beam because they aren't matched).
+- Toggle Test → Live on `/merchant/payouts/balances`: overlay appears with the pulsing dot and "Switching to Live Mode…" for ~800ms before data updates.
+- Toggle back to Test: overlay shows orange variant, then Test data reloads.
+- Confirm the mode pill and page data update together (no flash of stale numbers).
