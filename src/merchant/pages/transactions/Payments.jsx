@@ -151,6 +151,24 @@ export default function Payments({ scope = 'all' }) {
 
   useEffect(() => { load() }, [load])
 
+  // Keep local search state in sync with URL search param from the topbar.
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || ''
+    if (urlSearch !== search) setSearch(urlSearch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  const onSearchChange = (e) => {
+    const value = e.target.value
+    setSearch(value)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (value) next.set('search', value)
+      else next.delete('search')
+      return next
+    }, { replace: true })
+  }
+
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (statuses.size && !statuses.has(r.status)) return false
