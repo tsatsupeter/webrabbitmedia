@@ -26,11 +26,13 @@ function canonical(obj: Record<string, unknown>) {
 const IN_FLIGHT_TTL_MS = 30_000
 const REPLAY_TTL_HOURS = 24
 
+export type IdemEndpoint = 'collect-momo' | 'payout-momo' | 'payout-bank'
+
 export async function tryClaimIdempotency(opts: {
   headerKey: string | null
   businessId: string
   apiKeyId: string
-  endpoint: 'collect-momo' | 'payout-momo'
+  endpoint: IdemEndpoint
   body: Record<string, unknown>
 }): Promise<IdemDecision> {
   const raw = (opts.headerKey || '').trim()
@@ -87,7 +89,7 @@ export async function tryClaimIdempotency(opts: {
 
 export async function completeIdempotency(opts: {
   businessId: string
-  endpoint: 'collect-momo' | 'payout-momo'
+  endpoint: IdemEndpoint
   key: string
   status: number
   body: unknown
