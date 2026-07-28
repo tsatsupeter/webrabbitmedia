@@ -16,7 +16,7 @@ function Avatar({ name, className = '' }) {
   )
 }
 
-export default function BusinessSwitcher() {
+export default function BusinessSwitcher({ compact = false }) {
   const navigate = useNavigate()
   const { businesses, active, activeId, setActive } = useBusinesses()
   const [open, setOpen] = useState(false)
@@ -37,7 +37,12 @@ export default function BusinessSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full h-16 px-4 flex items-center gap-2.5 border-b border-merchant-border hover:bg-white/[0.03] transition-colors"
+        className={`${
+          compact
+            ? 'w-full h-16 flex items-center justify-center'
+            : 'w-full h-16 px-4 flex items-center gap-2.5'
+        } border-b border-merchant-border hover:bg-white/[0.03] transition-colors`}
+        aria-label={title}
       >
         {active ? (
           <Avatar name={active.name} />
@@ -50,13 +55,17 @@ export default function BusinessSwitcher() {
             className="rounded-md ring-1 ring-white/10"
           />
         )}
-        <div className="flex-1 min-w-0 text-left">
-          <div className="font-display font-semibold text-[0.9rem] text-white truncate">{title}</div>
-          <div className="text-[0.65rem] text-white/40 uppercase tracking-wider">Merchant</div>
-        </div>
-        <div className="w-6 h-6 flex items-center justify-center rounded text-white/40">
-          <Icon name="chevron" size={14} className="rotate-90" />
-        </div>
+        {!compact && (
+          <>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="font-display font-semibold text-[0.9rem] text-white truncate">{title}</div>
+              <div className="text-[0.65rem] text-white/40 uppercase tracking-wider">Merchant</div>
+            </div>
+            <div className="w-6 h-6 flex items-center justify-center rounded text-white/40">
+              <Icon name="chevron" size={14} className="rotate-90" />
+            </div>
+          </>
+        )}
       </button>
 
       {open && (
