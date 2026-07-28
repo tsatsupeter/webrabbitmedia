@@ -14,6 +14,7 @@ import TransactionsRetrieve from './sections/TransactionsRetrieve'
 import ProviderCodes from './sections/ProviderCodes'
 import TestData from './sections/TestData'
 import Webhooks from './sections/Webhooks'
+import Me from './sections/Me'
 
 // Single source of truth for sidebar, Cmd+K search, and prev/next pager.
 // `headings` is a flat list of {id, text, depth} for the on-this-page TOC / search.
@@ -174,6 +175,18 @@ export const groups = [
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
           { id: 'response', text: 'Response', depth: 2 },
+          { id: 'not-found', text: 'Unknown transaction — HTTP 404', depth: 2 },
+          { id: 'polling', text: 'Polling pattern', depth: 2 },
+        ],
+      },
+      {
+        slug: 'me',
+        title: 'Me (preflight)',
+        summary: 'Verify the current key mode and business approval status before charging.',
+        Component: Me,
+        headings: [
+          { id: 'endpoint', text: 'Endpoint', depth: 2 },
+          { id: 'response', text: 'Response', depth: 2 },
         ],
       },
     ],
@@ -190,6 +203,7 @@ export const groups = [
           { id: 'approved', text: 'Approved', depth: 2 },
           { id: 'declined', text: 'Declined by customer / issuer', depth: 2 },
           { id: 'auth', text: 'Auth / configuration', depth: 2 },
+          { id: 'not-found', text: 'Not found', depth: 2 },
         ],
       },
       {

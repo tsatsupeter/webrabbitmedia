@@ -47,11 +47,27 @@ export default function Idempotency() {
         ]}
       />
 
+      <h2 id="recovery">Recovering a lost transaction id</h2>
+      <p>
+        If the response to a <code>POST</code> is lost in transit you can look the transaction up by the
+        <code> Idempotency-Key </code>you sent, without re-issuing the money-moving request:
+      </p>
+      <CodeBlock
+        lang="bash"
+        filename="shell"
+        code={`curl -H "Authorization: Bearer wr_live_..." \\
+  "https://api.webrabbitmedia.com/v1/transactions?idempotency_key=8f4b7c1e-invoice-a104"
+
+# -> { "items": [ { "provider_transaction_id": "521888807466", "status": "approved", ... } ], ... }
+# -> Empty items[] means we have no record — safe to retry the POST with the same key.`}
+      />
+
       <h2 id="best-practices">Best practices</h2>
       <ul>
         <li>Generate a UUID per business event (invoice id, order id) and reuse it across retries.</li>
         <li>Set client-side timeouts to at least 30s — MoMo prompts can be slow.</li>
         <li>Retry on network errors and <code>5xx</code>. Do <em>not</em> retry on <code>4xx</code> other than <code>429</code>.</li>
+        <li>On a lost response, look up by <code>idempotency_key</code> before assuming failure.</li>
       </ul>
     </>
   )

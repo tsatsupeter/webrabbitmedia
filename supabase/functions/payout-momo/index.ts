@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       raw_response: json,
     }).eq('provider_transaction_id', provider_transaction_id).eq('business_id', auth.business.id)
 
-    const responseBody = { transaction_id: provider_transaction_id, status, code: json?.code, reason: json?.reason }
+    const responseBody = { transaction_id: provider_transaction_id, status, code: json?.code != null ? String(json.code) : null, reason: json?.reason ?? null }
     const httpStatus = approved ? 201 : (status === 'pending' ? 202 : 200)
 
     if (idem.mode === 'new') {

@@ -89,13 +89,14 @@ export default function ApiKeys() {
     if (!name.trim() || !user || !active || !modeReady || !mode) return
     setSubmitting(true)
     try {
-      const fullKey = generateKey()
+      const secret = generateKey()
+      const fullKey = `wr_${mode}_${secret}`
       const key_hash = await sha256Hex(fullKey)
       const { error } = await supabase.from('api_keys').insert({
         business_id: active.id,
         user_id: user.id,
         name: name.trim(),
-        key_prefix: fullKey.slice(0, 8),
+        key_prefix: fullKey.slice(0, 12),
         key_hash,
         access: enableWrite ? 'write' : 'read',
         mode,

@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
     return jsonResponse({
       transaction_id: provider_transaction_id,
       status: json?.status ?? status,
-      code: json?.code,
-      reason: json?.reason,
+      code: json?.code != null ? String(json.code) : null,
+      reason: json?.reason ?? null,
       gross_amount: amount,
       fee_amount: fee,
       net_amount: net,

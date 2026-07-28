@@ -102,6 +102,17 @@ export default {
           idempotency: r.idempotency,
         })
       }
+      // GET /v1/me
+      if (req.method === 'GET' && path === '/v1/me') {
+        const r = await forward(env, 'me', req, {}, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+        })
+      }
       // GET /v1/transactions/:id
       const txnMatch = path.match(/^\/v1\/transactions\/([^/]+)$/)
       if (req.method === 'GET' && txnMatch) {
