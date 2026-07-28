@@ -1,159 +1,79 @@
+Based on your answers, here is the plan for polishing the merchant dashboard.
 
-## Goal
+## Goals
+1. Make the dashboard layout and visual language consistent across every merchant page.
+2. Replace the topbar's non-functional search, theme, and notification icons with working features.
+3. Remove the unused Recovery tab from Analytics.
+4. Fix dead UI, duplicate exports, and broken navigation labels.
 
-1. Audit the public API docs end-to-end against what the Worker + Edge Functions actually do, fix drift, and verify every documented example against `api.webrabbitmedia.com`.
-2. Add `Idempotency-Key` support to `POST /v1/collect/momo` and `POST /v1/payout/momo`.
-3. Replace the KV sliding-window limiter with Cloudflare's native **Rate Limiting binding** (KV kept only as a diagnostic fallback).
-4. Add structured request logging + metrics for every `/v1` route.
+## Plan
 
----
+### 1. Layout consistency audit and standardization
+Review every merchant page (`GetStarted`, `MerchantHome`, `Analytics`, `Payments`, `Payouts`, `Balances`, `History`, `Collect`, `ApiKeys`, `Verification` sub-pages) and enforce a shared layout system:
+- Wrap every page in the same `w-full px-4 md:px-8 py-6` page shell.
+- Standardize page-level headings: `text-2xl font-semibold text-white` or `font-display text-[1.3rem] font-semibold text-white` — pick one and apply everywhere.
+- Standardize card containers: use `bg-merchant-panel border border-merchant-border rounded-xl p-6` everywhere; replace `bg-[hsl(var(--card))]` and `bg-white/[0.02]` mixes that drift across pages.
+- Standardize toolbar/button patterns: `bg-merchant-panel border border-merchant-border` with `hover:bg-white/[0.04]` for secondary actions, and emerald primary for main CTAs.
+- Ensure all tables have consistent sticky header, `min-w-[...]` handling, and loading skeletons.
 
-## 1. Docs audit + fixes
+### 2. Real topbar features
+The topbar currently has a fake search bar, a dead theme button, and a hardcoded "3" notification badge. Replace these with real behavior:
 
-Findings from reading `src/pages/docs/sections/*` against the live worker + edge functions:
+- **Search**:
+  - Hook the search input to a lightweight local search over the current merchant data.
+  - On `/merchant/transactions/payments` it filters the transactions table by phone, ID, or customer.
+  - On other pages it can jump to a relevant page or show a "Search transactions" dropdown.
+  - Keep the `/` keyboard shortcut.
+- **Theme toggle**:
+  - The dashboard is always dark today; make the button toggle between the current dark merchant theme and a high-contrast/emerald-tinted accent mode (or keep it as a preference stored in `localStorage`).
+  - Alternatively, make the button toggle a compact sidebar mode.
+- **Notifications**:
+  - Read from a new `public.notifications` table (or reuse a sensible existing source if available).
+  - Show a real unread count; clicking opens a popover listing recent notifications.
+  - Seed initial notifications for verification progress and successful payouts.
 
-- **Network enum drift.** Docs list `MTN, VODAFONE, AIRTELTIGO, G-MONEY`. The edge function accepts `MTN, VDF, ATL, TGO, ZPY, GMY`. Fix docs to the real codes and add a small mapping table.
-- **Request field drift on `collect/momo`.** Docs show `description` + `reference`; edge function reads `desc` + `customer_email` and ignores `reference`. Rename docs to `desc`, add `customer_email`, drop `reference` (or wire it — see §2, we'll use `Idempotency-Key` instead).
-- **Response drift.** Docs show `id`, `channel: "MTN"`, `subscriber_number`, `provider_reference`. Edge function returns `transaction_id`, `code`, `reason`, `gross_amount`, `fee_amount`, `net_amount`, `currency`, `status`. Align docs to the real payload and add the `code`/`reason` fields.
-- **Error shape drift.** Docs show a nested `{ error: { type, code, message, param } }`. The worker + edge functions return `{ error: "message", request_id }`. Rewrite the Errors page to match reality and document `x-request-id` on every response.
-- **Missing pages.** Add:
-  - **Payouts → Mobile Money** (`POST /v1/payout/momo`) — currently undocumented.
-  - **Idempotency** page under "Get Started" covering the header, TTL, and replay semantics (see §2).
-  - **Rate limits** page covering the new native limits and `Retry-After` (see §3).
-  - **Request IDs & logs** short page (see §4).
-- **Base URL / auth examples** already correct — leave as-is but sweep every `curl`/JS snippet after the field-name fixes.
-- **Fees page** matches reality (15%, `net = gross − gross×0.15`) — leave as-is.
-- **Registry + Pager.** Update `src/pages/docs/registry.js` groups/headings for the new pages and re-verify prev/next order.
+### 3. Remove Analytics Recovery tab
+- Delete the `Recovery` tab from `TABS` in `Analytics.jsx`.
+- Remove the `RecoveryTab` component and its unused helpers from the file.
+- Keep the file focused on Revenue, Customers, and Success Rate.
 
-### Verification pass (build-mode)
+### 4. Fix dead UI and navigation bugs
+- Fix `History.jsx`: the component is exported as `Balances` — rename it to `History`.
+- Extend `titleByPath` in `MerchantLayout` to cover all real routes (`/merchant/sales/collect`, `/merchant/payouts`, `/merchant/payouts/balances`, `/merchant/payouts/history`, `/merchant/transactions/payments`, `/merchant/developer/api-keys`, `/merchant/verification/*`).
+- Make placeholder nav items (`Webhooks`, `Others`, `Feature Request`, `Settings`) either route to a sensible first sub-item, show a "Coming soon" tooltip, or remove them if they have no purpose.
+- Disable the `UpdatedLine` refresh buttons if they do nothing; wire them to a real refetch or remove them.
+- Replace the `ActivateBanner` default copy on the Get Started page with a "Your account is live" state for approved businesses.
 
-For each documented endpoint, run the exact snippet from the docs against `https://api.webrabbitmedia.com/v1/*` using a freshly minted test key for ECHODATE, capture the response, and diff it against what the docs show. Fix any remaining mismatch. Revoke the key at the end.
+### 5. Visual polish and design tokens
+- Audit all hardcoded colors (`bg-red-500`, `bg-emerald-500`, `bg-orange-500`) and map them to semantic tokens where possible, or add dedicated merchant tokens (`--merchant-danger`, `--merchant-warning`, `--merchant-success`) in `index.css`.
+- Unify input/select styles on `Collect`, `WithdrawModal`, `BankVerification`, and verification forms.
+- Fix the `ModeSwitchOverlay` timing so it does not block interaction longer than necessary.
+- Ensure every icon-only button has an `aria-label`.
+- Ensure focus rings use the same emerald accent color.
 
----
+### 6. Mobile and responsive improvements
+- Verify the mobile sidebar opens/closes cleanly on every page.
+- Ensure table overflow scrolls horizontally without breaking the page layout.
+- Make the Analytics tabs and Payouts balance card stack gracefully on small screens.
+- Touch targets: bump icon-only buttons to at least `min-w-11 min-h-11` on mobile.
 
-## 2. Idempotency-Key
+### 7. Verification and edge cases
+- Run the build to catch TypeScript/JSX errors.
+- Spot-check the navigation flow on desktop and mobile.
+- Verify the Topbar search works on Payments and produces no errors on other pages.
+- Verify the mode switch animation still displays correctly after layout changes.
 
-Scope: `POST /v1/collect/momo` and `POST /v1/payout/momo` (the two money-moving endpoints).
+## Out of scope
+- No backend changes beyond the lightweight `notifications` table for the topbar badge.
+- No changes to the public marketing pages or the docs.
+- No new payment methods or payout logic.
 
-Schema (single migration):
-
-```sql
-CREATE TABLE public.idempotency_keys (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  business_id uuid NOT NULL,
-  api_key_id uuid NOT NULL,
-  endpoint text NOT NULL,          -- 'collect-momo' | 'payout-momo'
-  key text NOT NULL,               -- caller-supplied Idempotency-Key
-  request_hash text NOT NULL,      -- sha256 of canonical body
-  status_code int,
-  response_body jsonb,
-  transaction_id text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  completed_at timestamptz,
-  UNIQUE (business_id, endpoint, key)
-);
--- GRANTs: service_role only (never touched by anon/authenticated).
--- ENABLE RLS + deny-all policy (edge functions use service role).
--- TTL: nightly cron / manual cleanup for rows older than 24h.
-```
-
-Worker changes (`worker/src/index.ts`, `lib/proxy.ts`):
-- Forward incoming `Idempotency-Key` header verbatim to Supabase functions (also generate one server-side if the caller omits it? **No** — only honor when caller provides it, per Stripe convention).
-
-Edge function changes (`collect-momo`, `payout-momo`):
-1. Read `Idempotency-Key` header. If absent → behave as today.
-2. If present:
-   - Compute `request_hash = sha256(canonical(body))`.
-   - `INSERT ... ON CONFLICT (business_id, endpoint, key) DO NOTHING` to claim the slot.
-   - If insert conflicted:
-     - If stored `request_hash` differs → return `409 { error: "Idempotency-Key reused with different body" }`.
-     - If `completed_at IS NOT NULL` → replay stored `status_code` + `response_body` with header `Idempotent-Replayed: true`.
-     - If in-flight (row exists, no `completed_at`, <30s old) → return `409 { error: "Request in progress" }` (caller should retry after brief wait).
-   - After work finishes, `UPDATE` the row with `status_code`, `response_body`, `transaction_id`, `completed_at = now()`.
-3. Document TTL: keys are honored for 24h; after that the row is GC'd and the key can be reused.
-
-Docs: new **Idempotency** page with header spec, replay semantics, 409 cases, and a cURL example.
-
----
-
-## 3. Cloudflare native Rate Limiting binding
-
-Add a Rate Limiting binding in `worker/wrangler.toml`:
-
-```toml
-[[unsafe.bindings]]
-name = "RATE_LIMITER"
-type = "ratelimit"
-namespace_id = "1001"
-simple = { limit = 60, period = 10 }   # requests per 10s per key
-```
-
-Worker changes:
-- New `lib/ratelimit.ts` calls `env.RATE_LIMITER.limit({ key: hashedBearer })`. If `success === false`, return `429` with `Retry-After: <period>` and `X-RateLimit-*` headers.
-- Keep the existing KV limiter behind a `RL_FALLBACK=1` flag for diagnostics only; default path uses the native binding, so bursts during KV eventual-consistency windows are no longer a hole.
-- Health endpoint is not rate-limited (unchanged).
-- Unauthenticated requests limited by client IP (`cf-connecting-ip`) at a lower cap (e.g. 20/10s) to protect the 401 path.
-
-Docs: new **Rate limits** page listing the 60 req / 10s per-key limit, IP fallback, `Retry-After`, and the response shape.
-
----
-
-## 4. Structured request logging + metrics
-
-Every `/v1` request emits one JSON log line (Workers `console.log`, picked up by Logpush / `wrangler tail`):
-
-```json
-{
-  "ts": "2026-07-28T12:00:00.123Z",
-  "request_id": "…",
-  "method": "POST",
-  "path": "/v1/collect/momo",
-  "status": 201,
-  "duration_ms": 812,
-  "mode": "test",
-  "business_id": "…",
-  "api_key_id": "…",
-  "ip": "…",
-  "ua": "…",
-  "rl_remaining": 42,
-  "rl_limited": false,
-  "idempotency": "new | replayed | conflict | none",
-  "upstream_status": 200,
-  "error_code": null
-}
-```
-
-Implementation:
-- Add `lib/log.ts` with `startTimer()` and `emit(fields)`.
-- Wrap the top-level `fetch` handler so every code path (success, 4xx, 5xx, thrown) funnels through one `emit`.
-- `mode`, `business_id`, `api_key_id` come from a lightweight upstream response header (`x-wr-mode`, `x-wr-business-id`, `x-wr-api-key-id`) that `_shared/auth.ts` starts setting on every proxied response. The worker copies those into the log line, then strips them before returning to the client so nothing internal leaks.
-- Metrics: rely on Workers Analytics Engine binding (`[[analytics_engine_datasets]] binding = "METRICS"`) — one `writeDataPoint({ blobs: [path, mode, status_class], doubles: [duration_ms], indexes: [business_id] })` per request. Free tier, queryable via GraphQL. If the user prefers no Analytics Engine, we skip the binding and rely on the JSON logs alone (call this out and let them choose).
-
-Docs: **Request IDs & logs** page explaining `x-request-id` echoing, how to include it in support tickets, and that Web Rabbit stores structured logs for 30 days.
-
----
-
-## Files touched
-
-- `src/pages/docs/registry.js` — new entries, updated headings.
-- `src/pages/docs/sections/*.jsx` — rewrites for CollectMomo, CollectCard, Errors; new files: `PayoutMomo.jsx`, `Idempotency.jsx`, `RateLimits.jsx`, `RequestIds.jsx`.
-- `supabase/migrations/<ts>_idempotency_keys.sql` — new table + grants + RLS.
-- `supabase/functions/_shared/idempotency.ts` — helper reused by both money-moving functions.
-- `supabase/functions/_shared/auth.ts` — set `x-wr-*` metadata headers on responses.
-- `supabase/functions/collect-momo/index.ts`, `supabase/functions/payout-momo/index.ts` — integrate idempotency.
-- `worker/wrangler.toml` — add `RATE_LIMITER` (and optionally `METRICS`) bindings; keep KV as fallback.
-- `worker/src/index.ts` — logging wrapper, native rate limiter, idempotency header pass-through.
-- `worker/src/lib/ratelimit.ts` — rewritten around `env.RATE_LIMITER.limit`.
-- `worker/src/lib/log.ts` — new.
-
-## Verification
-
-- Run every docs snippet against the live worker with a fresh ECHODATE test key; screenshot / paste diffs.
-- Idempotency: send the same `collect/momo` request twice with same key → second returns replayed body + `Idempotent-Replayed: true`; different body + same key → `409`.
-- Rate limiter: fire 80 parallel authenticated requests → observe 429s with `Retry-After`; confirm `wrangler tail` shows `rl_limited: true` lines.
-- Logs: `wrangler tail --format=json` shows one structured line per request with mode + business_id populated.
-- Revoke the test key when done.
-
-## Open question (need one answer to proceed)
-
-Do you want Cloudflare **Analytics Engine** enabled for metrics (free, queryable via GraphQL, 90-day retention), or keep it to JSON logs only for now? Default if you don't answer: enable Analytics Engine.
+## Deliverables
+- Updated `src/merchant/MerchantLayout.jsx`, `src/merchant/Sidebar.jsx`, `src/merchant/Topbar.jsx`.
+- Updated `src/merchant/nav.js`.
+- Updated `src/merchant/pages/Analytics.jsx`.
+- Updated `src/merchant/pages/payouts/History.jsx`.
+- Updated `src/merchant/pages/GetStarted.jsx`, `src/merchant/pages/MerchantHome.jsx`, and other pages for layout consistency.
+- New `src/merchant/components/NotificationsPopover.jsx`.
+- New `public.notifications` table migration (if implemented).
+- Updated `src/index.css` for any new tokens.
