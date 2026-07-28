@@ -379,7 +379,7 @@ export default function BankVerification() {
 
       <div className="flex justify-end gap-3">
         {readOnly ? (
-          <button type="button" onClick={() => navigate('/merchant/verification')}
+          <button type="button" onClick={() => navigate(returnTo)}
             className="h-11 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90">
             Back to verification
           </button>
