@@ -222,7 +222,7 @@ export default function Payments({ scope = 'all' }) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search ID, email, phone…"
+              placeholder="Search ID, phone, email…"
               className="h-9 pl-9 pr-3 rounded-lg text-[0.82rem] bg-merchant-panel/40 border border-merchant-border text-white placeholder:text-white/35 w-64 focus:outline-none focus:border-emerald-500/40"
             />
           </div>
@@ -289,7 +289,7 @@ export default function Payments({ scope = 'all' }) {
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Payment ID</th>
                 <th className="px-5 py-3 font-medium">Method</th>
-                <th className="px-5 py-3 font-medium">Customer</th>
+                <th className="px-5 py-3 font-medium">Customer ID</th>
                 <th className="px-5 py-3 font-medium">Date</th>
                 
                 <th className="px-5 py-3 font-medium w-10"></th>
@@ -346,7 +346,7 @@ export default function Payments({ scope = 'all' }) {
                   </td>
                   <td className="px-5 py-3.5"><MethodChip channel={r.channel} rSwitch={r.r_switch} /></td>
                   <td className="px-5 py-3.5 text-[0.82rem] text-white/75">
-                    {r.customer_email || r.subscriber_number || r.account_number || '—'}
+                    {r.subscriber_number || r.account_number || r.customer_email || '—'}
                   </td>
                   <td className="px-5 py-3.5 text-[0.82rem] text-white/60 whitespace-nowrap">
                     {new Date(r.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}

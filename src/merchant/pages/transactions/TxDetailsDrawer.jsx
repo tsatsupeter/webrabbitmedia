@@ -64,7 +64,7 @@ export default function TxDetailsDrawer({ tx, onClose }) {
             </Row>
             {tx.provider_reference && <Row label="Reference"><span className="font-mono">{tx.provider_reference}</span></Row>}
             <Row label="Method">{(tx.r_switch || tx.channel || '').toUpperCase()}</Row>
-            {tx.subscriber_number && <Row label="Phone">{tx.subscriber_number}</Row>}
+            {tx.subscriber_number && <Row label="Customer ID"><span className="font-mono">{tx.subscriber_number}</span></Row>}
             {tx.account_number && <Row label="Account">{tx.account_number} {tx.account_bank && `· ${tx.account_bank}`}</Row>}
             {tx.customer_email && <Row label="Email">{tx.customer_email}</Row>}
             {tx.description && <Row label="Description">{tx.description}</Row>}
