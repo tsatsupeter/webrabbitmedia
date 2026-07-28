@@ -23,8 +23,8 @@ import Payments from './merchant/pages/transactions/Payments'
 import Payouts from './merchant/pages/payouts/Payouts'
 import Balances from './merchant/pages/payouts/Balances'
 import History from './merchant/pages/payouts/History'
-import Refunds from './merchant/pages/transactions/Refunds'
-import Disputes from './merchant/pages/transactions/Disputes'
+import Collect from './merchant/pages/sales/Collect'
+
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -64,8 +64,7 @@ function App() {
           
           <Route path="developer/api-keys" element={<ApiKeys />} />
           <Route path="transactions/payments" element={<Payments />} />
-          <Route path="transactions/refunds" element={<Refunds />} />
-          <Route path="transactions/disputes" element={<Disputes />} />
+          <Route path="sales/collect" element={<Collect />} />
           <Route path="payouts" element={<Payouts />} />
           <Route path="payouts/balances" element={<Balances />} />
           <Route path="payouts/history" element={<History />} />
