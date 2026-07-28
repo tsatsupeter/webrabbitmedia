@@ -38,7 +38,8 @@ export const navGroups = [
         icon: 'swap',
         children: [
           { key: 'tx-payments', label: 'Payments', to: '/merchant/transactions/payments' },
-          { key: 'tx-refunds', label: 'Refunds' },
+          { key: 'tx-refunds', label: 'Refunds', to: '/merchant/transactions/refunds' },
+          { key: 'tx-disputes', label: 'Disputes', to: '/merchant/transactions/disputes' },
         ],
       },
       {
