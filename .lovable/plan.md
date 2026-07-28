@@ -1,53 +1,77 @@
-## End-to-end audit plan
+## Merchant Dashboard (UI shell)
 
-I'll do a full read-only pass across the project and produce a single audit report. No code changes in this step — you'll approve fixes after.
+Add a `/merchant` section to the app that mirrors the layout in your reference (dark sidebar + topbar + "Get Started" content), but re-skinned with Web Rabbit Media's green accent and branding. No auth, no backend — pure UI.
 
-### Scope
+### 1. Fix build first
+`package.json` is missing a `build:dev` script that the deploy pipeline calls. Add:
+```
+"build:dev": "vite build --mode development"
+```
 
-1. **Build & config health**
-   - `package.json`, `vite.config.js`, `.oxlintrc.json`, `index.html`
-   - Verify build succeeds, no missing deps, no console errors on dev server
-   - Confirm `.github/workflows/deploy-mirror.yml` mirror pipeline is wired correctly (Cloudflare Pages → webrabbitmedia repo)
+### 2. Routing
+In `src/App.jsx`, add a second route tree that does NOT use the marketing `Layout`:
+```
+<Route path="/merchant" element={<MerchantLayout />}>
+  <Route index element={<GetStarted />} />
+</Route>
+```
+Marketing site (`/`, `/about`, …) stays untouched.
 
-2. **Routing & pages**
-   - `src/App.jsx`, all pages (`Home`, `About`, `Privacy`, `Terms`, `Powered`)
-   - Check for broken links, missing routes, 404 handling, `public/_redirects` for SPA fallback
+### 3. New files
+```
+src/merchant/
+  MerchantLayout.jsx     ← dark shell: Sidebar + Topbar + <Outlet/>
+  Sidebar.jsx            ← logo, nav groups, Test/Live mode toggle at bottom
+  Topbar.jsx             ← page title, search (Press /), brand chip, theme icon, bell, avatar
+  pages/GetStarted.jsx   ← "Create a product" + "Integrate Payments" card grids
+  nav.js                 ← nav item definitions
+```
 
-3. **SEO & metadata**
-   - `index.html` `<title>`, meta description, OG/Twitter tags, canonical, favicon
-   - Single H1 per page, semantic HTML, image alt text
-   - Run the SEO scanner and report findings
+### 4. Sidebar contents (all sections, static placeholders)
+- **Core:** Get Started, Home, Analytics
+- **Extras:** Verification, Sentra AI
+- **Commerce:** Products, Entitlements, Sales, Transactions, Payouts, Storefront
+- **Platform:** Developer, Support, Settings
 
-4. **Accessibility**
-   - Skip link, focus states, aria labels, color contrast on dark surfaces, keyboard nav on mobile menu
+Only `Get Started` links to a real route (`/merchant`). The rest are visual-only buttons for now (cursor-default, muted hover) so the shell feels complete without dead routes. Collapsible groups (Products, Sales, Transactions, Payouts, Developer, Support) render with a chevron but don't expand yet.
 
-5. **Design system consistency**
-   - `src/index.css` tokens vs hardcoded colors in components
-   - Font usage (`Space Grotesk` / `DM Sans`) — confirm they're actually loaded in `index.html`
-   - Responsive behavior at mobile/tablet/desktop
+### 5. Get Started page
+Two sections matching the screenshot, rewritten for our brand:
 
-6. **Performance**
-   - Image sizes (logo jpeg vs optimized), lazy loading, bundle size sanity check
-   - Animation respects `prefers-reduced-motion` (already partially handled)
+**Create a product**
+- One-time product — "Perfect for single purchases or lifetime deals."
+- Subscription product — "Recurring billing for SaaS and memberships."
+- Usage-based product — "Bill customers for actual usage or API calls."
+- Each card: colored icon tile, title, description, "Learn more" + "Create sample product" buttons (non-functional).
 
-7. **Legal & content**
-   - `Privacy`, `Terms`, `About`, `Powered` — check for placeholder text, broken email links, consistent tone
+**Integrate Web Rabbit Payments**
+- No-Code Checkout (Fastest)
+- Inline / Overlay Checkout
+- Full SDK Integration
+- Each card: icon tile, title, description, "Learn more" button.
 
-8. **Deployment integrity**
-   - Confirm the GitHub mirror workflow will succeed on next push
-   - Check `MIRROR_SSH_KEY` secret is referenced correctly (can't verify secret value, only wiring)
+### 6. Design tokens (reuse existing, add a few)
+Keep `--color-surface-dark: #0e1a12` and `--color-accent: #1a8a4a` from `src/index.css`. Add merchant-scoped helpers in the same file:
+```
+--color-merchant-bg: #0a0f0c;         /* page bg, slightly deeper than surface-dark */
+--color-merchant-panel: #0f1712;      /* sidebar + card bg */
+--color-merchant-border: rgba(255,255,255,0.06);
+```
+Cards: `bg-merchant-panel`, `border border-merchant-border`, `rounded-xl`, subtle hover ring in accent green. Icon tiles use tinted backgrounds (green / blue / purple / orange) at ~12% opacity with matching stroke icons. "Live Mode" pill uses `--color-accent`; "Test Mode" is muted.
 
-### Deliverable
+### 7. Topbar
+- Left: page title (e.g. "Get Started").
+- Center: search input with `Press /` kbd hint (visual only).
+- Right: brand chip "Web Rabbit" (replacing "Dodo Games"), theme toggle icon, bell w/ badge, avatar circle. All non-functional.
 
-A single categorized report:
-- 🔴 **Critical** — breaks build, deploy, or core UX
-- 🟡 **Should fix** — SEO, a11y, polish
-- 🟢 **Nice to have** — optimizations, minor consistency
+### 8. Responsive
+- ≥ md: fixed 260px sidebar, content scrolls.
+- < md: sidebar hidden behind a hamburger in the topbar (slide-over), same pattern as the marketing header.
 
-After you review, tell me which items to fix and I'll implement them in one batch.
+### Out of scope (call out for later)
+Auth gate, real product creation, DB, checkout, per-nav-item pages, dark/light toggle wiring, search functionality.
 
-### Out of scope
-
-- No backend/Cloud audit (project has no backend yet)
-- No security scan of live production site (only the codebase in this repo)
-- No content rewrites unless you ask
+### Technical notes
+- All icons via inline SVG (no new deps) to match current codebase style.
+- No shadcn usage — the marketing site is hand-rolled Tailwind; keep merchant consistent.
+- Marketing header/footer must NOT render on `/merchant/*` — that's why MerchantLayout is a sibling route, not nested under `Layout`.
