@@ -1,50 +1,67 @@
-# Auth: real implementation + signup view
+## Goal
+
+Add real multi-business support to the merchant dashboard: a business switcher in the sidebar, a create-business onboarding form at `/auth/create-business` shown when a user has no businesses, and a disclaimer modal that must be accepted before the business is created.
+
+## Flow
+
+```text
+sign in ──► has businesses? ──► yes ──► /merchant (active = last used)
+                              └─ no  ──► /auth/create-business ──► fill form ──► Create account
+                                                                                    │
+                                                                                    ▼
+                                                                          Disclaimer modal
+                                                                                    │
+                                                                                    ▼
+                                                                    insert business ──► /merchant
+```
+
+Sidebar brand block becomes a dropdown:
+- Header row: active business logo + name + chevron
+- Panel: "My Businesses" list (click to switch active) + "+ Add new" (routes to `/auth/create-business`)
 
 ## Database (migration)
 
-Create `public.profiles`:
-- `id uuid primary key references auth.users on delete cascade`
-- `email text`, `full_name text`, `avatar_url text`, `created_at`, `updated_at`
+New table `public.businesses`:
+- `user_id` (owner, FK auth.users, cascade delete)
+- `name`, `website_url`
+- `product_category` (enum-like text: SaaS/AI, Edtech, Services, Financial services, Physical products, Gaming, Marketplace, Others)
+- `location` (country code)
+- `referral_source` (text)
+- `monetization_note` (text, nullable)
+- `disclaimer_accepted_at` (timestamptz)
+- Standard `id`, `created_at`, `updated_at`, plus updated_at trigger
 
-Grants: `authenticated` (select/insert/update own), `service_role` (all). RLS on with policies scoped to `auth.uid() = id`.
+GRANTs: `authenticated` full CRUD, `service_role` all. RLS: owner-only (`auth.uid() = user_id`) for select/insert/update/delete.
 
-Trigger `handle_new_user()` (security definer, `search_path = public`) inserts a profile row on `auth.users` insert, pulling `email`, `raw_user_meta_data->>'full_name'`, `raw_user_meta_data->>'avatar_url'`.
+Also add `last_active_business_id uuid` column on `profiles` to remember the current selection across sessions (nullable, no FK to avoid delete coupling — validated in app).
 
-`update_updated_at_column()` trigger for `updated_at`.
+## Frontend
 
-## Auth page (`/auth`)
+**New files**
+- `src/hooks/useBusinesses.js` — loads current user's businesses, exposes `businesses`, `activeId`, `setActive(id)`, `refresh()`. Persists `activeId` to `profiles.last_active_business_id`; falls back to localStorage before profile row loads.
+- `src/pages/CreateBusiness.jsx` — the "Let's create your account" form (image 2/3). Fields: Business Name*, Website URL* (with `https://` prefix affix), Product category* (Select), Location* (Select country), Referral source* (Select), Monetization note (textarea). Bottom-right "Log out" link, bottom-left language chip (static). White "Create account" button opens the Disclaimer modal.
+- `src/components/DisclaimerModal.jsx` — matches images 4/5. Supported/Unsupported use cases, geographies, checkbox to agree, Back / Create account buttons. Uses shadcn `Dialog` and `Checkbox` for consistent design.
+- `src/components/BusinessSwitcher.jsx` — the sidebar dropdown (image 1). Trigger = current sidebar brand row; opens a panel with "My Businesses" list, checkmark on active, and "+ Add new" row. Uses shadcn `Popover` styled to match the merchant dark theme.
 
-Turn the current single-view page into a two-mode view driven by local state (`mode: 'login' | 'signup'`):
+**Edited files**
+- `src/merchant/Sidebar.jsx` — replace hardcoded Web Rabbit brand block with `<BusinessSwitcher />`.
+- `src/components/ProtectedRoute.jsx` — after auth passes, if the requested path starts with `/merchant` and the user has zero businesses, redirect to `/auth/create-business`. If path is `/auth/create-business` and user has ≥1 business, allow (used for "Add new").
+- `src/App.jsx` — add route `/auth/create-business` (protected, no marketing layout).
+- `src/pages/Auth.jsx` — after successful sign-in / sign-up, navigate to `/merchant` (existing behavior) and let the guard bounce to create-business when appropriate.
 
-- **Signup mode** (matches the new reference): heading "Get Started with Web Rabbit", subtext "Already have an account? Login" (toggles mode), Google + GitHub buttons side-by-side, "Or" divider, email input, white **Sign up** button, T&C line, "Need help? Contact support".
-- **Login mode** (keeps current design): heading "Sign in to Web Rabbit", subtext "New here? Sign up", same OAuth row, email input, **Continue with password** (primary) + **Log in with OTP** (secondary).
+## Design consistency
 
-Flow states within each mode:
-1. Email step (shown above).
-2. Password step — appears after "Continue with password" (login) or "Sign up" (signup): password input + submit. Signup calls `signUp({ email, password, options: { emailRedirectTo: window.location.origin + '/merchant' } })`. Login calls `signInWithPassword`.
-3. OTP step (login only) — after "Log in with OTP": calls `signInWithOtp({ email, options: { emailRedirectTo: origin + '/merchant' } })`, then 6-digit code input calling `verifyOtp({ email, token, type: 'email' })`.
+- Reuse merchant tokens (`bg-merchant-panel`, `border-merchant-border`, `text-accent-bright`) and existing font stack (`font-display`, `font-body`).
+- Buttons follow existing patterns: primary = white bg + black text (matches reference), secondary = `bg-white/[0.06]` (matches Get Started page).
+- Form inputs match the auth page styling: dark bg, subtle border, green focus ring.
+- Dropdown uses same rounded-lg + border + subtle hover states as sidebar nav items.
 
-OAuth buttons call `signInWithOAuth({ provider, options: { redirectTo: origin + '/merchant' } })` for `google` and `github`.
+## Out of scope (not this turn)
 
-Errors surfaced via `sonner` toast. Loading states disable buttons.
+- Wiring existing pages (Analytics, Home, Verification) to read the active business — data is filtered later once those pages have real data.
+- Team members / invites.
+- Editing a business after creation.
 
-## Session + route guard
+## Notes
 
-- New `src/hooks/useAuth.js`: subscribes to `onAuthStateChange` first, then `getSession()`; exposes `{ session, user, loading }`.
-- New `src/components/ProtectedRoute.jsx`: while loading show nothing; if no session, `<Navigate to="/auth" replace />`; else render children.
-- Wrap `/merchant/*` routes in `App.jsx` with `ProtectedRoute`.
-- After successful password/OTP login and after OAuth callback lands back on `/auth` with a session, redirect to `/merchant`.
-- Add a sign-out action in `Topbar.jsx` (dropdown on the avatar) calling `supabase.auth.signOut()`.
-
-## Provider setup (user action, outside code)
-
-Google and GitHub OAuth must be enabled in the Supabase dashboard (Authentication → Providers) with client ID/secret from each provider console. Site URL + redirect URLs must include the preview URL and `http://localhost:8080`. I'll link the pages after implementation. Email confirmations can stay on or be disabled in Auth settings — with confirmations on, signup users must click the email link before they can log in.
-
-## Files
-
-- New: `supabase/migrations/*` (via migration tool), `src/hooks/useAuth.js`, `src/components/ProtectedRoute.jsx`
-- Edit: `src/pages/Auth.jsx` (two modes + real auth calls), `src/App.jsx` (guard `/merchant`), `src/merchant/Topbar.jsx` (sign out), `src/merchant/Icon.jsx` (add `chevronDown`/`logout` if needed)
-
-## Verification
-
-Build passes; manually check signup → email verification (or immediate session), login with password, login with OTP code, Google/GitHub buttons redirect to provider, `/merchant` redirects to `/auth` when signed out, sign-out returns to `/auth`.
+Every claim about current state above (routes, sidebar structure, protected route logic, profiles table) is based on files shown in `<codebase-context>` this turn. The new `businesses` table and `profiles.last_active_business_id` column do not exist yet — they are added by the migration in this plan.

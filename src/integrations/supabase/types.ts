@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      businesses: {
+        Row: {
+          created_at: string
+          disclaimer_accepted_at: string
+          id: string
+          location: string
+          monetization_note: string | null
+          name: string
+          product_category: string
+          referral_source: string
+          updated_at: string
+          user_id: string
+          website_url: string
+        }
+        Insert: {
+          created_at?: string
+          disclaimer_accepted_at?: string
+          id?: string
+          location: string
+          monetization_note?: string | null
+          name: string
+          product_category: string
+          referral_source: string
+          updated_at?: string
+          user_id: string
+          website_url: string
+        }
+        Update: {
+          created_at?: string
+          disclaimer_accepted_at?: string
+          id?: string
+          location?: string
+          monetization_note?: string | null
+          name?: string
+          product_category?: string
+          referral_source?: string
+          updated_at?: string
+          user_id?: string
+          website_url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -21,6 +63,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          last_active_business_id: string | null
           updated_at: string
         }
         Insert: {
@@ -29,6 +72,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          last_active_business_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -37,6 +81,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          last_active_business_id?: string | null
           updated_at?: string
         }
         Relationships: []

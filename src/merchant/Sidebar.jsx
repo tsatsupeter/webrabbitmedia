@@ -1,31 +1,14 @@
 import { NavLink } from 'react-router-dom'
 import { navGroups } from './nav'
 import Icon from './Icon'
+import BusinessSwitcher from './BusinessSwitcher'
 
 export default function Sidebar({ onNavigate }) {
   return (
     <aside className="w-[260px] shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border">
-      {/* Brand */}
-      <div className="h-16 px-4 flex items-center gap-2.5 border-b border-merchant-border">
-        <img
-          src="/webrabbitmedia-logo-green.jpeg"
-          alt=""
-          width="30"
-          height="30"
-          className="rounded-md ring-1 ring-white/10"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="font-display font-semibold text-[0.9rem] text-white truncate">Web Rabbit</div>
-          <div className="text-[0.65rem] text-white/40 uppercase tracking-wider">Merchant</div>
-        </div>
-        <button
-          type="button"
-          className="w-6 h-6 flex items-center justify-center rounded text-white/40 hover:text-white/80 hover:bg-white/5"
-          aria-label="Switch workspace"
-        >
-          <Icon name="chevron" size={14} className="rotate-90" />
-        </button>
-      </div>
+      {/* Business switcher */}
+      <BusinessSwitcher />
+
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
