@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
@@ -303,7 +304,7 @@ export default function AccountTab() {
   const [profile, setProfile] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [editOpen, setEditOpen] = useState(false)
-  const [pwOpen, setPwOpen] = useState(false)
+  
   const [mfaOpen, setMfaOpen] = useState(false)
   const [mfaEnrolled, setMfaEnrolled] = useState(false)
 
