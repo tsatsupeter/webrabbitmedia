@@ -24,7 +24,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # npm install, not ci: Lovable commits package.json changes without
+      # updating package-lock.json (it uses bun), which makes npm ci fail.
+      - run: npm install --no-audit --no-fund
       - run: npm run build
 
   mirror:

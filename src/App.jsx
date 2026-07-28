@@ -26,8 +26,9 @@ function App() {
           <Route path="privacy" element={<Privacy />} />
           <Route path="terms" element={<Terms />} />
           <Route path="powered" element={<Powered />} />
-          <Route path="auth" element={<Auth />} />
         </Route>
+        {/* Auth stands alone: no marketing navbar/footer */}
+        <Route path="/auth" element={<Auth />} />
         <Route path="/merchant" element={<ProtectedRoute><MerchantLayout /></ProtectedRoute>}>
           <Route index element={<GetStarted />} />
           <Route path="verification" element={<Verification />} />
