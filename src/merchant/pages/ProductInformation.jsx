@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import Icon from '../Icon'
 import { useBusinesses } from '../../hooks/useBusinesses'
+import { useAuth } from '../../hooks/useAuth'
+import { supabase } from '../../integrations/supabase/client'
 import { markStepComplete } from '../verificationProgress'
 
 const CATEGORY_OPTIONS = [
@@ -49,7 +51,13 @@ const INTEGRATION_OPTIONS = [
   "Not sure / haven't decided",
 ]
 
-const ACQUISITION_OPTIONS = ['Website & SEO', 'Social Media', 'Ads', 'Email Marketing', 'Others (Please specify)']
+const ACQUISITION_OPTIONS = [
+  'Website & SEO',
+  'Social Media',
+  'Ads',
+  'Email Marketing',
+  'Others (Please specify)',
+]
 
 function Label({ children, required }) {
   return (
@@ -84,19 +92,25 @@ function UrlRow({ value, onChange, placeholder = 'www.example.com' }) {
   )
 }
 
-function Checkbox({ checked, onChange, label }) {
+function Checkbox({ checked, onChange, label, align = 'center' }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer group">
+    <label className={`flex ${align === 'start' ? 'items-start' : 'items-center'} gap-3 cursor-pointer group select-none`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
       <span
-        onClick={() => onChange(!checked)}
-        className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-          checked ? 'bg-accent-bright border-accent-bright' : 'border-white/25 group-hover:border-white/50'
+        className={`w-5 h-5 ${align === 'start' ? 'mt-0.5' : ''} shrink-0 rounded border flex items-center justify-center transition-colors ${
+          checked
+            ? 'bg-accent-bright border-accent-bright'
+            : 'border-white/25 group-hover:border-white/50'
         }`}
       >
         {checked && <Icon name="check" size={13} className="text-black" strokeWidth={3} />}
       </span>
-      <span className="text-[0.9rem] text-white/75">{label}</span>
-      <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className="text-[0.9rem] text-white/75 leading-relaxed">{label}</span>
     </label>
   )
 }
@@ -131,8 +145,11 @@ function toggleInList(list, val) {
 
 export default function ProductInformation() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { active } = useBusinesses()
 
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [websites, setWebsites] = useState([''])
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
@@ -148,6 +165,40 @@ export default function ProductInformation() {
   const [paymentPlatform, setPaymentPlatform] = useState('')
   const [confirmed, setConfirmed] = useState(false)
 
+  useEffect(() => {
+    if (!active?.id) return
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      const { data } = await supabase
+        .from('product_information')
+        .select('*')
+        .eq('business_id', active.id)
+        .maybeSingle()
+      if (cancelled) return
+      if (data) {
+        setWebsites(data.websites?.length ? data.websites : [''])
+        setDescription(data.description ?? '')
+        setCategory(data.category ?? '')
+        setReceive(data.receive_methods ?? [])
+        setReceiveFlow(data.receive_flow ?? '')
+        setDeliveryLevel(data.delivery_level ?? '')
+        setRisks(data.risks ?? [])
+        setIntegrations(data.integrations ?? [])
+        setAcquisitions(data.acquisitions ?? [])
+        setOtherAcquisition(data.other_acquisition ?? '')
+        setSocials(data.socials?.length ? data.socials : [''])
+        setStage(data.stage ?? '')
+        setPaymentPlatform(data.payment_platform ?? '')
+        setConfirmed(data.status === 'submitted')
+      }
+      setLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [active?.id])
+
   const requiredValid =
     websites.some((w) => w.trim()) &&
     description.trim() &&
@@ -160,22 +211,65 @@ export default function ProductInformation() {
     stage &&
     paymentPlatform.trim()
 
-  const canSubmit = requiredValid && confirmed
+  const canSubmit = requiredValid && confirmed && !saving
 
-  function handleSubmit() {
+  function buildPayload(status) {
+    return {
+      business_id: active.id,
+      user_id: user.id,
+      websites: websites.map((w) => w.trim()).filter(Boolean),
+      description: description.trim() || null,
+      category: category || null,
+      receive_methods: receive,
+      receive_flow: receiveFlow.trim() || null,
+      delivery_level: deliveryLevel || null,
+      risks,
+      integrations,
+      acquisitions,
+      other_acquisition: otherAcquisition.trim() || null,
+      socials: socials.map((s) => s.trim()).filter(Boolean),
+      stage: stage || null,
+      payment_platform: paymentPlatform.trim() || null,
+      status,
+      confirmed_at: status === 'submitted' ? new Date().toISOString() : null,
+    }
+  }
+
+  async function persist(status) {
+    if (!active?.id || !user?.id) {
+      toast.error('No active business selected')
+      return { error: true }
+    }
+    setSaving(true)
+    const { error } = await supabase
+      .from('product_information')
+      .upsert(buildPayload(status), { onConflict: 'business_id' })
+    setSaving(false)
+    if (error) {
+      toast.error(error.message)
+      return { error: true }
+    }
+    return { error: false }
+  }
+
+  async function handleSubmit() {
     if (!canSubmit) {
       toast.error('Please complete all required fields')
       return
     }
-    if (active?.id) markStepComplete(active.id, 'product')
+    const { error } = await persist('submitted')
+    if (error) return
+    markStepComplete(active.id, 'product')
     toast.success('Product information submitted', {
-      description: 'We\'ll review it shortly.',
+      description: "We'll review it shortly.",
     })
     navigate('/merchant/verification')
   }
 
-  function handleDraft() {
-    toast('Draft saved')
+  async function handleDraft() {
+    const { error } = await persist('draft')
+    if (error) return
+    toast.success('Draft saved')
     navigate('/merchant/verification')
   }
 
@@ -190,20 +284,29 @@ export default function ProductInformation() {
         >
           <Icon name="chevronLeft" size={18} />
         </button>
-        <h1 className="font-display text-white text-[1.25rem] font-semibold">Product Information</h1>
+        <h1 className="font-display text-white text-[1.25rem] font-semibold">
+          Product Information
+        </h1>
       </div>
 
       <p className="text-[0.9rem] text-white/60">
-        Tell us about your product so we can get you ready to accept payments. Takes about 2 minutes.
+        Tell us about your product so we can get you ready to accept payments. Takes about 2
+        minutes.
       </p>
 
-      <div className="bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8">
+      <div className={`bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
         {/* Websites */}
         <div>
-          <Label required>Provide website/s where customers purchase or access your product.</Label>
+          <Label required>
+            Provide website/s where customers purchase or access your product.
+          </Label>
           <div className="space-y-2">
             {websites.map((w, i) => (
-              <UrlRow key={i} value={w} onChange={(v) => setWebsites(websites.map((x, idx) => (idx === i ? v : x)))} />
+              <UrlRow
+                key={i}
+                value={w}
+                onChange={(v) => setWebsites(websites.map((x, idx) => (idx === i ? v : x)))}
+              />
             ))}
           </div>
           <button
@@ -230,15 +333,27 @@ export default function ProductInformation() {
         {/* Category */}
         <div>
           <Label required>Which category best describes your product?</Label>
-          <Select value={category} onChange={setCategory} options={CATEGORY_OPTIONS} placeholder="Select a category" />
+          <Select
+            value={category}
+            onChange={setCategory}
+            options={CATEGORY_OPTIONS}
+            placeholder="Select a category"
+          />
         </div>
 
         {/* Receive */}
         <div>
-          <Label required>How do customers receive the product after payment? (Select all that apply.)</Label>
+          <Label required>
+            How do customers receive the product after payment? (Select all that apply.)
+          </Label>
           <div className="space-y-3">
             {RECEIVE_OPTIONS.map((o) => (
-              <Checkbox key={o} label={o} checked={receive.includes(o)} onChange={() => setReceive(toggleInList(receive, o))} />
+              <Checkbox
+                key={o}
+                label={o}
+                checked={receive.includes(o)}
+                onChange={() => setReceive(toggleInList(receive, o))}
+              />
             ))}
           </div>
           <textarea
@@ -252,8 +367,15 @@ export default function ProductInformation() {
 
         {/* Delivery level */}
         <div>
-          <Label required>Which option best describes how your product or service is delivered?</Label>
-          <Select value={deliveryLevel} onChange={setDeliveryLevel} options={DELIVERY_LEVELS} placeholder="Select level" />
+          <Label required>
+            Which option best describes how your product or service is delivered?
+          </Label>
+          <Select
+            value={deliveryLevel}
+            onChange={setDeliveryLevel}
+            options={DELIVERY_LEVELS}
+            placeholder="Select level"
+          />
         </div>
 
         {/* Risks */}
@@ -261,7 +383,12 @@ export default function ProductInformation() {
           <Label>Does your product involve any of the following? (Select all that apply.)</Label>
           <div className="space-y-3">
             {RISK_OPTIONS.map((o) => (
-              <Checkbox key={o} label={o} checked={risks.includes(o)} onChange={() => setRisks(toggleInList(risks, o))} />
+              <Checkbox
+                key={o}
+                label={o}
+                checked={risks.includes(o)}
+                onChange={() => setRisks(toggleInList(risks, o))}
+              />
             ))}
           </div>
         </div>
@@ -310,7 +437,11 @@ export default function ProductInformation() {
           <Label required>Social Media Links (Product &amp; Founder)</Label>
           <div className="space-y-2">
             {socials.map((s, i) => (
-              <UrlRow key={i} value={s} onChange={(v) => setSocials(socials.map((x, idx) => (idx === i ? v : x)))} />
+              <UrlRow
+                key={i}
+                value={s}
+                onChange={(v) => setSocials(socials.map((x, idx) => (idx === i ? v : x)))}
+              />
             ))}
           </div>
           <button
@@ -325,37 +456,43 @@ export default function ProductInformation() {
         {/* Stage */}
         <div>
           <Label required>How far along are you with your product?</Label>
-          <Select value={stage} onChange={setStage} options={STAGES} placeholder="Select product stage" />
+          <Select
+            value={stage}
+            onChange={setStage}
+            options={STAGES}
+            placeholder="Select product stage"
+          />
         </div>
 
         {/* Payment platform */}
         <div>
-          <Label required>Which payment platform are you currently using? If not using any, specify NONE.</Label>
-          <TextInput value={paymentPlatform} onChange={(e) => setPaymentPlatform(e.target.value)} />
+          <Label required>
+            Which payment platform are you currently using? If not using any, specify NONE.
+          </Label>
+          <TextInput
+            value={paymentPlatform}
+            onChange={(e) => setPaymentPlatform(e.target.value)}
+          />
         </div>
 
         {/* Confirm */}
-        <div className="pt-2 border-t border-merchant-border">
-          <label className="flex items-start gap-3 cursor-pointer group pt-4">
-            <span
-              onClick={() => setConfirmed(!confirmed)}
-              className={`w-5 h-5 mt-0.5 shrink-0 rounded border flex items-center justify-center transition-colors ${
-                confirmed ? 'bg-accent-bright border-accent-bright' : 'border-white/25 group-hover:border-white/50'
-              }`}
-            >
-              {confirmed && <Icon name="check" size={13} className="text-black" strokeWidth={3} />}
-            </span>
-            <span className="text-[0.85rem] text-white/70 leading-relaxed">
-              I confirm that the information provided above accurately describes my product. I understand that Web
-              Rabbit Payments may suspend payouts or terminate access to the platform if the product is later found to
-              violate the{' '}
-              <a href="#" className="text-accent-bright underline">
-                Acceptance Policy
-              </a>
-              .
-            </span>
-            <input type="checkbox" className="sr-only" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
-          </label>
+        <div className="pt-2 border-t border-merchant-border pt-4">
+          <Checkbox
+            align="start"
+            checked={confirmed}
+            onChange={setConfirmed}
+            label={
+              <>
+                I confirm that the information provided above accurately describes my product. I
+                understand that Web Rabbit Payments may suspend payouts or terminate access to the
+                platform if the product is later found to violate the{' '}
+                <a href="#" className="text-accent-bright underline">
+                  Acceptance Policy
+                </a>
+                .
+              </>
+            }
+          />
         </div>
       </div>
 
@@ -363,7 +500,8 @@ export default function ProductInformation() {
         <button
           type="button"
           onClick={handleDraft}
-          className="h-10 px-5 rounded-lg bg-white/[0.06] border border-white/10 text-white/85 text-[0.85rem] hover:bg-white/10"
+          disabled={saving}
+          className="h-10 px-5 rounded-lg bg-white/[0.06] border border-white/10 text-white/85 text-[0.85rem] hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Save as Draft
         </button>
@@ -373,7 +511,7 @@ export default function ProductInformation() {
           disabled={!canSubmit}
           className="h-10 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Submit &amp; Proceed
+          {saving ? 'Submitting…' : 'Submit & Proceed'}
         </button>
       </div>
     </div>
