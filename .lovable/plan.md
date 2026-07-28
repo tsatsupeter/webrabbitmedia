@@ -1,75 +1,35 @@
-## Goal
+## Problem
 
-Make `/merchant/analytics` show real numbers computed from the current business's `transactions` and `payouts` tables (mode-aware, GHS), and trim tabs down to what we actually track.
+Merchant pages use inconsistent outer containers, so some feel cramped while others sprawl:
 
-## Tabs
+| Page | Current wrapper |
+|---|---|
+| MerchantHome, GetStarted, Analytics | `max-w-[1400px] mx-auto px-4 md:px-8` |
+| Verification | `max-w-[1200px] mx-auto` |
+| ProductInformation, Identity, Bank, Business Verification | `max-w-[1100px] mx-auto` |
+| Sales / Collect | `max-w-2xl` (very narrow — the main complaint) |
+| Payments, ApiKeys | `w-full px-4 md:px-8 py-6` |
+| Payouts, Balances, History | `p-6 md:p-8` (no horizontal cap, different padding) |
 
-Keep: **Revenue**, **Customers**, **Success Rate**, **Recovery**
-Remove: **Subscriptions**, **Retention** (we don't have subscription/retention data)
+## Fix — one shared container
 
-## Data source
+Introduce two standard wrappers and apply them everywhere:
 
-Query Supabase directly from the client, scoped by:
-- `business_id = active.id`
-- `mode = current merchant mode` (test/live from `useMerchantMode`)
-- date range from the "Last X days" filter (default last 30 days)
-- comparison window = immediately preceding period of equal length
+1. **Dashboard/table pages** (fill available space):
+   `w-full px-4 md:px-8 py-6 space-y-6`
+   → MerchantHome, GetStarted, Analytics, Payments, ApiKeys, Payouts, Balances, History, Sales/Collect (form gets an inner `max-w-3xl` card but the page itself is full width so it doesn't look tiny in the middle of a wide viewport).
 
-Two fetches per view:
-- `transactions`: `created_at, status, gross_amount, fee_amount, net_amount, channel, customer_email, subscriber_number, provider_reason`
-- `payouts` (for Payouts Received card): `completed_at, net_amount, status`
+2. **Verification / form flows** (readable line length, but consistent):
+   `w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-6`
+   → Verification, ProductInformation, IdentityVerification, BusinessVerification, BankVerification.
 
-All amounts are GHS; format as `GHS 1,234.56`. No USD.
+## Changes
 
-## Filters (top-right)
-
-- **Date range** dropdown: Last 7 / 30 / 90 days, This month, Last month
-- **Compare** dropdown: Previous period (default), None
-- Remove "All Products" chip (we have no products)
-
-Filters live in Analytics page state; each tab re-derives its cards from the filtered result set.
-
-## Tab contents (all cards use existing `ChartCard` + `LineChart` + `DeltaLine`)
-
-**Revenue**
-- Gross Volume — cumulative sum of `gross_amount` where status in ('approved','success')
-- Net Volume — cumulative sum of `net_amount` (after 15% fee)
-- Fees Collected — cumulative sum of `fee_amount` (replaces "Payouts Received" position — or keep both)
-- Payouts Received — cumulative sum of `payouts.net_amount` where status='paid', bucketed by `completed_at`
-- Refunds — zeros for now (feature not implemented) with "No data" state
-
-**Customers**
-- Active Customers — distinct `subscriber_number || customer_email` per day (running unique count in range)
-- New Customers — first-seen customers per day in range
-- Top Customers by Spend — top 10 by summed `gross_amount`, styled like the reference (medals for top 3)
-
-**Success Rate**
-- Payment Success Rate — % of approved vs total attempted, daily
-- Payments Breakdown — Succeeded / Failed / Pending amounts (bar rows)
-- Payment Failure Reason — group failed txns by `provider_reason` (top 5)
-- By Payment Method — group by `channel` (MTN, Vodafone, AirtelTigo, G-Money, Card) with amount
-
-**Recovery**
-- Retry Success — % of same subscriber that failed then succeeded within range
-- Recovered Amount — sum of successful retries
-- If no recoveries in range, show empty state (not fake data)
-
-## Code structure
-
-- `src/merchant/pages/Analytics.jsx` — replace hardcoded arrays with real fetch + `useMemo` bucketing
-- New helper `src/merchant/analytics/useAnalyticsData.js` — takes `{ businessId, mode, start, end }`, returns `{ txns, prevTxns, payouts, prevPayouts, loading }`
-- New helper `src/merchant/analytics/bucket.js` — pure functions to bucket rows into daily cumulative series and compute deltas
-- Keep existing `Chart.jsx` primitives; no restyling
-
-## Empty / loading states
-
-- While loading: skeleton shimmer in cards (existing `ChartCard` gets a `loading` prop)
-- Empty range: card shows the metric title, `GHS 0.00`, and "No data in this period"
+- Update outer `<div>` on each page listed above to the matching wrapper.
+- `Collect.jsx`: switch outer from `max-w-2xl` to full-width; wrap the form card in `max-w-3xl` so inputs stay usable but header/breakdown span the page like other pages.
+- Normalize `p-6 md:p-8` on payouts pages to `px-4 md:px-8 py-6` so vertical/horizontal rhythm matches Payments/Analytics.
+- No changes to sidebar, topbar, drawers, or business logic.
 
 ## Out of scope
 
-- No new tables, no edge functions, no schema changes
-- No product/subscription tracking
-- No cross-business aggregation
-
-Verification: load `/merchant/analytics` in test mode after seeding transactions exist → numbers match Payments page totals for the same window; switch to Live mode → numbers change; switch tab to Subscriptions/Retention → tabs no longer present.
+Sentra (intentional full-bleed chat canvas) and drawers/modals keep their current widths.
