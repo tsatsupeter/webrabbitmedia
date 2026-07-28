@@ -4,6 +4,9 @@ import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
 import { useMerchantMode } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
+import WithdrawModal from '../../components/WithdrawModal'
+
+const MIN_WITHDRAW = 2000
 
 const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'GHS' }).format(Number(v || 0))
 
