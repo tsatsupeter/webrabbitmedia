@@ -172,10 +172,8 @@ export default function Analytics() {
         <RevenueTab {...{ txns, prevTxns, payouts, prevPayouts, days, cmpDays, alignPrev, xLabels, tooltipLabel, cmp, successful }} />
       ) : active === 'Customers' ? (
         <CustomersTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp, successful }} />
-      ) : active === 'Success Rate' ? (
-        <SuccessTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }} />
       ) : (
-        <RecoveryTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }} />
+        <SuccessTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }} />
       )}
     </div>
   )
