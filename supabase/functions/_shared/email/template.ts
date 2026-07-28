@@ -17,7 +17,7 @@ const BRAND = {
   replyTo: 'support@webrabbitmedia.com',
   site: 'https://webrabbitmedia.com',
   dashboard: 'https://webrabbitmedia.com/merchant',
-  logo: 'https://webrabbitmedia.com/logo.png',
+  logo: 'https://webrabbitmedia.com/webrabbitmedia-logo-green.jpeg',
   accent: '#B7F94A',
   ink: '#0a0a0a',
   muted: '#55575d',
