@@ -1,80 +1,46 @@
-
 ## Goal
-Turn the Balances page into a real payout history driven by the database, add a manual (admin-initiated) payout system with a 2,000.00 GHS minimum, and make sure editing a linked bank account from the Payouts page actually loads that account into the form.
+Let merchants initiate their own payout from the Payouts page, subject to a **GHS 2,000.00 minimum** and an approved primary bank on file. Admin still marks payouts as `success/failed` afterward — this only creates the pending payout request.
 
-## 1. Database — new `payouts` table
-Migration creating `public.payouts`:
+## UX changes (`src/merchant/pages/Payouts.jsx`)
+- Add a **Withdraw** button in the Payout Balance card header (primary green, wallet icon). Disabled + tooltip when:
+  - business not `approved`
+  - available balance < 2,000
+  - no primary bank linked
+- Clicking opens a new `WithdrawModal`:
+  - Shows Available balance, destination bank (primary account, masked number), currency GHS
+  - Amount input (default = full available, min 2000, max = available, step 0.01)
+  - Optional note field
+  - Confirm / Cancel; loading state; error toast on failure
+  - On success: toast "Payout requested", close modal, refetch balance + refresh Balances list, navigate optionally to `/merchant/payouts/balances`
 
-Domain fields:
-- `business_id`, `user_id`
-- `bank_id` (FK to `bank_verification`)
-- `name` (e.g. "Jul 20 Payout" — auto-generated on insert)
-- `mode` (`test` | `live`)
-- `currency` (default `GHS`)
-- `gross_amount` (sum of net collections included in this payout)
-- `fees` (payout processing fees, default 0)
-- `tax_deducted` (default 0)
-- `currency_conversion` (default 0)
-- `net_amount` (gross − fees − tax − conversion)
-- `payment_method` (default `Bank Transfer`)
-- `status` (`pending` | `processing` | `success` | `failed`, default `pending`)
-- `provider_reference`, `notes`
-- `initiated_at`, `completed_at`
+## Backend
+New edge function **`merchant-create-payout`** (verify_jwt validated in code via user's JWT):
+- Auth: read `Authorization` bearer, resolve user via service-role `auth.getUser`
+- Body (zod): `{ business_id: uuid, amount: number, mode: 'test'|'live', note?: string }`
+- Checks:
+  - business belongs to user AND `status = 'approved'`
+  - amount >= 2000
+  - primary bank exists for business (fallback to any bank if no primary)
+  - available = sum of `transactions` where `business_id`, `mode`, `status in ('approved','success')`, `payout_id is null`, minus already-pending payouts; amount <= available
+- Insert `payouts` row: `status='pending'`, `gross_amount=amount`, `net_amount=amount`, `bank_id`, `name` = `"Payout <date>"`, `initiated_at=now()`
+- Stamp included transactions' `payout_id` up to the requested amount (oldest-first, same logic as `admin-create-payout` — extract shared helper into `supabase/functions/_shared/payout.ts`)
+- Return the new payout row
 
-Standard grants + RLS:
-- Merchants: SELECT only their own rows (`auth.uid() = user_id`).
-- No INSERT/UPDATE/DELETE from client — payouts are created/edited by the admin via service_role only.
-- `service_role`: ALL.
-- `updated_at` trigger.
+Reuse existing `admin-update-payout` for status transitions — no change.
 
-Minimum-payout constant `2000.00 GHS` is enforced in the admin action (see §3), not as a DB check (so it can be adjusted later like the commission).
+## Balances page
+- Small toast/refresh trigger after withdrawal so the new pending row shows immediately (already fetches on mount; just call refetch after modal success via a shared query key or a passed callback).
 
-## 2. Balances page — real payout history
-Rewrite `src/merchant/pages/payouts/Balances.jsx`:
-- Fetch payouts for `active.business_id` filtered by current `mode` (Test/Live), ordered by `initiated_at DESC`.
-- Table columns: Name · Payout Amount · Status · Payout Fees · Payment Method · Created At · Details.
-- Status pills: success (green), pending/processing (amber), failed (red).
-- "Details" icon opens a right-side **Payout Details drawer** (new `PayoutDetailsDrawer.jsx`) matching image-32: header, Status, Payout ID, Created, Last Updated, then an expandable currency block showing Payments, Payment Fees, Tax Deducted, Currency Conversion, Total. Close + Download (CSV of that payout) buttons.
-- Empty state kept when there are no rows.
-- Build Report button = CSV export of the current filtered list.
+## Files touched
+- `src/merchant/pages/Payouts.jsx` — Withdraw button + wiring
+- `src/merchant/components/WithdrawModal.jsx` — new
+- `supabase/functions/_shared/payout.ts` — new (shared allocator)
+- `supabase/functions/merchant-create-payout/index.ts` — new
+- `supabase/functions/admin-create-payout/index.ts` — refactor to use shared helper (no behavior change)
 
-## 3. Manual admin initiation
-Since the admin (you) triggers payouts manually, add a small admin surface rather than a public UI:
+## Out of scope
+- Actual bank disbursement (still manual by admin via `admin-update-payout`)
+- Editing/cancelling a pending payout (can add later)
+- Changing the 2,000 minimum to a configurable setting
 
-- **Edge function `admin-create-payout`** (service_role):
-  - Input: `business_id`, `bank_id` (optional — defaults to primary), `mode`, optional `notes`.
-  - Computes available balance = sum of `net_amount` from `transactions` where `status='approved'`, `type='collection'`, `mode=<mode>`, and no existing payout covers them (tracked via a `payout_id` column added to `transactions` in the same migration, nullable, indexed).
-  - Rejects if available < **2000.00**.
-  - Inserts a `payouts` row (`status='pending'`, auto name `"<Mon D> Payout"`), stamps the included transactions with `payout_id`.
-  - Returns the created payout.
-- **Edge function `admin-update-payout`** (service_role): update `status` (`processing` → `success`/`failed`), `fees`, `tax_deducted`, `currency_conversion`, `provider_reference`, `notes`, `completed_at`. Recomputes `net_amount`.
-
-Both functions require an `x-admin-token` header checked against a new `ADMIN_API_TOKEN` secret. You call them from curl/Postman; no merchant-facing button.
-
-## 4. Payouts page updates
-`src/merchant/pages/payouts/Payouts.jsx`:
-- "Payout Balance / Available" now = sum of approved collection `net_amount` **minus** amounts already tied to a payout (using `payout_id IS NULL`).
-- Under the balance card, show a small note: *"Minimum payout: GHS 2,000.00. Payouts are initiated manually after review."*
-- Growth chart switches to plotting real `payouts` rows (by `initiated_at` month, `success` only) instead of raw transactions — matches image-31's semantics.
-- Payout Schedule panel wording adjusted to "Manual, after review" since we're not on a bi-monthly automation.
-
-## 5. Fix bank "Edit" from Payouts
-Verify + fix the flow so clicking Edit on a linked bank in `Payouts.jsx` opens `BankVerification.jsx?id=<uuid>` and:
-- The form pre-loads that specific row (not just the first row for the business).
-- Save updates that row (upsert by `id`) and returns to `/merchant/payouts`.
-- "Add Bank Account" (`?new=1`) creates a fresh row, respecting the 3-account cap and single-primary rule.
-- "Make Primary" action on a non-primary linked bank in `Payouts.jsx` (calls a small RPC or two updates in a transaction to flip `is_primary`).
-
-## 6. Files touched
-- New migration: `payouts` table + `transactions.payout_id` column + grants/RLS/trigger.
-- New: `supabase/functions/admin-create-payout/index.ts`, `supabase/functions/admin-update-payout/index.ts`.
-- New: `src/merchant/components/PayoutDetailsDrawer.jsx`.
-- Edit: `src/merchant/pages/payouts/Balances.jsx` (real data + drawer + CSV export).
-- Edit: `src/merchant/pages/payouts/Payouts.jsx` (available-balance logic, min-payout note, real growth chart, Make Primary, Edit link fix).
-- Edit: `src/merchant/pages/BankVerification.jsx` (load by `?id=`).
-- New secret: `ADMIN_API_TOKEN`.
-
-## 7. Out of scope
-- No merchant-facing "Request Payout" button (you initiate manually).
-- No automated bi-monthly scheduler.
-- No changes to commission logic or the transactions ledger schema beyond adding `payout_id`.
+Confirm and I'll build it.

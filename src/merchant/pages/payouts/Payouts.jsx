@@ -4,6 +4,9 @@ import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
 import { useMerchantMode } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
+import WithdrawModal from '../../components/WithdrawModal'
+
+const MIN_WITHDRAW = 2000
 
 const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'GHS' }).format(Number(v || 0))
 
@@ -33,6 +36,8 @@ export default function Payouts() {
   const [monthly, setMonthly] = useState([])
   const [banks, setBanks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const primaryBank = banks.find((b) => b.is_primary) || banks[0] || null
   const backupBanks = banks.filter((b) => b.id !== primaryBank?.id)
@@ -77,7 +82,7 @@ export default function Payouts() {
       setLoading(false)
     })()
     return () => { cancel = true }
-  }, [active?.id, mode])
+  }, [active?.id, mode, refreshKey])
 
   const maxVal = useMemo(() => Math.max(1, ...monthly.map((m) => m.value)), [monthly])
   const totalBar = totals.available + totals.incoming
@@ -108,15 +113,36 @@ export default function Payouts() {
         <div className="lg:col-span-2 space-y-6">
           {/* Balance card */}
           <section className="rounded-xl border border-white/10 bg-[hsl(var(--card))] p-6">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-1.5 text-xs text-white/50 uppercase tracking-wide">
                   Payout Balance <Icon name="help" size={12} />
                 </div>
                 <div className="mt-2 text-4xl font-semibold text-white tabular-nums">{fmt(totals.available)}</div>
               </div>
-              <Link to="/merchant/payouts/balances" className="text-sm text-emerald-400 hover:text-emerald-300">View Details</Link>
+              <div className="flex items-center gap-3">
+                {(() => {
+                  const canWithdraw = activated && totals.available >= MIN_WITHDRAW && !!primaryBank
+                  const reason = !activated
+                    ? 'Complete verification to enable withdrawals'
+                    : !primaryBank ? 'Link a bank account first'
+                    : totals.available < MIN_WITHDRAW ? `Minimum withdrawal is ${fmt(MIN_WITHDRAW)}`
+                    : ''
+                  return (
+                    <button
+                      onClick={() => setWithdrawOpen(true)}
+                      disabled={!canWithdraw}
+                      title={reason}
+                      className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:bg-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Icon name="bank" size={14} /> Withdraw
+                    </button>
+                  )
+                })()}
+                <Link to="/merchant/payouts/balances" className="text-sm text-emerald-400 hover:text-emerald-300">View Details</Link>
+              </div>
             </div>
+
 
             <div className="mt-6 h-2 w-full rounded-full bg-white/5 overflow-hidden">
               <div className="h-full bg-emerald-500 transition-all" style={{ width: `${availPct}%` }} />
@@ -226,6 +252,16 @@ export default function Payouts() {
           </section>
         </div>
       </div>
+
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        businessId={active?.id}
+        mode={mode}
+        available={totals.available}
+        bank={primaryBank}
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   )
 }
