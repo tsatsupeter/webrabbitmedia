@@ -17,7 +17,7 @@ import {
   dayKey,
 } from '../analytics/bucket'
 
-const TABS = ['Revenue', 'Customers', 'Success Rate', 'Recovery']
+const TABS = ['Revenue', 'Customers', 'Success Rate']
 
 const RANGES = [
   { key: '7', label: 'Last 7 days', days: 7 },
@@ -172,10 +172,8 @@ export default function Analytics() {
         <RevenueTab {...{ txns, prevTxns, payouts, prevPayouts, days, cmpDays, alignPrev, xLabels, tooltipLabel, cmp, successful }} />
       ) : active === 'Customers' ? (
         <CustomersTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp, successful }} />
-      ) : active === 'Success Rate' ? (
-        <SuccessTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }} />
       ) : (
-        <RecoveryTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }} />
+        <SuccessTab {...{ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }} />
       )}
     </div>
   )
@@ -430,77 +428,3 @@ function SuccessTab({ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cm
   )
 }
 
-// ---------- Recovery ----------
-
-function RecoveryTab({ txns, prevTxns, days, alignPrev, xLabels, tooltipLabel, cmp }) {
-  const successful = (r) => SUCCESS_STATUSES.includes(r.status)
-
-  // A "recovery" = a customer had a failed txn followed by a successful txn in the range.
-  function computeRecovery(rows) {
-    const byCustomer = new Map()
-    for (const r of rows) {
-      const ck = customerKey(r)
-      if (!ck) continue
-      if (!byCustomer.has(ck)) byCustomer.set(ck, [])
-      byCustomer.get(ck).push(r)
-    }
-    let recoveredCount = 0
-    let recoveredAmount = 0
-    let failedCount = 0
-    const perDay = new Map(days.map((d) => [dayKey(d), 0]))
-    for (const [, list] of byCustomer) {
-      list.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      let hadFail = false
-      for (const r of list) {
-        if (r.status === 'failed') {
-          hadFail = true
-          failedCount++
-        } else if (successful(r) && hadFail) {
-          recoveredCount++
-          recoveredAmount += Number(r.gross_amount)
-          const k = dayKey(r.created_at)
-          if (perDay.has(k)) perDay.set(k, perDay.get(k) + Number(r.gross_amount))
-          hadFail = false
-        }
-      }
-    }
-    const series = []
-    let s = 0
-    for (const d of days) {
-      s += perDay.get(dayKey(d)) || 0
-      series.push(Math.round(s * 100) / 100)
-    }
-    const rate = failedCount > 0 ? Math.round((recoveredCount / failedCount) * 1000) / 10 : 0
-    return { recoveredCount, recoveredAmount, failedCount, series, rate }
-  }
-
-  const now = computeRecovery(txns)
-  const prev = computeRecovery(prevTxns)
-  const seriesPrev = alignPrev(prev.series)
-
-  const dR = pctDelta(now.rate, prev.rate)
-  const dA = pctDelta(now.recoveredAmount, prev.recoveredAmount)
-
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <ChartCard
-        title="Retry Success Rate"
-        value={`${now.rate}%`}
-        delta={cmp && prev.rate > 0 ? <DeltaLine dir={dR.dir} pct={dR.pct} vsLabel="previous period" vsValue={`${prev.rate}%`} /> : null}
-      >
-        <div className="text-white/50 text-[0.85rem] mb-4">
-          {now.recoveredCount} recovered out of {now.failedCount} failed attempts.
-        </div>
-        <LineChart values={now.series} compare={cmp ? seriesPrev : undefined} xLabels={xLabels} tooltipLabel={tooltipLabel} formatY={(v) => fmtGHS(v)} />
-      </ChartCard>
-
-      <ChartCard
-        title="Recovered Amount"
-        value={fmtGHS(now.recoveredAmount)}
-        delta={cmp && prev.recoveredAmount > 0 ? <DeltaLine dir={dA.dir} pct={dA.pct} vsLabel="previous period" vsValue={fmtGHS(prev.recoveredAmount)} /> : null}
-      >
-        <LineChart values={now.series} compare={cmp ? seriesPrev : undefined} xLabels={xLabels} tooltipLabel={tooltipLabel} formatY={(v) => fmtGHS(v)} />
-      </ChartCard>
-    </div>
-  )
-}

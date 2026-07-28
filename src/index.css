@@ -17,6 +17,12 @@
   --color-merchant-bg: #0a0f0c;
   --color-merchant-panel: #0f1712;
   --color-merchant-border: rgba(255,255,255,0.06);
+  --color-merchant-success: #22c55e;
+  --color-merchant-success-bg: rgba(34, 197, 94, 0.15);
+  --color-merchant-danger: #ef4444;
+  --color-merchant-danger-bg: rgba(239, 68, 68, 0.15);
+  --color-merchant-warning: #f59e0b;
+  --color-merchant-warning-bg: rgba(245, 158, 11, 0.15);
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "DM Sans", system-ui, sans-serif;
 }

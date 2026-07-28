@@ -58,6 +58,8 @@ const paths = {
   dots: <path d="M6 12h.01M12 12h.01M18 12h.01" />,
   clock: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 5v5l3 2" />,
   scale: <path d="M12 3v18M6 8l-3 6a3 3 0 006 0L6 8zm12 0l-3 6a3 3 0 006 0l-3-6zM5 21h14" />,
+  panelLeft: <path d="M4 4h16v16H4V4zm3 0v16" />,
+  panelRight: <path d="M4 4h16v16H4V4zm10 0v16" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {

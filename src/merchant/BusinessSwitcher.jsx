@@ -16,7 +16,7 @@ function Avatar({ name, className = '' }) {
   )
 }
 
-export default function BusinessSwitcher() {
+export default function BusinessSwitcher({ compact = false }) {
   const navigate = useNavigate()
   const { businesses, active, activeId, setActive } = useBusinesses()
   const [open, setOpen] = useState(false)
@@ -37,7 +37,12 @@ export default function BusinessSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full h-16 px-4 flex items-center gap-2.5 border-b border-merchant-border hover:bg-white/[0.03] transition-colors"
+        className={`${
+          compact
+            ? 'w-full h-16 flex items-center justify-center'
+            : 'w-full h-16 px-4 flex items-center gap-2.5'
+        } border-b border-merchant-border hover:bg-white/[0.03] transition-colors`}
+        aria-label={title}
       >
         {active ? (
           <Avatar name={active.name} />
@@ -50,17 +55,21 @@ export default function BusinessSwitcher() {
             className="rounded-md ring-1 ring-white/10"
           />
         )}
-        <div className="flex-1 min-w-0 text-left">
-          <div className="font-display font-semibold text-[0.9rem] text-white truncate">{title}</div>
-          <div className="text-[0.65rem] text-white/40 uppercase tracking-wider">Merchant</div>
-        </div>
-        <div className="w-6 h-6 flex items-center justify-center rounded text-white/40">
-          <Icon name="chevron" size={14} className="rotate-90" />
-        </div>
+        {!compact && (
+          <>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="font-display font-semibold text-[0.9rem] text-white truncate">{title}</div>
+              <div className="text-[0.65rem] text-white/40 uppercase tracking-wider">Merchant</div>
+            </div>
+            <div className="w-6 h-6 flex items-center justify-center rounded text-white/40">
+              <Icon name="chevron" size={14} className="rotate-90" />
+            </div>
+          </>
+        )}
       </button>
 
       {open && (
-        <div className="absolute z-40 top-full left-3 right-3 mt-2 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden">
+        <div className={`absolute z-40 top-full ${compact ? 'left-full ml-2' : 'left-3 right-3'} mt-2 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden min-w-[220px]`}>
           <div className="px-4 py-3 border-b border-merchant-border">
             <div className="text-[0.8rem] font-semibold text-white">My Businesses</div>
           </div>

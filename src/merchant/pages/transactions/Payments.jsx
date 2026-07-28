@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
@@ -114,13 +114,14 @@ function ToolbarBtn({ icon, children, onClick, active }) {
 export default function Payments({ scope = 'all' }) {
   const { active } = useBusinesses()
   const { mode, modeReady } = useMerchantMode()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [range, setRange] = useState('30d')
   const [statuses, setStatuses] = useState(new Set())
   const [methods, setMethods] = useState(new Set())
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [showFilters, setShowFilters] = useState(false)
   const [selected, setSelected] = useState(null)
 
@@ -149,6 +150,24 @@ export default function Payments({ scope = 'all' }) {
   }, [active, mode, modeReady, range, scope])
 
   useEffect(() => { load() }, [load])
+
+  // Keep local search state in sync with URL search param from the topbar.
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || ''
+    if (urlSearch !== search) setSearch(urlSearch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  const onSearchChange = (e) => {
+    const value = e.target.value
+    setSearch(value)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (value) next.set('search', value)
+      else next.delete('search')
+      return next
+    }, { replace: true })
+  }
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -224,7 +243,7 @@ export default function Payments({ scope = 'all' }) {
             <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={onSearchChange}
               placeholder="Search ID, phone, email…"
               className="h-9 pl-9 pr-3 rounded-lg text-[0.82rem] bg-merchant-panel/40 border border-merchant-border text-white placeholder:text-white/35 w-64 focus:outline-none focus:border-emerald-500/40"
             />

@@ -140,7 +140,7 @@ export default function GetStarted() {
 
   return (
     <div className="w-full px-4 md:px-8 py-6 space-y-10">
-      {modeReady && (
+      {modeReady && !approved && (
         <div className="flex justify-center">
           <div
             className={`px-4 py-2 rounded-lg border text-[0.8rem] flex items-center gap-2 ${
@@ -239,7 +239,7 @@ export default function GetStarted() {
             icon="brackets"
             title="API documentation"
             desc="Reference for the Collect endpoints, authentication with your API keys and webhook payloads."
-            to="#"
+            to="/docs"
             cta="Read the docs"
           />
           <ActionCard

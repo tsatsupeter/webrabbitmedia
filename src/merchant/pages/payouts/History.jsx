@@ -24,7 +24,7 @@ const STATUS_STYLES = {
   failed: 'bg-red-500/15 text-red-400 border-red-500/25',
 }
 
-export default function Balances() {
+export default function History() {
   const { active } = useBusinesses()
   const { mode, modeReady } = useMerchantMode()
   const [payouts, setPayouts] = useState([])
