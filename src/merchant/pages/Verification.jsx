@@ -179,6 +179,10 @@ export default function Verification() {
       navigate('/merchant/verification/product-information')
       return
     }
+    if (key === 'identity') {
+      navigate('/merchant/verification/identity')
+      return
+    }
     if (!active?.id) return
     const next = markStepComplete(active.id, key)
     setCompletedStepsState(next)
