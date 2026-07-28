@@ -37,7 +37,7 @@ export const navGroups = [
         label: 'Transactions',
         icon: 'swap',
         children: [
-          { key: 'tx-payments', label: 'Payments' },
+          { key: 'tx-payments', label: 'Payments', to: '/merchant/transactions/payments' },
           { key: 'tx-refunds', label: 'Refunds' },
         ],
       },
