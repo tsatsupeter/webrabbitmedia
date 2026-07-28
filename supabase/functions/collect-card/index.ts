@@ -75,34 +75,42 @@ Deno.serve(async (req) => {
       customer_email,
     }
     if (redirect_url) upstreamBody['3d_url_response'] = redirect_url
-    const { json } = await payswitchPost(mode, '/v1.1/transaction/process', upstreamBody)
+    let json: any = null
+    let upstreamErr: Error | null = null
+    try {
+      const res = await payswitchPost(mode, '/v1.1/transaction/process', upstreamBody)
+      json = res.json
+    } catch (e) {
+      upstreamErr = e instanceof Error ? e : new Error(String(e))
+    }
 
-    const approved = json?.code === '000' || json?.status === 'approved'
-    const vbv = json?.status === 'vbv required'
-    const status = approved ? 'approved' : (vbv ? 'pending' : 'failed')
+    const approved = !upstreamErr && (json?.code === '000' || json?.status === 'approved')
+    const vbv = !upstreamErr && json?.status === 'vbv required'
+    const status = upstreamErr ? 'failed' : (approved ? 'approved' : (vbv ? 'pending' : 'failed'))
     const fee = approved ? Math.round(amount * (auth.commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
 
     await db.from('transactions')
       .update({
         status, fee_amount: fee, net_amount: net,
-        provider_code: json?.code ?? null,
-        provider_reason: json?.reason ?? null,
-        raw_response: json,
+        provider_code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
+        provider_reason: upstreamErr ? upstreamErr.message : (json?.reason ?? null),
+        raw_response: upstreamErr ? { error: upstreamErr.message } : json,
       })
       .eq('provider_transaction_id', provider_transaction_id)
       .eq('business_id', auth.business.id)
 
     return jsonResponse({
       transaction_id: provider_transaction_id,
-      status: json?.status ?? status,
-      code: json?.code != null ? String(json.code) : null,
-      reason: json?.reason ?? null,
+      status: upstreamErr ? 'failed' : (json?.status ?? status),
+      code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
+      reason: upstreamErr ? 'Upstream provider unavailable' : (json?.reason ?? null),
       gross_amount: amount,
       fee_amount: fee,
       net_amount: net,
       currency,
-    })
+    }, upstreamErr ? 502 : 200)
+
   } catch (e) {
     return handleError(e)
   }

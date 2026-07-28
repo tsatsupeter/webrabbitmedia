@@ -391,7 +391,7 @@ export default function Payments({ scope = 'all' }) {
         )}
       </div>
 
-      <TxDetailsDrawer tx={selected} onClose={() => setSelected(null)} />
+      <TxDetailsDrawer tx={selected} onClose={() => setSelected(null)} onReconciled={load} />
     </div>
   )
 }
