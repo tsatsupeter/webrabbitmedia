@@ -1,19 +1,20 @@
-Replace the user's real phone number (0248980332) and its international format (233248980332) with the demo number (0240000000 / 233240000000) across all documentation pages and code examples. This is a find-and-replace sweep only; no functional code changes.
+## What's happening
 
-### Files to edit
-- `src/pages/docs/sections/Idempotency.jsx`
-- `src/pages/docs/sections/PayoutMomo.jsx`
-- `src/pages/docs/sections/CollectMomo.jsx`
-- `src/pages/docs/sections/TestData.jsx`
-- `src/pages/docs/sections/Quickstart.jsx`
-- `src/pages/docs/sections/TransactionsList.jsx`
+The business `LETGOALBET` (user `support@letgoalbet.com`) was successfully created in the DB (status=`pending`, `profiles.last_active_business_id` was updated), but the browser stayed on `/auth/create-business`. That means the `insert()` succeeded but something between the insert and `navigate('/merchant')` in `src/pages/CreateBusiness.jsx` prevented the redirect — most likely the follow-up `profiles.update(...)` or `.select().single()` after `insert` threw (caught by `try/catch`, toast shown, `navigate` skipped) even though the row was written.
 
-### Changes
-1. Replace `0248980332` with `0240000000` everywhere.
-2. Replace `233248980332` with `233240000000` everywhere.
-3. Verify no occurrences of the real number remain in `src/pages/docs/`.
-4. Run a build check to ensure no JSX errors were introduced.
+## Fix
 
-### Out of scope
-- No changes to app logic, merchant pages, or Edge Functions.
-- No changes to non-doc source files unless they contain the same real number in user-facing examples.
+1. **Harden `src/pages/CreateBusiness.jsx`** so a successful business insert always redirects:
+   - Wrap the post-insert profile update in its own `try/catch` so it can never block navigation.
+   - If `.select().single()` returns no row (RLS/replication edge case), fall back to re-querying `businesses` by `user_id` for the newest row before navigating.
+   - Always `navigate('/merchant', { replace: true })` on successful insert; only show error toast when the actual insert failed.
+
+2. **Belt-and-suspenders in `src/components/ProtectedRoute.jsx`**: when the requireBusiness check returns 0, re-check once after a short delay before redirecting to `/auth/create-business` (handles the race where a just-created row isn't visible yet).
+
+3. **Approve `LETGOALBET`** via a data change:
+   - `UPDATE public.businesses SET status='approved' WHERE id='3b0d5696-32bf-4918-a556-fbefd573e6c0';`
+   - The existing `notify_business_approved` trigger will insert the merchant notification automatically.
+
+## Out of scope
+
+No schema changes, no UI redesign, no changes to other merchant pages.
