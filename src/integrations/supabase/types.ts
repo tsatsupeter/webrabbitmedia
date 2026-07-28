@@ -61,6 +61,66 @@ export type Database = {
           },
         ]
       }
+      bank_verification: {
+        Row: {
+          account_holder_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          branch_address: string | null
+          branch_name: string | null
+          business_id: string
+          country: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          proof_doc_path: string | null
+          routing_code: string | null
+          routing_type: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          branch_address?: string | null
+          branch_name?: string | null
+          business_id: string
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          proof_doc_path?: string | null
+          routing_code?: string | null
+          routing_type?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          branch_address?: string | null
+          branch_name?: string | null
+          business_id?: string
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          proof_doc_path?: string | null
+          routing_code?: string | null
+          routing_type?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_verification: {
         Row: {
           address_line1: string | null
