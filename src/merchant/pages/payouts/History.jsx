@@ -79,7 +79,7 @@ export default function Balances() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="w-full px-4 md:px-8 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-white">Payout History</h1>
         <div className="flex items-center gap-2">

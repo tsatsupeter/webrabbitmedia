@@ -232,11 +232,12 @@ export default function Verification() {
   }
 
   if (loading && !active) {
-    return <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8" />
+    return <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8" />
+
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-8">
+    <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-8">
       {state === 'basics' && (
         <>
           <div className="flex items-center gap-3 px-5 h-14 rounded-xl border border-accent/40 bg-accent/[0.08]">

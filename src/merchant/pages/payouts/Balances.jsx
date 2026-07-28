@@ -274,7 +274,7 @@ export default function Balances() {
     typeFilter.size !== ALL_TYPES.length || dateActive || channelFilter !== 'ALL'
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="w-full px-4 md:px-8 py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-white">Account Statement</h1>
       </div>
