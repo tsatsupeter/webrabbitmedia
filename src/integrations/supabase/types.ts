@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          access: string
+          business_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          key_hash: string
+          key_prefix: string
+          name: string
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access?: string
+          business_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key_hash: string
+          key_prefix: string
+          name: string
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access?: string
+          business_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          name?: string
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_verification: {
         Row: {
           address_line1: string | null
@@ -129,6 +176,7 @@ export type Database = {
           name: string
           product_category: string
           referral_source: string
+          status: string
           updated_at: string
           user_id: string
           website_url: string
@@ -143,6 +191,7 @@ export type Database = {
           name: string
           product_category: string
           referral_source: string
+          status?: string
           updated_at?: string
           user_id: string
           website_url: string
@@ -157,6 +206,7 @@ export type Database = {
           name?: string
           product_category?: string
           referral_source?: string
+          status?: string
           updated_at?: string
           user_id?: string
           website_url?: string
