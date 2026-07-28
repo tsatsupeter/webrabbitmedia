@@ -287,12 +287,17 @@ export default function Auth() {
                 <label htmlFor="otp" className="block text-[0.85rem] text-white/70 mb-2">6-digit code</label>
                 <input
                   id="otp"
+                  ref={otpInputRef}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   required
                   maxLength={6}
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 6)
+                    setOtp(v)
+                    if (v.length === 6 && !busy) verifyOtp()
+                  }}
                   placeholder="123456"
                   className="w-full h-11 px-3.5 rounded-lg bg-merchant-panel border-2 border-accent/60 text-white placeholder:text-white/35 outline-none focus:border-accent-bright focus:ring-4 focus:ring-accent/20 transition-all text-[0.9rem] tracking-widest"
                 />
@@ -303,6 +308,14 @@ export default function Auth() {
                 className="w-full h-11 rounded-lg bg-white text-black text-[0.9rem] font-medium hover:bg-white/90 transition-colors disabled:opacity-60"
               >
                 {busy ? 'Verifying…' : 'Verify code'}
+              </button>
+              <button
+                type="button"
+                disabled={busy || resendIn > 0}
+                onClick={sendOtp}
+                className="w-full h-10 rounded-lg text-[0.85rem] text-white/70 hover:text-white disabled:opacity-50"
+              >
+                {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
               </button>
             </form>
           )}
