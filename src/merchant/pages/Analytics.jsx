@@ -17,7 +17,7 @@ import {
   dayKey,
 } from '../analytics/bucket'
 
-const TABS = ['Revenue', 'Customers', 'Success Rate', 'Recovery']
+const TABS = ['Revenue', 'Customers', 'Success Rate']
 
 const RANGES = [
   { key: '7', label: 'Last 7 days', days: 7 },
