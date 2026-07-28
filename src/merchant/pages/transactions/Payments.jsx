@@ -243,7 +243,7 @@ export default function Payments({ scope = 'all' }) {
             <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={onSearchChange}
               placeholder="Search ID, phone, email…"
               className="h-9 pl-9 pr-3 rounded-lg text-[0.82rem] bg-merchant-panel/40 border border-merchant-border text-white placeholder:text-white/35 w-64 focus:outline-none focus:border-emerald-500/40"
             />
