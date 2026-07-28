@@ -17,7 +17,7 @@ const BRAND = {
   replyTo: 'support@webrabbitmedia.com',
   site: 'https://webrabbitmedia.com',
   dashboard: 'https://webrabbitmedia.com/merchant',
-  logo: 'https://webrabbitmedia.com/logo.png',
+  logo: 'https://webrabbitmedia.com/webrabbitmedia-logo-green.jpeg',
   accent: '#B7F94A',
   ink: '#0a0a0a',
   muted: '#55575d',
@@ -238,10 +238,10 @@ function renderHtml(c: Content, recipient: { name?: string }): string {
     <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
       <tr><td style="padding:0 4px 20px;">
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-          <td style="width:36px;height:36px;background:${BRAND.accent};border-radius:999px;text-align:center;vertical-align:middle;">
-            <img src="${BRAND.logo}" alt="" width="24" height="24" style="display:inline-block;vertical-align:middle;border-radius:999px;">
+          <td style="width:40px;height:40px;background:${BRAND.accent};border-radius:999px;text-align:center;vertical-align:middle;overflow:hidden;">
+            <img src="${BRAND.logo}" alt="${BRAND.name}" width="40" height="40" style="display:block;width:40px;height:40px;border-radius:999px;object-fit:cover;">
           </td>
-          <td style="padding-left:10px;font-size:15px;font-weight:600;color:${BRAND.ink};">${BRAND.name}</td>
+          <td style="padding-left:12px;font-size:15px;font-weight:600;color:${BRAND.ink};">${BRAND.name}</td>
         </tr></table>
       </td></tr>
       <tr><td style="background:#ffffff;border:1px solid ${BRAND.border};border-radius:14px;padding:28px 28px 24px;">
