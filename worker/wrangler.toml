@@ -13,11 +13,33 @@ custom_domain = true
 SUPABASE_FUNCTIONS_URL = "https://eydjkasswyygiycitnml.supabase.co/functions/v1"
 # Publishable anon key is safe to ship (public by design; RLS enforces access).
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZGprYXNzd3l5Z2l5Y2l0bm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxOTM0ODYsImV4cCI6MjEwMDc2OTQ4Nn0.Y7IKnmjSUeWMXs5PabDNSd2YeciPFmpmhokiJBbOnSI"
+# Legacy KV limiter fallback (kept for diagnostics; native binding is primary).
 RATE_LIMIT_PER_10S = "60"
 
-# Sliding-window rate limit storage. Create with:
-#   wrangler kv:namespace create RL
-# then paste the returned id below.
+# Diagnostic fallback only. Native Rate Limiting binding below is the primary
+# enforcement path so bursts can't slip through KV eventual-consistency windows.
 [[kv_namespaces]]
 binding = "RL"
 id = "685c786de65b462ea023e1d0e8298214"
+
+# Cloudflare native Rate Limiting binding — authenticated callers, per API key.
+# 60 requests / 10 seconds. Enforced at the edge; strongly consistent per colo.
+[[unsafe.bindings]]
+name = "RATE_LIMITER_KEY"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 60, period = 10 }
+
+# Native Rate Limiting binding — unauthenticated callers, per client IP.
+# 20 requests / 10 seconds protects the 401 path from brute force.
+[[unsafe.bindings]]
+name = "RATE_LIMITER_IP"
+type = "ratelimit"
+namespace_id = "1002"
+simple = { limit = 20, period = 10 }
+
+# Workers Analytics Engine — one datapoint per /v1 request for latency/status
+# dashboards. Free tier, 90-day retention, queryable via GraphQL.
+[[analytics_engine_datasets]]
+binding = "METRICS"
+dataset = "webrabbit_api_v1"

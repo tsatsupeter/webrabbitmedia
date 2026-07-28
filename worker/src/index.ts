@@ -1,55 +1,136 @@
 import { CORS, errorJson, json, newRequestId, type Env } from './lib/response'
 import { checkRateLimit } from './lib/ratelimit'
 import { forward } from './lib/proxy'
+import { emitLog, emitMetric, type LogFields } from './lib/log'
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const started = Date.now()
     const requestId = req.headers.get('x-request-id') || newRequestId()
-    if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
-
     const url = new URL(req.url)
     const path = url.pathname
+    const clientIp = req.headers.get('cf-connecting-ip')
+    const ua = req.headers.get('user-agent')
 
-    if (path === '/v1/health') {
-      return json({ ok: true, service: 'webrabbit-api', request_id: requestId }, 200, { 'x-request-id': requestId })
+    const base: LogFields = {
+      request_id: requestId,
+      method: req.method,
+      path,
+      status: 0,
+      duration_ms: 0,
+      ip: clientIp,
+      ua,
+      rl_limited: false,
+      rl_source: 'none',
+      idempotency: 'none',
+      upstream_status: null,
+      error: null,
     }
 
-    // Rate limit before touching Supabase.
+    const finish = (resp: Response, extra: Partial<LogFields> = {}): Response => {
+      const fields: LogFields = {
+        ...base,
+        ...extra,
+        status: resp.status,
+        duration_ms: Date.now() - started,
+      }
+      emitLog(fields)
+      emitMetric(env, fields)
+      return resp
+    }
+
+    if (req.method === 'OPTIONS') {
+      return finish(new Response('ok', { headers: CORS }))
+    }
+
+    if (path === '/v1/health') {
+      const resp = json(
+        { ok: true, service: 'webrabbit-api', request_id: requestId },
+        200,
+        { 'x-request-id': requestId },
+      )
+      return finish(resp)
+    }
+
     const authHeader = req.headers.get('authorization')
     const bearer = authHeader?.toLowerCase().startsWith('bearer ') ? authHeader.slice(7).trim() : null
-    const rl = await checkRateLimit(env, bearer)
+
+    // Rate limit before touching Supabase.
+    const rl = await checkRateLimit(env, bearer, clientIp)
     if (!rl.allowed) {
-      return errorJson('Rate limit exceeded', 429, requestId)
+      const resp = errorJson('Rate limit exceeded', 429, requestId, {
+        'retry-after': String(rl.retryAfter),
+        'x-ratelimit-limit': String(rl.limit),
+        'x-ratelimit-remaining': '0',
+      })
+      return finish(resp, { rl_limited: true, rl_source: rl.source })
     }
 
     try {
       // POST /v1/collect/momo
       if (req.method === 'POST' && path === '/v1/collect/momo') {
-        return await forward(env, 'collect-momo', req, {}, requestId)
+        const r = await forward(env, 'collect-momo', req, {}, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+          idempotency: r.idempotency,
+        })
       }
       // POST /v1/collect/card
       if (req.method === 'POST' && path === '/v1/collect/card') {
-        return await forward(env, 'collect-card', req, {}, requestId)
+        const r = await forward(env, 'collect-card', req, {}, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+        })
       }
       // POST /v1/payout/momo
       if (req.method === 'POST' && path === '/v1/payout/momo') {
-        return await forward(env, 'payout-momo', req, {}, requestId)
+        const r = await forward(env, 'payout-momo', req, {}, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+          idempotency: r.idempotency,
+        })
       }
       // GET /v1/transactions/:id
       const txnMatch = path.match(/^\/v1\/transactions\/([^/]+)$/)
       if (req.method === 'GET' && txnMatch) {
         const id = txnMatch[1]
-        return await forward(env, 'transaction-status', req, { search: `?transaction_id=${encodeURIComponent(id)}` }, requestId)
+        const r = await forward(env, 'transaction-status', req, { search: `?transaction_id=${encodeURIComponent(id)}` }, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+        })
       }
       // GET /v1/transactions
       if (req.method === 'GET' && path === '/v1/transactions') {
-        return await forward(env, 'list-transactions', req, {}, requestId)
+        const r = await forward(env, 'list-transactions', req, {}, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+        })
       }
 
-      return errorJson('not_found', 404, requestId)
+      return finish(errorJson('not_found', 404, requestId), { rl_source: rl.source })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'internal_error'
-      return errorJson(msg, 500, requestId)
+      return finish(errorJson(msg, 500, requestId), { rl_source: rl.source, error: msg })
     }
   },
 }
