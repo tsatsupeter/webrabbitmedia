@@ -4,10 +4,10 @@ export const navGroups = [
     label: null,
     items: [
       { key: 'get-started', label: 'Get Started', icon: 'rocket', to: '/merchant' },
-      { key: 'verification', label: 'Verification', icon: 'shield' },
-      { key: 'home', label: 'Home', icon: 'home' },
-      { key: 'analytics', label: 'Analytics', icon: 'chart' },
-      { key: 'sentra', label: 'Sentra AI', icon: 'sparkles' },
+      { key: 'verification', label: 'Verification', icon: 'shield', to: '/merchant/verification' },
+      { key: 'home', label: 'Home', icon: 'home', to: '/merchant/home' },
+      { key: 'analytics', label: 'Analytics', icon: 'chart', to: '/merchant/analytics' },
+      { key: 'sentra', label: 'Sentra AI', icon: 'sparkles', to: '/merchant/sentra' },
     ],
   },
   {

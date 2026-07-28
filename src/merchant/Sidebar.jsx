@@ -40,7 +40,7 @@ export default function Sidebar({ onNavigate }) {
                 </>
               )
               const base =
-                'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.85rem] transition-colors'
+                'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.85rem] transition-colors no-underline'
               if (item.to) {
                 return (
                   <NavLink

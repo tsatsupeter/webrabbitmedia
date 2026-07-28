@@ -28,6 +28,18 @@ const paths = {
   brackets: <path d="M8 4l-4 8 4 8m8-16l4 8-4 8" />,
   mail: <path d="M3 6h18v12H3V6zm0 0l9 7 9-7" />,
   globe: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-9 9h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" />,
+  check: <path d="M5 13l4 4L19 7" />,
+  seal: <path d="M12 3l2.2 1.8 2.8-.3 1 2.6 2.6 1-.3 2.8L22 13l-1.7 2.1.3 2.8-2.6 1-1 2.6-2.8-.3L12 23l-2.2-1.8-2.8.3-1-2.6-2.6-1 .3-2.8L2 13l1.7-2.1-.3-2.8 2.6-1 1-2.6 2.8.3L12 3zm-3.5 10l2.5 2.5 5-5.5" />,
+  user: <path d="M12 4a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0116 0" />,
+  bank: <path d="M3 9l9-5 9 5v1H3V9zm2 3v6m4.7-6v6m4.6-6v6M19 12v6M3 20h18" />,
+  refresh: <path d="M4 11a8 8 0 0114-4l2 2m0-5v5h-5M20 13a8 8 0 01-14 4l-2-2m0 5v-5h5" />,
+  help: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-2.5 6.5a2.5 2.5 0 115 .7c-.6 1-2 1.3-2.3 2.6l-.1.7m0 3h.01" />,
+  share: <path d="M18 5a2 2 0 11-4 0 2 2 0 014 0zM8 12a2 2 0 11-4 0 2 2 0 014 0zm10 7a2 2 0 11-4 0 2 2 0 014 0zM8.7 11l5.6-3.5M8.7 13l5.6 3.5" />,
+  image: <path d="M4 5h16v14H4V5zm4.5 5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM4 16l5-5 4 4 3-3 4 4" />,
+  arrowUp: <path d="M12 19V5m-6 6l6-6 6 6" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  history: <path d="M4 5v5h5M4.6 10A8 8 0 114 14m8-6v4l3 2" />,
+  pencil: <path d="M4 20l1-4L16 5l3 3L8 19l-4 1zm10-13l3 3" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {

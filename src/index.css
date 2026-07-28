@@ -45,12 +45,15 @@ body {
   color: #ffffff;
 }
 
-a {
-  color: var(--color-accent);
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
+/* In @layer base so Tailwind utilities (e.g. dashboard nav colors) win. */
+@layer base {
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

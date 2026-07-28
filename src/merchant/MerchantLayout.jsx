@@ -2,15 +2,21 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import Icon from './Icon'
 
 const titleByPath = {
   '/merchant': 'Get Started',
+  '/merchant/verification': 'Verification',
+  '/merchant/home': 'Home',
+  '/merchant/analytics': 'Analytics',
 }
 
 export default function MerchantLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { pathname } = useLocation()
   const title = titleByPath[pathname] ?? 'Dashboard'
+  // Sentra is a full-bleed chat canvas: no topbar, like the reference.
+  const bareCanvas = pathname === '/merchant/sentra'
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex">
@@ -34,8 +40,18 @@ export default function MerchantLayout() {
       )}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <Topbar title={title} onMenuClick={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
+        {!bareCanvas && <Topbar title={title} onMenuClick={() => setMobileOpen(true)} />}
+        {bareCanvas && (
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden absolute top-5 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:bg-white/[0.06]"
+            aria-label="Open menu"
+          >
+            <Icon name="menu" size={20} />
+          </button>
+        )}
+        <main className="flex-1 overflow-y-auto flex flex-col">
           <Outlet />
         </main>
       </div>

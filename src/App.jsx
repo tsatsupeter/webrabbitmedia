@@ -8,6 +8,10 @@ import Powered from './pages/Powered'
 import Auth from './pages/Auth'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
+import Verification from './merchant/pages/Verification'
+import MerchantHome from './merchant/pages/MerchantHome'
+import Analytics from './merchant/pages/Analytics'
+import Sentra from './merchant/pages/Sentra'
 
 function App() {
   return (
@@ -23,6 +27,10 @@ function App() {
         </Route>
         <Route path="/merchant" element={<MerchantLayout />}>
           <Route index element={<GetStarted />} />
+          <Route path="verification" element={<Verification />} />
+          <Route path="home" element={<MerchantHome />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="sentra" element={<Sentra />} />
         </Route>
       </Routes>
     </BrowserRouter>
