@@ -99,6 +99,8 @@ export default function Auth() {
       if (error) throw error
       toast.success('Code sent to your email')
       setStep('otp')
+      setOtp('')
+      setResendIn(30)
     } catch (err) {
       toast.error(err.message || 'Failed to send code')
     } finally {
@@ -107,14 +109,16 @@ export default function Auth() {
   }
 
   async function verifyOtp(e) {
-    e.preventDefault()
-    if (!otp) return
+    if (e && e.preventDefault) e.preventDefault()
+    if (!otp || otp.length < 6) return
     setBusy(true)
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
       if (error) throw error
     } catch (err) {
-      toast.error(err.message || 'Invalid code')
+      toast.error(err.message || 'Invalid or expired code')
+      setOtp('')
+      otpInputRef.current?.focus()
     } finally {
       setBusy(false)
     }
