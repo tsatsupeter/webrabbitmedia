@@ -82,7 +82,7 @@ export default function Payouts() {
       setLoading(false)
     })()
     return () => { cancel = true }
-  }, [active?.id, mode])
+  }, [active?.id, mode, refreshKey])
 
   const maxVal = useMemo(() => Math.max(1, ...monthly.map((m) => m.value)), [monthly])
   const totalBar = totals.available + totals.incoming
