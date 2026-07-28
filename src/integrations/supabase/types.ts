@@ -59,6 +59,83 @@ export type Database = {
         }
         Relationships: []
       }
+      product_information: {
+        Row: {
+          acquisitions: string[]
+          business_id: string
+          category: string | null
+          confirmed_at: string | null
+          created_at: string
+          delivery_level: string | null
+          description: string | null
+          id: string
+          integrations: string[]
+          other_acquisition: string | null
+          payment_platform: string | null
+          receive_flow: string | null
+          receive_methods: string[]
+          risks: string[]
+          socials: string[]
+          stage: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          websites: string[]
+        }
+        Insert: {
+          acquisitions?: string[]
+          business_id: string
+          category?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          delivery_level?: string | null
+          description?: string | null
+          id?: string
+          integrations?: string[]
+          other_acquisition?: string | null
+          payment_platform?: string | null
+          receive_flow?: string | null
+          receive_methods?: string[]
+          risks?: string[]
+          socials?: string[]
+          stage?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          websites?: string[]
+        }
+        Update: {
+          acquisitions?: string[]
+          business_id?: string
+          category?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          delivery_level?: string | null
+          description?: string | null
+          id?: string
+          integrations?: string[]
+          other_acquisition?: string | null
+          payment_platform?: string | null
+          receive_flow?: string | null
+          receive_methods?: string[]
+          risks?: string[]
+          socials?: string[]
+          stage?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          websites?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_information_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
