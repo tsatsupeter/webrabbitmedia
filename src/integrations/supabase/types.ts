@@ -59,6 +59,83 @@ export type Database = {
         }
         Relationships: []
       }
+      identity_verification: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          business_id: string
+          city: string | null
+          country: string | null
+          created_at: string
+          date_of_birth: string | null
+          full_name: string | null
+          id: string
+          id_document_back_path: string | null
+          id_document_front_path: string | null
+          id_number: string | null
+          id_type: string | null
+          postal_code: string | null
+          selfie_path: string | null
+          state: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_id: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          id?: string
+          id_document_back_path?: string | null
+          id_document_front_path?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          postal_code?: string | null
+          selfie_path?: string | null
+          state?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_id?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          id?: string
+          id_document_back_path?: string | null
+          id_document_front_path?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          postal_code?: string | null
+          selfie_path?: string | null
+          state?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_verification_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_information: {
         Row: {
           acquisitions: string[]
