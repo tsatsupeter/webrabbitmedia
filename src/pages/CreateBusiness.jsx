@@ -93,10 +93,30 @@ export default function CreateBusiness() {
           monetization_note: form.note.trim() || null,
         })
         .select()
-        .single()
+        .maybeSingle()
       if (error) throw error
-      await supabase.from('profiles').update({ last_active_business_id: data.id }).eq('id', user.id)
-      if (typeof window !== 'undefined') localStorage.setItem('wr.activeBusinessId', data.id)
+
+      // Resolve the created business id even if .maybeSingle() returned nothing.
+      let bizId = data?.id
+      if (!bizId) {
+        const { data: latest } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        bizId = latest?.id
+      }
+
+      // Secondary writes must never block the redirect.
+      if (bizId) {
+        try {
+          await supabase.from('profiles').update({ last_active_business_id: bizId }).eq('id', user.id)
+        } catch { /* ignore */ }
+        if (typeof window !== 'undefined') localStorage.setItem('wr.activeBusinessId', bizId)
+      }
+
       toast.success('Business created')
       navigate('/merchant', { replace: true })
     } catch (err) {
