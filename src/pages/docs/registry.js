@@ -11,6 +11,9 @@ import CollectCard from './sections/CollectCard'
 import PayoutMomo from './sections/PayoutMomo'
 import TransactionsList from './sections/TransactionsList'
 import TransactionsRetrieve from './sections/TransactionsRetrieve'
+import ProviderCodes from './sections/ProviderCodes'
+import TestData from './sections/TestData'
+import Webhooks from './sections/Webhooks'
 
 // Single source of truth for sidebar, Cmd+K search, and prev/next pager.
 // `headings` is a flat list of {id, text, depth} for the on-this-page TOC / search.
@@ -171,6 +174,43 @@ export const groups = [
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
           { id: 'response', text: 'Response', depth: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Reference',
+    items: [
+      {
+        slug: 'provider-codes',
+        title: 'Provider codes',
+        summary: 'Full reference for the upstream code field returned on every transaction.',
+        Component: ProviderCodes,
+        headings: [
+          { id: 'approved', text: 'Approved', depth: 2 },
+          { id: 'declined', text: 'Declined by customer / issuer', depth: 2 },
+          { id: 'auth', text: 'Auth / configuration', depth: 2 },
+        ],
+      },
+      {
+        slug: 'test-data',
+        title: 'Test data',
+        summary: 'Test Mobile Money numbers and card PANs that work in test mode.',
+        Component: TestData,
+        headings: [
+          { id: 'momo', text: 'Test Mobile Money numbers', depth: 2 },
+          { id: 'cards', text: 'Test cards', depth: 2 },
+          { id: 'example', text: 'Example test charge', depth: 2 },
+        ],
+      },
+      {
+        slug: 'webhooks',
+        title: 'Webhooks',
+        summary: 'Signed webhook delivery is coming — use polling in the meantime.',
+        Component: Webhooks,
+        headings: [
+          { id: 'polling', text: 'Polling pattern (today)', depth: 2 },
+          { id: 'notify-me', text: 'Get notified at launch', depth: 2 },
         ],
       },
     ],

@@ -19,6 +19,11 @@ export default function Introduction() {
       <h2 id="base-url">Base URL</h2>
       <p>All endpoints are served over HTTPS at:</p>
       <p><code>{API_BASE}/{API_VERSION}</code></p>
+      <Callout type="info" title="One base URL — mode is inferred from the key">
+        There is no separate sandbox host. The mode of the request (<strong>test</strong> or{' '}
+        <strong>live</strong>) is determined by the key prefix: <code>wr_test_...</code> hits sandbox rails,
+        <code> wr_live_...</code> hits production rails. Test and live data are fully isolated.
+      </Callout>
 
       <h2 id="modes">Test mode & Live mode</h2>
       <p>
@@ -30,6 +35,10 @@ export default function Introduction() {
         You can create live API keys, but charges will fail until your business status is <code>approved</code>.
         Complete verification from the <Link to="/merchant/verification">Verification</Link> page.
       </Callout>
+      <p>
+        Only <strong>GHS</strong> is supported today. Amounts are decimal (e.g. <code>10.50</code>) — we
+        handle any pesewa-string conversion required by upstream rails.
+      </p>
 
       <p>Ready to charge your first customer?</p>
       <p><Link to="/docs/quickstart">Jump to the Quickstart →</Link></p>
