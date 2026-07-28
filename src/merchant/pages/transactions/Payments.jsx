@@ -291,7 +291,7 @@ export default function Payments({ scope = 'all' }) {
                 <th className="px-5 py-3 font-medium">Method</th>
                 <th className="px-5 py-3 font-medium">Customer</th>
                 <th className="px-5 py-3 font-medium">Date</th>
-                <th className="px-5 py-3 font-medium text-right">Refund</th>
+                
                 <th className="px-5 py-3 font-medium w-10"></th>
               </tr>
             </thead>
@@ -299,7 +299,7 @@ export default function Payments({ scope = 'all' }) {
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-t border-merchant-border">
-                    {Array.from({ length: 8 }).map((__, j) => (
+                    {Array.from({ length: 7 }).map((__, j) => (
                       <td key={j} className="px-5 py-4">
                         <div className="h-3 rounded bg-white/[0.05] animate-pulse" />
                       </td>
@@ -307,12 +307,12 @@ export default function Payments({ scope = 'all' }) {
                   </tr>
                 ))
               ) : error ? (
-                <tr><td colSpan={8} className="px-5 py-16 text-center">
+                <tr><td colSpan={7} className="px-5 py-16 text-center">
                   <div className="text-red-400 text-sm mb-2">{error}</div>
                   <button onClick={load} className="text-emerald-400 text-sm hover:underline">Retry</button>
                 </td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="px-5 py-20 text-center">
+                <tr><td colSpan={7} className="px-5 py-20 text-center">
                   <div className="mx-auto w-12 h-12 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/40 mb-3">
                     <Icon name="receipt" size={22} />
                   </div>
@@ -350,15 +350,6 @@ export default function Payments({ scope = 'all' }) {
                   </td>
                   <td className="px-5 py-3.5 text-[0.82rem] text-white/60 whitespace-nowrap">
                     {new Date(r.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <button
-                      disabled={r.status !== 'approved'}
-                      onClick={(e) => { e.stopPropagation(); toast.info('Refund API coming soon') }}
-                      className="h-7 px-2.5 rounded-md text-[0.75rem] border border-merchant-border bg-white/[0.03] text-white/75 hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Initiate Refund
-                    </button>
                   </td>
                   <td className="px-3 py-3.5 text-white/40">
                     <Icon name="chevron" size={14} />
