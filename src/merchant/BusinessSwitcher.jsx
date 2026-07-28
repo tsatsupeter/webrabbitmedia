@@ -69,7 +69,7 @@ export default function BusinessSwitcher({ compact = false }) {
       </button>
 
       {open && (
-        <div className="absolute z-40 top-full left-3 right-3 mt-2 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden">
+        <div className={`absolute z-40 top-full ${compact ? 'left-full ml-2' : 'left-3 right-3'} mt-2 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden min-w-[220px]`}>
           <div className="px-4 py-3 border-b border-merchant-border">
             <div className="text-[0.8rem] font-semibold text-white">My Businesses</div>
           </div>
