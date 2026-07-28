@@ -20,6 +20,8 @@ import Analytics from './merchant/pages/Analytics'
 import Sentra from './merchant/pages/Sentra'
 import ApiKeys from './merchant/pages/developer/ApiKeys'
 import Payments from './merchant/pages/transactions/Payments'
+import Payouts from './merchant/pages/payouts/Payouts'
+import Balances from './merchant/pages/payouts/Balances'
 import Refunds from './merchant/pages/transactions/Refunds'
 import Disputes from './merchant/pages/transactions/Disputes'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -61,6 +63,8 @@ function App() {
           <Route path="transactions/payments" element={<Payments />} />
           <Route path="transactions/refunds" element={<Refunds />} />
           <Route path="transactions/disputes" element={<Disputes />} />
+          <Route path="payouts" element={<Payouts />} />
+          <Route path="payouts/balances" element={<Balances />} />
         </Route>
       </Routes>
     </BrowserRouter>
