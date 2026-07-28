@@ -1,0 +1,45 @@
+name: Deploy (mirror to webrabbitmedia → Cloudflare Pages)
+
+# Cloudflare Pages auto-deploys the tsatsupeter/webrabbitmedia repo
+# (webrabbitmedia.com). This workflow keeps that repo in sync with main
+# here, so every commit — including Lovable edits — goes live.
+# Auth: MIRROR_SSH_KEY secret, paired with a write deploy key on the
+# webrabbitmedia repo.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-mirror
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  mirror:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push to deploy mirror
+        env:
+          SSH_KEY: ${{ secrets.MIRROR_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          git push --force git@github.com:tsatsupeter/webrabbitmedia.git HEAD:main
