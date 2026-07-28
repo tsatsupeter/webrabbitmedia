@@ -16,14 +16,6 @@ const fmtDate = (iso) =>
     hour12: true,
   })
 
-const CURRENCY_META = {
-  GHS: { name: 'Ghanaian Cedi', flag: '🇬🇭' },
-  USD: { name: 'US Dollar', flag: '🇺🇸' },
-  EUR: { name: 'Euro', flag: '🇪🇺' },
-  GBP: { name: 'Great British Pound', flag: '🇬🇧' },
-  NGN: { name: 'Nigerian Naira', flag: '🇳🇬' },
-}
-
 const ALL_COLS = [
   { key: 'type', label: 'Transaction Type' },
   { key: 'amount', label: 'Transaction Amount' },
@@ -34,6 +26,28 @@ const ALL_COLS = [
 ]
 
 const ALL_TYPES = ['Payment', 'Payment Fees', 'Payout']
+
+const CHANNEL_META = {
+  'MTN Mobile Money': { flag: '🇬🇭', sub: 'MTN · Ghana', color: 'text-yellow-400' },
+  'Vodafone Mobile Money': { flag: '🇬🇭', sub: 'Vodafone · Ghana', color: 'text-red-400' },
+  'AirtelTigo Mobile Money': { flag: '🇬🇭', sub: 'AirtelTigo · Ghana', color: 'text-blue-400' },
+  'Mobile Money': { flag: '🇬🇭', sub: 'Ghana', color: 'text-white/70' },
+  Card: { flag: '💳', sub: 'Visa / Mastercard', color: 'text-white/70' },
+  Payouts: { flag: '🏦', sub: 'Bank transfers out', color: 'text-red-400' },
+}
+
+function channelLabel(t) {
+  const ch = (t.channel || '').toLowerCase()
+  if (ch === 'momo') {
+    const s = (t.r_switch || '').toUpperCase()
+    if (s === 'MTN') return 'MTN Mobile Money'
+    if (s === 'VDF' || s === 'VOD') return 'Vodafone Mobile Money'
+    if (s === 'ATL' || s === 'TGO' || s === 'AT') return 'AirtelTigo Mobile Money'
+    return 'Mobile Money'
+  }
+  if (ch === 'card') return 'Card'
+  return ch ? ch.charAt(0).toUpperCase() + ch.slice(1) : 'Other'
+}
 
 function Popover({ open, onClose, children, align = 'right' }) {
   const ref = useRef(null)
@@ -68,7 +82,7 @@ export default function Balances() {
   const [typeFilter, setTypeFilter] = useState(new Set(ALL_TYPES))
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [currencyFilter, setCurrencyFilter] = useState('ALL')
+  const [channelFilter, setChannelFilter] = useState('ALL')
   const colsKey = `balances:cols:${active?.id || 'none'}`
   const [visibleCols, setVisibleCols] = useState(() => {
     try {
@@ -91,7 +105,7 @@ export default function Balances() {
     } catch {}
   }, [visibleCols, colsKey])
 
-  const [openPop, setOpenPop] = useState(null) // 'filters' | 'date' | 'currency' | 'cols'
+  const [openPop, setOpenPop] = useState(null) // 'filters' | 'date' | 'channel' | 'cols'
 
   useEffect(() => {
     if (!active?.id) return
@@ -101,10 +115,10 @@ export default function Balances() {
       const [{ data: t }, { data: p }] = await Promise.all([
         supabase
           .from('transactions')
-          .select('id,provider_transaction_id,gross_amount,fee_amount,net_amount,currency,status,type,created_at')
+          .select('id,provider_transaction_id,gross_amount,fee_amount,net_amount,currency,status,type,channel,r_switch,created_at')
           .eq('business_id', active.id)
           .eq('mode', mode)
-          .eq('status', 'success')
+          .in('status', ['approved', 'success'])
           .order('created_at', { ascending: true }),
         supabase
           .from('payouts')
@@ -125,11 +139,12 @@ export default function Balances() {
     }
   }, [active?.id, mode])
 
-  // Build full ledger (all events, chronological, with running balances per currency)
-  const { fullRows, totals, currencies, primaryCurrency } = useMemo(() => {
+  // Build full ledger with running balance
+  const { fullRows, breakdown, channels } = useMemo(() => {
     const events = []
     for (const t of txs) {
       const ccy = t.currency || 'GHS'
+      const label = channelLabel(t)
       events.push({
         key: `pay-${t.id}`,
         when: t.created_at,
@@ -137,6 +152,7 @@ export default function Balances() {
         amount: Number(t.gross_amount || 0),
         currency: ccy,
         txId: t.provider_transaction_id || t.id,
+        channel: label,
         sign: 1,
       })
       if (Number(t.fee_amount || 0) > 0) {
@@ -147,6 +163,7 @@ export default function Balances() {
           amount: Number(t.fee_amount || 0),
           currency: ccy,
           txId: t.provider_transaction_id || t.id,
+          channel: label,
           sign: -1,
         })
       }
@@ -159,52 +176,53 @@ export default function Balances() {
         amount: Number(p.net_amount || 0),
         currency: p.currency || 'GHS',
         txId: p.id,
+        channel: 'Payouts',
         sign: -1,
       })
     }
     events.sort((a, b) => new Date(a.when) - new Date(b.when))
 
-    const running = {}
+    // Running balance for whole ledger (used for the table's Previous/Updated columns)
+    let bal = 0
     const built = events.map((e) => {
-      const prev = running[e.currency] || 0
-      const next = prev + e.sign * e.amount
-      running[e.currency] = next
-      return { ...e, prev, next }
+      const prev = bal
+      bal = bal + e.sign * e.amount
+      return { ...e, prev, next: bal }
     })
 
-    const ccySet = Array.from(new Set(events.map((e) => e.currency)))
-    const counts = {}
-    for (const e of events) counts[e.currency] = (counts[e.currency] || 0) + 1
-    const primary =
-      Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'GHS'
-
-    return {
-      fullRows: built,
-      totals: running,
-      currencies: ccySet.length ? ccySet : ['GHS'],
-      primaryCurrency: primary,
+    // Breakdown by channel: net contribution per channel
+    const bd = {}
+    for (const e of events) {
+      const key = e.channel
+      if (!bd[key]) bd[key] = { channel: key, net: 0, count: 0 }
+      bd[key].net += e.sign * e.amount
+      if (e.type === 'Payment') bd[key].count += 1
     }
+    const bdList = Object.values(bd).sort((a, b) => b.net - a.net)
+    const chList = Array.from(new Set(events.filter((e) => e.channel !== 'Payouts').map((e) => e.channel)))
+
+    return { fullRows: built, breakdown: bdList, channels: chList }
   }, [txs, payouts])
 
-  // Apply filters (type, date range, currency)
+  // Apply filters (type, date range, channel)
   const filteredRows = useMemo(() => {
     const fromMs = dateFrom ? new Date(dateFrom).getTime() : null
     const toMs = dateTo ? new Date(dateTo).getTime() + 24 * 60 * 60 * 1000 - 1 : null
     const list = fullRows.filter((r) => {
       if (!typeFilter.has(r.type)) return false
-      if (currencyFilter !== 'ALL' && r.currency !== currencyFilter) return false
+      if (channelFilter !== 'ALL' && r.channel !== channelFilter) return false
       const t = new Date(r.when).getTime()
       if (fromMs !== null && t < fromMs) return false
       if (toMs !== null && t > toMs) return false
       return true
     })
-    // newest first for display
     return [...list].reverse()
-  }, [fullRows, typeFilter, dateFrom, dateTo, currencyFilter])
+  }, [fullRows, typeFilter, dateFrom, dateTo, channelFilter])
 
-  const displayCurrency = currencyFilter !== 'ALL' ? currencyFilter : primaryCurrency
-  const displayTotal =
-    currencyFilter !== 'ALL' ? totals[currencyFilter] || 0 : totals[primaryCurrency] || 0
+  const totalBalance = useMemo(() => {
+    if (channelFilter === 'ALL') return fullRows.length ? fullRows[fullRows.length - 1].next : 0
+    return breakdown.find((b) => b.channel === channelFilter)?.net || 0
+  }, [fullRows, breakdown, channelFilter])
 
   function toggleType(t) {
     setTypeFilter((prev) => {
@@ -226,9 +244,10 @@ export default function Balances() {
 
   function buildReport() {
     if (!filteredRows.length) return
-    const header = ['Transaction Type', 'Transaction Amount', 'Currency', 'Transaction ID', 'Previous Balance', 'Updated Balance', 'Date']
+    const header = ['Transaction Type', 'Channel', 'Transaction Amount', 'Currency', 'Transaction ID', 'Previous Balance', 'Updated Balance', 'Date']
     const rows = [header, ...filteredRows.map((r) => [
       r.type,
+      r.channel,
       (r.sign > 0 ? '' : '-') + r.amount,
       r.currency,
       r.txId,
@@ -248,11 +267,11 @@ export default function Balances() {
     URL.revokeObjectURL(url)
   }
 
-  const activeFilterCount =
-    (typeFilter.size < ALL_TYPES.length ? 1 : 0)
   const dateActive = !!(dateFrom || dateTo)
+  const activeFilterCount = typeFilter.size < ALL_TYPES.length ? 1 : 0
   const isCol = (k) => visibleCols.has(k)
-  const filtersActive = typeFilter.size !== ALL_TYPES.length || dateActive || currencyFilter !== 'ALL'
+  const filtersActive =
+    typeFilter.size !== ALL_TYPES.length || dateActive || channelFilter !== 'ALL'
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -267,9 +286,11 @@ export default function Balances() {
             <Icon name="wallet" size={22} />
           </div>
           <div className="flex-1 min-w-[180px]">
-            <div className="text-xs text-white/50">Total Balance</div>
+            <div className="text-xs text-white/50">
+              Total Balance {channelFilter !== 'ALL' && <span className="text-white/40">· {channelFilter}</span>}
+            </div>
             <div className="text-3xl font-semibold text-white mt-0.5">
-              {fmt(displayTotal, displayCurrency)}
+              {fmt(totalBalance, 'GHS')}
             </div>
           </div>
           <button
@@ -282,28 +303,39 @@ export default function Balances() {
 
         {showBreakdown && (
           <div className="mt-5 rounded-lg border border-white/10 overflow-hidden">
-            <div className="grid grid-cols-2 px-4 py-2 text-xs text-white/50 bg-white/[0.03] border-b border-white/10">
-              <div>Currency</div>
-              <div className="text-right">Value</div>
+            <div className="grid grid-cols-[1fr,auto,auto] gap-4 px-4 py-2 text-xs text-white/50 bg-white/[0.03] border-b border-white/10">
+              <div>Channel</div>
+              <div className="text-right">Transactions</div>
+              <div className="text-right min-w-[100px]">Value</div>
             </div>
-            {currencies.map((c) => {
-              const meta = CURRENCY_META[c] || { name: c, flag: '🏳️' }
-              return (
-                <div
-                  key={c}
-                  className="grid grid-cols-2 px-4 py-3 items-center border-b border-white/5 last:border-b-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl leading-none">{meta.flag}</span>
-                    <div>
-                      <div className="text-sm text-white font-medium">{c}</div>
-                      <div className="text-xs text-white/50">{meta.name}</div>
+            {breakdown.length === 0 ? (
+              <div className="px-4 py-6 text-center text-sm text-white/50">
+                No channel activity yet.
+              </div>
+            ) : (
+              breakdown.map((b) => {
+                const meta = CHANNEL_META[b.channel] || { flag: '💠', sub: '', color: 'text-white/70' }
+                return (
+                  <div
+                    key={b.channel}
+                    className="grid grid-cols-[1fr,auto,auto] gap-4 px-4 py-3 items-center border-b border-white/5 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl leading-none">{meta.flag}</span>
+                      <div>
+                        <div className={`text-sm font-medium ${meta.color}`}>{b.channel}</div>
+                        <div className="text-xs text-white/50">{meta.sub}</div>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm text-white/60">{b.count}</div>
+                    <div className={`text-right text-sm min-w-[100px] ${b.net < 0 ? 'text-red-400' : 'text-white'}`}>
+                      {b.net < 0 ? '-' : ''}
+                      {fmt(Math.abs(b.net), 'GHS')}
                     </div>
                   </div>
-                  <div className="text-right text-sm text-white">{fmt(totals[c] || 0, c)}</div>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
           </div>
         )}
       </section>
@@ -346,32 +378,32 @@ export default function Balances() {
         <div className="ml-auto flex items-center gap-2">
           <div className="relative">
             <button
-              onClick={() => setOpenPop(openPop === 'currency' ? null : 'currency')}
+              onClick={() => setOpenPop(openPop === 'channel' ? null : 'channel')}
               className={`px-3 py-2 rounded-lg border text-sm inline-flex items-center gap-2 ${
-                currencyFilter !== 'ALL'
+                channelFilter !== 'ALL'
                   ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/5'
                   : 'border-white/10 bg-[hsl(var(--card))] text-white/80 hover:bg-white/5'
               }`}
             >
-              <span>$</span> Currency
-              {currencyFilter !== 'ALL' && <span className="text-xs">· {currencyFilter}</span>}
+              <Icon name="swap" size={14} /> Channel
+              {channelFilter !== 'ALL' && <span className="text-xs">· {channelFilter}</span>}
             </button>
-            <Popover open={openPop === 'currency'} onClose={() => setOpenPop(null)}>
-              <div className="text-xs text-white/50 mb-2">Filter by currency</div>
-              <div className="space-y-1">
+            <Popover open={openPop === 'channel'} onClose={() => setOpenPop(null)}>
+              <div className="text-xs text-white/50 mb-2">Filter by channel</div>
+              <div className="space-y-1 max-h-64 overflow-y-auto">
                 <button
-                  onClick={() => { setCurrencyFilter('ALL'); setOpenPop(null) }}
-                  className={`w-full text-left px-2 py-1.5 rounded text-sm ${currencyFilter === 'ALL' ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
+                  onClick={() => { setChannelFilter('ALL'); setOpenPop(null) }}
+                  className={`w-full text-left px-2 py-1.5 rounded text-sm ${channelFilter === 'ALL' ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
                 >
-                  All currencies
+                  All channels
                 </button>
-                {currencies.map((c) => (
+                {channels.map((c) => (
                   <button
                     key={c}
-                    onClick={() => { setCurrencyFilter(c); setOpenPop(null) }}
-                    className={`w-full text-left px-2 py-1.5 rounded text-sm inline-flex items-center gap-2 ${currencyFilter === c ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
+                    onClick={() => { setChannelFilter(c); setOpenPop(null) }}
+                    className={`w-full text-left px-2 py-1.5 rounded text-sm inline-flex items-center gap-2 ${channelFilter === c ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
                   >
-                    <span>{(CURRENCY_META[c] || { flag: '🏳️' }).flag}</span> {c}
+                    <span>{(CHANNEL_META[c] || { flag: '💠' }).flag}</span> {c}
                   </button>
                 ))}
               </div>
@@ -502,9 +534,12 @@ export default function Balances() {
                     <tr key={r.key} className="border-t border-white/5 hover:bg-white/[0.02]">
                       {isCol('type') && (
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-md border text-xs ${badgeCls}`}>
-                            {r.type}
-                          </span>
+                          <div className="flex flex-col gap-0.5">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-md border text-xs w-fit ${badgeCls}`}>
+                              {r.type}
+                            </span>
+                            <span className="text-[11px] text-white/40">{r.channel}</span>
+                          </div>
                         </td>
                       )}
                       {isCol('amount') && (
@@ -514,8 +549,8 @@ export default function Balances() {
                         </td>
                       )}
                       {isCol('id') && <td className="px-4 py-3 text-white/80 font-mono text-xs">{r.txId}</td>}
-                      {isCol('prev') && <td className="px-4 py-3 text-white/70">{fmt(r.prev, r.currency)}</td>}
-                      {isCol('next') && <td className="px-4 py-3 text-white/90">{fmt(r.next, r.currency)}</td>}
+                      {isCol('prev') && <td className="px-4 py-3 text-white/70">{fmt(r.prev, 'GHS')}</td>}
+                      {isCol('next') && <td className="px-4 py-3 text-white/90">{fmt(r.next, 'GHS')}</td>}
                       {isCol('date') && <td className="px-4 py-3 text-white/60">{fmtDate(r.when)}</td>}
                     </tr>
                   )
