@@ -60,13 +60,13 @@ export default function Sidebar({ onNavigate }) {
       {/* Mode toggle */}
       <div className="p-3 border-t border-merchant-border">
         <div className="flex items-center bg-white/[0.04] rounded-full p-1 text-[0.75rem] font-medium">
-          <button className="flex-1 py-1.5 rounded-full text-white/50 hover:text-white/70" type="button">
-            Test Mode
-          </button>
           <button
             className="flex-1 py-1.5 rounded-full bg-accent text-white shadow-[0_0_0_1px_rgba(34,197,94,0.4)]"
             type="button"
           >
+            Test Mode
+          </button>
+          <button className="flex-1 py-1.5 rounded-full text-white/50 hover:text-white/70" type="button">
             Live Mode
           </button>
         </div>
