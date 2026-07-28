@@ -47,8 +47,8 @@ export const navGroups = [
         label: 'Payouts',
         icon: 'wallet',
         children: [
-          { key: 'payouts-history', label: 'History' },
-          { key: 'payouts-methods', label: 'Methods' },
+          { key: 'payouts-main', label: 'Payouts', to: '/merchant/payouts' },
+          { key: 'payouts-balances', label: 'Balances', to: '/merchant/payouts/balances' },
         ],
       },
       { key: 'storefront', label: 'Storefront', icon: 'store' },
