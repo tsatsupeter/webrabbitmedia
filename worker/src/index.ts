@@ -101,6 +101,7 @@ export default {
           api_key_id: r.meta.apiKeyId,
           idempotency: r.idempotency,
         })
+      }
       // POST /v1/payout/bank
       if (req.method === 'POST' && path === '/v1/payout/bank') {
         const r = await forward(env, 'payout-bank', req, {}, requestId)
