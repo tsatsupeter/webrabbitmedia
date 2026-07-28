@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
 import { useBusinesses } from '../../../hooks/useBusinesses'
+import { useMerchantMode } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import Modal from '../../components/Modal'
 
