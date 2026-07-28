@@ -13,8 +13,32 @@ Deno.serve(async (req) => {
     const type = url.searchParams.get('type')
     const from = url.searchParams.get('from')
     const to = url.searchParams.get('to')
+    const idempotencyKey = url.searchParams.get('idempotency_key')
 
     const db = admin()
+
+    // Lookup by Idempotency-Key: returns at most one row.
+    if (idempotencyKey) {
+      const { data: idem } = await db.from('idempotency_keys')
+        .select('transaction_id')
+        .eq('business_id', auth.business.id)
+        .eq('key', idempotencyKey)
+        .maybeSingle()
+      if (!idem?.transaction_id) {
+        return jsonResponse({ items: [], next_cursor: null, limit })
+      }
+      const { data } = await db.from('transactions')
+        .select('provider_transaction_id, mode, type, channel, subscriber_number, account_number, r_switch, description, customer_email, gross_amount, fee_amount, net_amount, currency, status, provider_code, provider_reason, created_at')
+        .eq('business_id', auth.business.id)
+        .eq('mode', auth.key.mode)
+        .eq('provider_transaction_id', idem.transaction_id)
+        .maybeSingle()
+      const items = data
+        ? [{ ...data, provider_code: data.provider_code != null ? String(data.provider_code) : null }]
+        : []
+      return jsonResponse({ items, next_cursor: null, limit })
+    }
+
     let q = db.from('transactions')
       .select('provider_transaction_id, mode, type, channel, subscriber_number, account_number, r_switch, description, customer_email, gross_amount, fee_amount, net_amount, currency, status, provider_code, provider_reason, created_at')
       .eq('business_id', auth.business.id)
@@ -32,7 +56,10 @@ Deno.serve(async (req) => {
     const { data, error } = await q
     if (error) throw new HttpError(500, error.message)
 
-    const rows = data ?? []
+    const rows = (data ?? []).map((r: any) => ({
+      ...r,
+      provider_code: r.provider_code != null ? String(r.provider_code) : null,
+    }))
     const hasMore = rows.length > limit
     const items = hasMore ? rows.slice(0, limit) : rows
     const next_cursor = hasMore ? items[items.length - 1].created_at : null

@@ -48,12 +48,22 @@ export async function authenticateKey(req: Request): Promise<AuthedKey> {
   }
   const raw = h.slice(7).trim()
   if (!raw) throw new HttpError(401, 'Missing bearer API key')
-  const hash = await sha256Hex(raw)
+
+  // Build hash candidates:
+  //  1. as-sent (new prefixed keys OR legacy raw keys stored that way)
+  //  2. if the client didn't send a prefix, also try adding wr_live_/wr_test_
+  //     — this lets a user paste a legacy unprefixed key with the documented prefix.
+  const candidates = [await sha256Hex(raw)]
+  if (!/^wr_(test|live)_/.test(raw)) {
+    candidates.push(await sha256Hex('wr_live_' + raw))
+    candidates.push(await sha256Hex('wr_test_' + raw))
+  }
+
   const db = admin()
   const { data: key, error } = await db
     .from('api_keys')
     .select('id, business_id, user_id, access, mode, revoked_at, expires_at')
-    .eq('key_hash', hash)
+    .in('key_hash', candidates)
     .maybeSingle()
   if (error) throw new HttpError(500, error.message)
   if (!key) throw new HttpError(401, 'Invalid API key')
