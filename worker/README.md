@@ -48,6 +48,11 @@ Once deployed, point `api.webrabbitmedia.com` at Cloudflare:
 60 requests / 10 s per API key, sliding window, backed by KV. Adjust
 `RATE_LIMIT_PER_10S` in `wrangler.toml`.
 
+> KV is eventually consistent, so this catches sustained abuse but a
+> simultaneous burst can slip through before writes propagate. For strict
+> atomic limits, swap `lib/ratelimit.ts` for Cloudflare's native
+> [Rate Limiting binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
+
 ## Test
 
 ```bash
