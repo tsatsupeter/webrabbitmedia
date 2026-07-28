@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import { supabase } from '../../../integrations/supabase/client'
 import Icon from '../../Icon'
+
 
 const CURRENCY_FMT = (v, ccy = 'GHS') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: ccy }).format(Number(v || 0))
