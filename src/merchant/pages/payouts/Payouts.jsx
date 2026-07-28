@@ -31,10 +31,12 @@ export default function Payouts() {
   const { mode } = useMerchantMode()
   const [totals, setTotals] = useState({ available: 0, incoming: 0 })
   const [monthly, setMonthly] = useState([])
-  const [bank, setBank] = useState(null)
+  const [banks, setBanks] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const activated = active?.status === 'approved' && bank?.status && bank.status !== 'draft'
+  const primaryBank = banks.find((b) => b.is_primary) || banks[0] || null
+  const backupBanks = banks.filter((b) => b.id !== primaryBank?.id)
+  const activated = active?.status === 'approved' && !!primaryBank && primaryBank.status && primaryBank.status !== 'draft'
 
   useEffect(() => {
     if (!active) return
@@ -44,7 +46,8 @@ export default function Payouts() {
       const [txRes, bankRes] = await Promise.all([
         supabase.from('transactions').select('net_amount,status,type,created_at,mode')
           .eq('business_id', active.id).eq('mode', mode).eq('type', 'collection'),
-        supabase.from('bank_verification').select('*').eq('business_id', active.id).maybeSingle(),
+        supabase.from('bank_verification').select('*').eq('business_id', active.id)
+          .order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
       ])
       if (cancel) return
       const rows = txRes.data || []
@@ -66,7 +69,7 @@ export default function Payouts() {
         if (b) b.value += Number(r.net_amount || 0)
       })
       setMonthly(buckets)
-      setBank(bankRes.data || null)
+      setBanks(bankRes.data || [])
       setLoading(false)
     })()
     return () => { cancel = true }
