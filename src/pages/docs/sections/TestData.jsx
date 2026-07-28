@@ -17,6 +17,9 @@ export default function TestData() {
       </Callout>
 
       <h2 id="momo">Test Mobile Money numbers</h2>
+      <p className="text-sm text-white/60 mb-3">
+        Accepted phone formats: local <code>0248980332</code> or international <code>233248980332</code>.
+      </p>
       <ParamTable
         rows={[
           { name: '0248980332', type: 'MTN · approved', desc: 'Happy-path approval within ~5 seconds.' },
@@ -24,9 +27,6 @@ export default function TestData() {
           { name: '0509999999', type: 'VDF · failed (101)', desc: 'Simulates insufficient funds.' },
         ]}
       />
-      <p className="text-sm text-white/60 mt-2">
-        Accepted phone formats: local <code>0248980332</code> or international <code>233248980332</code>.
-      </p>
 
       <h2 id="cards">Test cards</h2>
       <ParamTable
