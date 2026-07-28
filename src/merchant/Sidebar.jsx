@@ -99,7 +99,7 @@ export default function Sidebar({ onNavigate }) {
               )
               const base =
                 'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.85rem] transition-colors no-underline'
-              if (item.to) {
+              if (item.to && !item.comingSoon) {
                 return (
                   <NavLink
                     key={item.key}
@@ -122,9 +122,15 @@ export default function Sidebar({ onNavigate }) {
                 <button
                   key={item.key}
                   type="button"
-                  className={`${base} text-white/55 hover:text-white/85 hover:bg-white/[0.03] cursor-default`}
+                  title={item.comingSoon ? 'Coming soon' : undefined}
+                  className={`${base} text-white/55 hover:text-white/85 hover:bg-white/[0.03] ${
+                    item.comingSoon ? 'cursor-not-allowed opacity-60' : 'cursor-default'
+                  }`}
                 >
                   {content}
+                  {item.comingSoon && (
+                    <span className="ml-auto text-[0.65rem] text-white/30">Soon</span>
+                  )}
                 </button>
               )
             })}
