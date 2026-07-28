@@ -51,6 +51,13 @@ const paths = {
   upload: <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 9l5-5 5 5M12 4v12" />,
   file: <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9l-6-6zm0 0v6h6" />,
   trash: <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14M10 11v6M14 11v6" />,
+  copy: <path d="M8 8h10v12H8V8zm-2 8H4V4h10v2" />,
+  filter: <path d="M3 5h18l-7 9v6l-4-2v-4L3 5z" />,
+  download: <path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />,
+  columns: <path d="M4 4h16v16H4V4zm5 0v16m6-16v16" />,
+  dots: <path d="M6 12h.01M12 12h.01M18 12h.01" />,
+  clock: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 5v5l3 2" />,
+  scale: <path d="M12 3v18M6 8l-3 6a3 3 0 006 0L6 8zm12 0l-3 6a3 3 0 006 0l-3-6zM5 21h14" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {
