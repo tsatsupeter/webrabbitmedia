@@ -7,29 +7,17 @@ export const navGroups = [
       { key: 'verification', label: 'Verification', icon: 'shield', to: '/merchant/verification' },
       { key: 'home', label: 'Home', icon: 'home', to: '/merchant/home' },
       { key: 'analytics', label: 'Analytics', icon: 'chart', to: '/merchant/analytics' },
-      
     ],
   },
   {
     label: null,
     items: [
       {
-        key: 'products',
-        label: 'Products',
-        icon: 'box',
-        children: [
-          { key: 'products-all', label: 'All Products' },
-          { key: 'products-discounts', label: 'Discounts' },
-        ],
-      },
-      { key: 'entitlements', label: 'Entitlements', icon: 'key' },
-      {
         key: 'sales',
         label: 'Sales',
         icon: 'cash',
         children: [
-          { key: 'sales-overview', label: 'Overview' },
-          { key: 'sales-customers', label: 'Customers' },
+          { key: 'sales-collect', label: 'Collect', to: '/merchant/sales/collect' },
         ],
       },
       {
@@ -38,8 +26,6 @@ export const navGroups = [
         icon: 'swap',
         children: [
           { key: 'tx-payments', label: 'Payments', to: '/merchant/transactions/payments' },
-          { key: 'tx-refunds', label: 'Refunds', to: '/merchant/transactions/refunds' },
-          { key: 'tx-disputes', label: 'Disputes', to: '/merchant/transactions/disputes' },
         ],
       },
       {
@@ -52,7 +38,6 @@ export const navGroups = [
           { key: 'payouts-history', label: 'History', to: '/merchant/payouts/history' },
         ],
       },
-      { key: 'storefront', label: 'Storefront', icon: 'store' },
     ],
   },
   {
@@ -74,7 +59,6 @@ export const navGroups = [
         icon: 'life',
         children: [
           { key: 'support-tickets', label: 'Tickets' },
-          { key: 'support-docs', label: 'Docs' },
         ],
       },
       { key: 'settings', label: 'Settings', icon: 'gear' },
