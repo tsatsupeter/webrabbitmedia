@@ -279,6 +279,48 @@ export type Database = {
         }
         Relationships: []
       }
+      idempotency_keys: {
+        Row: {
+          api_key_id: string
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          key: string
+          request_hash: string
+          response_body: Json | null
+          status_code: number | null
+          transaction_id: string | null
+        }
+        Insert: {
+          api_key_id: string
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          key: string
+          request_hash: string
+          response_body?: Json | null
+          status_code?: number | null
+          transaction_id?: string | null
+        }
+        Update: {
+          api_key_id?: string
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          key?: string
+          request_hash?: string
+          response_body?: Json | null
+          status_code?: number | null
+          transaction_id?: string | null
+        }
+        Relationships: []
+      }
       identity_verification: {
         Row: {
           address_line1: string | null
