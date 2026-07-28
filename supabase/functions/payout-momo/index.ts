@@ -1,5 +1,6 @@
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
 import { creds, fmtAmount, newTxnId, payswitchPost } from '../_shared/payswitch.ts'
+import { tryClaimIdempotency, completeIdempotency } from '../_shared/idempotency.ts'
 
 const NETWORKS = new Set(['MTN', 'VDF', 'ATL', 'TGO', 'ZPY', 'GMY'])
 
@@ -9,6 +10,11 @@ Deno.serve(async (req) => {
   try {
     const auth = await authenticateKey(req)
     if (auth.key.access !== 'write') throw new HttpError(403, 'Write access required')
+    const meta = {
+      'x-wr-mode': auth.key.mode,
+      'x-wr-business-id': auth.business.id,
+      'x-wr-api-key-id': auth.key.id,
+    }
     const body = await req.json().catch(() => ({}))
     const amount = Number(body.amount)
     const account_number = String(body.account_number || '').trim()
@@ -17,6 +23,21 @@ Deno.serve(async (req) => {
     if (!(amount > 0)) throw new HttpError(400, 'amount must be > 0')
     if (!/^\d{10,12}$/.test(account_number)) throw new HttpError(400, 'account_number invalid')
     if (!NETWORKS.has(network)) throw new HttpError(400, 'network invalid')
+
+    // Idempotency claim
+    const idem = await tryClaimIdempotency({
+      headerKey: req.headers.get('idempotency-key'),
+      businessId: auth.business.id,
+      apiKeyId: auth.key.id,
+      endpoint: 'payout-momo',
+      body: { amount, account_number, network, desc },
+    })
+    if (idem.mode === 'replay') {
+      return jsonResponse(idem.body, idem.status, { ...meta, 'idempotent-replayed': 'true' })
+    }
+    if (idem.mode === 'conflict') {
+      return jsonResponse({ error: idem.message }, idem.status, meta)
+    }
 
     const mode = auth.key.mode
     const provider_transaction_id = newTxnId()
@@ -66,7 +87,21 @@ Deno.serve(async (req) => {
       raw_response: json,
     }).eq('provider_transaction_id', provider_transaction_id).eq('business_id', auth.business.id)
 
-    return jsonResponse({ transaction_id: provider_transaction_id, status, code: json?.code, reason: json?.reason })
+    const responseBody = { transaction_id: provider_transaction_id, status, code: json?.code, reason: json?.reason }
+    const httpStatus = approved ? 201 : (status === 'pending' ? 202 : 200)
+
+    if (idem.mode === 'new') {
+      await completeIdempotency({
+        businessId: auth.business.id,
+        endpoint: 'payout-momo',
+        key: idem.key,
+        status: httpStatus,
+        body: responseBody,
+        transactionId: provider_transaction_id,
+      })
+    }
+
+    return jsonResponse(responseBody, httpStatus, meta)
   } catch (e) {
     return handleError(e)
   }

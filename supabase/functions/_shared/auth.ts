@@ -3,14 +3,15 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key, x-request-id',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Expose-Headers': 'x-request-id, idempotent-replayed, x-wr-mode, x-wr-business-id, x-wr-api-key-id',
 }
 
-export function jsonResponse(body: unknown, status = 200) {
+export function jsonResponse(body: unknown, status = 200, extra: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', ...extra },
   })
 }
 
