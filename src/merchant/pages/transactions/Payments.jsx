@@ -114,13 +114,14 @@ function ToolbarBtn({ icon, children, onClick, active }) {
 export default function Payments({ scope = 'all' }) {
   const { active } = useBusinesses()
   const { mode, modeReady } = useMerchantMode()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [range, setRange] = useState('30d')
   const [statuses, setStatuses] = useState(new Set())
   const [methods, setMethods] = useState(new Set())
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [showFilters, setShowFilters] = useState(false)
   const [selected, setSelected] = useState(null)
 
