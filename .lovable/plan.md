@@ -1,30 +1,45 @@
 
-## 1. Fix sidebar highlight bug
+## Root cause
 
-In `src/merchant/Sidebar.jsx`, the child `NavLink` (used inside `ExpandableItem`) has no `end` prop, so `/merchant/payouts/balances` matches both "Payouts" (`/merchant/payouts`) and "Balances". Add `end` to the child `NavLink` so only the exact route highlights. (Parent items already use `end`.)
+Two issues on the Balances page:
 
-## 2. Make Balances page fully functional
+1. **No data showing** — the query filters `status = 'success'`, but the actual successful status in `transactions` is `'approved'` (confirmed via DB query: real records with `status='approved'` are being excluded).
+2. **Breakdown groups by currency**, but the user wants it grouped by **payment channel / network** (MTN Mobile Money, Vodafone Mobile Money, AirtelTigo Mobile Money, Card, etc.).
 
-Wire the toolbar buttons on `src/merchant/pages/payouts/Balances.jsx` — currently placeholders — to real behavior:
+## Fixes in `src/merchant/pages/payouts/Balances.jsx`
 
-- **Build Report** → export the currently-filtered ledger rows to CSV (`account-statement-<mode>-<date>.csv`) using the same pattern as History's `buildReport`.
-- **Filters** → popover with checkbox filters for Transaction Type (Payment / Payment Fees / Payout). Applied client-side; badge shows active count.
-- **Select Date Range** → popover with From / To date inputs; filters ledger by `when`. Badge shows selected range.
-- **Currency** → dropdown listing currencies present in the ledger + "All". When a single currency is selected, the Total Balance card and running balances scope to that currency.
-- **Edit Columns** → popover with checkboxes to show/hide each of the six columns (Transaction Type, Amount, ID, Previous Balance, Updated Balance, Date). Persisted to `localStorage` per business.
-- **Total Balance card** stays reactive: sums the currently-selected currency's net (transactions.net − payouts.net). Breakdown table already lists all currencies (unchanged).
-- **Empty state** copy tweaked when filters produce no rows ("No results match your filters").
-- Loading skeleton row instead of plain "Loading…".
+### Data fetch
+- Change the transactions filter to `.in('status', ['approved', 'success'])` so both spellings are included.
+- Keep the payouts query as-is.
 
-No schema changes, no new edge functions.
+### Breakdown by channel/network
+Replace the currency-grouped breakdown with a channel breakdown:
+
+- Derive a `channelLabel` per transaction:
+  - `channel === 'momo'` → map `r_switch` to `"MTN Mobile Money"` (MTN), `"Vodafone Mobile Money"` (VDF/VOD), `"AirtelTigo Mobile Money"` (ATL/TGO), fallback `"Mobile Money"`.
+  - `channel === 'card'` → `"Card"`.
+  - anything else → titlecase of `channel`.
+- Aggregate `sum(net_amount)` per channel label, plus count.
+- Render the breakdown panel with rows: icon + channel name + subtitle (e.g. "MTN · Ghana") on the left, txn count + total on the right.
+- Total Balance card = sum of net across all channels (minus payout net). Currency stays GHS (single-currency platform today).
+
+### Currency filter → Channel filter
+Since the platform is single-currency, replace the "$ Currency" toolbar button with a **"Channel"** filter that lets the user scope the table (and total) to one channel. Keep the icon consistent (`swap` or a plain label).
+
+### Ledger table
+- Keep the running-balance ledger, but the channel filter also filters rows.
+- Add a small channel badge in the "Transaction Type" column subtitle (or in the ID cell) so users can see which network each payment used.
+
+### Remove
+- Currency breakdown table.
+- `CURRENCY_META` (unused after change).
 
 ## Files
 
-- **Modify** `src/merchant/Sidebar.jsx` — add `end` to child `NavLink`.
-- **Modify** `src/merchant/pages/payouts/Balances.jsx` — implement filters, date range, currency, edit columns, CSV export.
+- **Modify** `src/merchant/pages/payouts/Balances.jsx` — status fix, channel-based breakdown, replace currency filter with channel filter, channel labels in rows.
 
 ## Technical notes
 
-- Filter state lives in component state; column visibility persists via `localStorage` key `balances:cols:<businessId>`.
-- Reuse existing `Icon` names (`filter`, `calendar`, `columns`, `download`) and dark popover styling from other merchant pages.
-- Running balance is recomputed after date/currency/type filtering so Previous/Updated columns stay consistent with the visible rows.
+- No schema or edge function changes.
+- Channel derivation lives in a small helper `channelLabel(t)`.
+- Payouts are aggregated separately under "Payouts (out)" in the breakdown so the sum reconciles with the Total Balance.
