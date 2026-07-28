@@ -31,10 +31,12 @@ export default function Payouts() {
   const { mode } = useMerchantMode()
   const [totals, setTotals] = useState({ available: 0, incoming: 0 })
   const [monthly, setMonthly] = useState([])
-  const [bank, setBank] = useState(null)
+  const [banks, setBanks] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const activated = active?.status === 'approved' && bank?.status && bank.status !== 'draft'
+  const primaryBank = banks.find((b) => b.is_primary) || banks[0] || null
+  const backupBanks = banks.filter((b) => b.id !== primaryBank?.id)
+  const activated = active?.status === 'approved' && !!primaryBank && primaryBank.status && primaryBank.status !== 'draft'
 
   useEffect(() => {
     if (!active) return
@@ -44,7 +46,8 @@ export default function Payouts() {
       const [txRes, bankRes] = await Promise.all([
         supabase.from('transactions').select('net_amount,status,type,created_at,mode')
           .eq('business_id', active.id).eq('mode', mode).eq('type', 'collection'),
-        supabase.from('bank_verification').select('*').eq('business_id', active.id).maybeSingle(),
+        supabase.from('bank_verification').select('*').eq('business_id', active.id)
+          .order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
       ])
       if (cancel) return
       const rows = txRes.data || []
@@ -66,7 +69,7 @@ export default function Payouts() {
         if (b) b.value += Number(r.net_amount || 0)
       })
       setMonthly(buckets)
-      setBank(bankRes.data || null)
+      setBanks(bankRes.data || [])
       setLoading(false)
     })()
     return () => { cancel = true }
@@ -178,23 +181,23 @@ export default function Payouts() {
               <Icon name="help" size={12} className="text-white/40" />
             </div>
 
-            {bank?.account_holder_name ? (
+            {primaryBank ? (
               <>
                 <div className="mt-5 text-[10px] font-semibold text-white/50 uppercase tracking-wide flex items-center gap-1">
                   Active Bank Account <Icon name="help" size={10} />
                 </div>
-                <div className="mt-2 flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70">
-                      <Icon name="bank" size={16} />
+                <BankRow bank={primaryBank} pill="Active" pillClass="bg-emerald-500/15 text-emerald-400 border-emerald-500/25" />
+
+                {backupBanks.length > 0 && (
+                  <>
+                    <div className="mt-5 text-[10px] font-semibold text-white/50 uppercase tracking-wide">Backup Accounts</div>
+                    <div className="mt-2 space-y-2">
+                      {backupBanks.map((b) => (
+                        <BankRow key={b.id} bank={b} pill={b.status === 'submitted' ? 'Backup' : 'Draft'} pillClass="bg-white/[0.06] text-white/70 border-white/15" />
+                      ))}
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-sm text-white truncate">{bank.account_holder_name}</div>
-                      {bank.bank_name && <div className="text-xs text-white/50 truncate">{bank.bank_name}</div>}
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center h-6 px-2 rounded-md text-[0.72rem] font-medium border bg-emerald-500/15 text-emerald-400 border-emerald-500/25">Active</span>
-                </div>
+                  </>
+                )}
               </>
             ) : (
               <div className="mt-5 text-sm text-white/60">No bank account linked yet.</div>
@@ -203,17 +206,41 @@ export default function Payouts() {
             <div className="mt-6">
               <div className="text-sm font-medium text-white">Add another bank account</div>
               <p className="mt-1 text-xs text-white/50">You can add up to 3 bank accounts to ensure your payouts always have a destination.</p>
-              <Link
-                to="/merchant/verification/bank"
-                className="mt-4 inline-flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:bg-emerald-400 transition-colors"
-              >
-                <Icon name="plus" size={14} /> Add Bank Account
-              </Link>
+              {banks.length < 3 ? (
+                <Link
+                  to="/merchant/verification/bank?new=1"
+                  className="mt-4 inline-flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:bg-emerald-400 transition-colors"
+                >
+                  <Icon name="plus" size={14} /> Add Bank Account
+                </Link>
+              ) : (
+                <div className="mt-4 text-xs text-white/50 text-center">Maximum of 3 bank accounts reached.</div>
+              )}
             </div>
           </section>
         </div>
       </div>
     </div>
+  )
+}
+
+function BankRow({ bank, pill, pillClass }) {
+  return (
+    <Link
+      to={`/merchant/verification/bank?id=${bank.id}`}
+      className="mt-2 flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] p-3 hover:bg-white/[0.04] transition-colors"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70">
+          <Icon name="bank" size={16} />
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm text-white truncate">{bank.account_holder_name || 'Unnamed account'}</div>
+          {bank.bank_name && <div className="text-xs text-white/50 truncate">{bank.bank_name}{bank.account_number ? ` • ****${bank.account_number.slice(-4)}` : ''}</div>}
+        </div>
+      </div>
+      <span className={`inline-flex items-center h-6 px-2 rounded-md text-[0.72rem] font-medium border ${pillClass}`}>{pill}</span>
+    </Link>
   )
 }
 

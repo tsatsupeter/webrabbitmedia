@@ -76,6 +76,7 @@ export type Database = {
           created_at: string
           currency: string | null
           id: string
+          is_primary: boolean
           proof_doc_path: string | null
           routing_code: string | null
           routing_type: string | null
@@ -95,6 +96,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           id?: string
+          is_primary?: boolean
           proof_doc_path?: string | null
           routing_code?: string | null
           routing_type?: string | null
@@ -114,6 +116,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           id?: string
+          is_primary?: boolean
           proof_doc_path?: string | null
           routing_code?: string | null
           routing_type?: string | null

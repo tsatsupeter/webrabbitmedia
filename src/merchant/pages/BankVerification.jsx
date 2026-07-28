@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import Icon from '../Icon'
 import { useBusinesses } from '../../hooks/useBusinesses'
@@ -119,11 +119,16 @@ function FileUpload({ label, path, file, onFile, onClear }) {
 
 export default function BankVerification() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const editId = params.get('id')
+  const isNew = params.get('new') === '1'
   const { user } = useAuth()
   const { active } = useBusinesses()
-  const readOnly = active?.status === 'approved'
+  const readOnly = active?.status === 'approved' && !isNew && !editId
 
 
+  const [rowId, setRowId] = useState(null)
+  const [isPrimary, setIsPrimary] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -146,13 +151,17 @@ export default function BankVerification() {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const { data } = await supabase
-        .from('bank_verification')
-        .select('*')
-        .eq('business_id', active.id)
-        .maybeSingle()
+      if (isNew) {
+        setLoading(false)
+        return
+      }
+      let query = supabase.from('bank_verification').select('*').eq('business_id', active.id)
+      query = editId ? query.eq('id', editId).maybeSingle() : query.order('is_primary', { ascending: false }).order('created_at', { ascending: true }).limit(1).maybeSingle()
+      const { data } = await query
       if (cancelled) return
       if (data) {
+        setRowId(data.id)
+        setIsPrimary(!!data.is_primary)
         setHolderName(data.account_holder_name ?? '')
         setAccountNumber(data.account_number ?? '')
         setConfirmAccount(data.account_number ?? '')
@@ -169,7 +178,7 @@ export default function BankVerification() {
       setLoading(false)
     })()
     return () => { cancelled = true }
-  }, [active?.id])
+  }, [active?.id, isNew, editId])
 
   const acctClean = accountNumber.replace(/\s+/g, '')
   const acctValid = /^[A-Za-z0-9]{6,34}$/.test(acctClean)
@@ -202,9 +211,7 @@ export default function BankVerification() {
     setSaving(true)
     try {
       const pp = await uploadIfNeeded(proofFile, proofPath)
-      const payload = {
-        business_id: active.id,
-        user_id: user.id,
+      const basePayload = {
         account_holder_name: holderName.trim() || null,
         account_number: acctClean || null,
         routing_code: routingCode.trim() || null,
@@ -218,10 +225,24 @@ export default function BankVerification() {
         status,
         submitted_at: status === 'submitted' ? new Date().toISOString() : null,
       }
-      const { error } = await supabase
-        .from('bank_verification')
-        .upsert(payload, { onConflict: 'business_id' })
-      if (error) throw error
+
+      if (rowId) {
+        const { error } = await supabase.from('bank_verification').update(basePayload).eq('id', rowId)
+        if (error) throw error
+      } else {
+        // Determine if this should be primary: only when no bank exists yet for this business
+        const { count } = await supabase
+          .from('bank_verification').select('id', { count: 'exact', head: true })
+          .eq('business_id', active.id)
+        const shouldBePrimary = (count || 0) === 0
+        const { data: inserted, error } = await supabase
+          .from('bank_verification')
+          .insert({ ...basePayload, business_id: active.id, user_id: user.id, is_primary: shouldBePrimary })
+          .select('id, is_primary').single()
+        if (error) throw error
+        setRowId(inserted.id)
+        setIsPrimary(inserted.is_primary)
+      }
       setProofPath(pp); setProofFile(null)
       return { error: false }
     } catch (e) {
@@ -232,30 +253,32 @@ export default function BankVerification() {
     }
   }
 
+  const returnTo = (isNew || editId) ? '/merchant/payouts' : '/merchant/verification'
+
   async function handleSubmit() {
     if (!canSubmit) { toast.error('Please complete all required fields'); return }
     const { error } = await persist('submitted')
     if (error) return
     toast.success('Bank details submitted', { description: "We'll verify your account shortly." })
-    navigate('/merchant/verification')
+    navigate(returnTo)
   }
 
   async function handleDraft() {
     const { error } = await persist('draft')
     if (error) return
     toast.success('Draft saved')
-    navigate('/merchant/verification')
+    navigate(returnTo)
   }
 
   return (
     <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-center gap-4">
-        <button type="button" onClick={() => navigate('/merchant/verification')}
+        <button type="button" onClick={() => navigate(returnTo)}
           className="w-10 h-10 rounded-lg border-2 border-accent-bright flex items-center justify-center text-white hover:bg-accent/10"
           aria-label="Back">
           <Icon name="chevronLeft" size={18} />
         </button>
-        <h1 className="font-display text-white text-[1.25rem] font-semibold">Bank Verification</h1>
+        <h1 className="font-display text-white text-[1.25rem] font-semibold">Bank Verification{isPrimary ? '' : (rowId || isNew ? ' — Additional Account' : '')}</h1>
       </div>
 
       <p className="text-[0.9rem] text-white/60">
@@ -356,7 +379,7 @@ export default function BankVerification() {
 
       <div className="flex justify-end gap-3">
         {readOnly ? (
-          <button type="button" onClick={() => navigate('/merchant/verification')}
+          <button type="button" onClick={() => navigate(returnTo)}
             className="h-11 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90">
             Back to verification
           </button>
