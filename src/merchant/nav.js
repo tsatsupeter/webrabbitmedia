@@ -59,7 +59,7 @@ export const navGroups = [
             { key: 'support-docs', label: 'Documentation', to: '/docs' },
           ],
         },
-        { key: 'settings', label: 'Settings', icon: 'gear', comingSoon: true },
+        { key: 'settings', label: 'Settings', icon: 'gear', to: '/merchant/settings' },
       ],
     },
 ]

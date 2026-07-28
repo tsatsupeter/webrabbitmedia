@@ -214,7 +214,7 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
                 label="Profile"
                 onClick={() => {
                   setAccountOpen(false)
-                  navigate('/merchant')
+                  navigate('/merchant/settings?tab=account')
                 }}
               />
               <MenuItem

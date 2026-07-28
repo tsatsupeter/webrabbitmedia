@@ -24,6 +24,7 @@ import Payouts from './merchant/pages/payouts/Payouts'
 import Balances from './merchant/pages/payouts/Balances'
 import History from './merchant/pages/payouts/History'
 import Collect from './merchant/pages/sales/Collect'
+import Settings from './merchant/pages/Settings'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -68,6 +69,7 @@ function App() {
           <Route path="payouts" element={<Payouts />} />
           <Route path="payouts/balances" element={<Balances />} />
           <Route path="payouts/history" element={<History />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>
