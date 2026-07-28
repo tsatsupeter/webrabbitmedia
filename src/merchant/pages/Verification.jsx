@@ -130,6 +130,7 @@ export default function Verification() {
   const [mode, setMode] = useState('view') // 'view' | 'edit'
   const [choice, setChoice] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [completedSteps, setCompletedSteps] = useState([])
 
   useEffect(() => {
     setChoice(active?.business_type ?? null)
@@ -151,7 +152,25 @@ export default function Verification() {
     }
     await refresh()
     setMode('view')
+    toast('Complete verification to activate live payments and payouts', {
+      description: 'Most reviews finish within 72 hours.',
+    })
   }
+
+  const steps = active?.business_type === 'registered'
+    ? ['product', 'identity', 'business', 'bank']
+    : ['product', 'identity', 'bank']
+
+  function statusFor(key) {
+    if (completedSteps.includes(key)) return 'completed'
+    const nextIdx = steps.findIndex((s) => !completedSteps.includes(s))
+    return steps[nextIdx] === key ? 'active' : 'locked'
+  }
+
+  function completeStep(key) {
+    setCompletedSteps((prev) => (prev.includes(key) ? prev : [...prev, key]))
+  }
+
 
   if (loading && !active) {
     return <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8" />
