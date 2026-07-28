@@ -3,18 +3,26 @@ import { toast } from 'sonner'
 import { useBusinesses } from './useBusinesses'
 
 const key = (id) => `wr.merchantMode.${id}`
+const LAST_KEY = 'wr.merchantMode.last'
 const SWITCH_MS = 650
 const TAIL_MS = 150
+
+function initialMode() {
+  if (typeof window === 'undefined') return 'test'
+  const hint = localStorage.getItem(LAST_KEY)
+  return hint === 'live' ? 'live' : 'test'
+}
 
 // Module-scoped shared store so every consumer (sidebar, overlay, pages)
 // sees the same `switching`/`pendingMode` state during a mode change.
 const state = {
-  mode: 'test',
+  mode: initialMode(),
   switching: false,
   pendingMode: null,
   activeId: null,
   canUseLive: false,
 }
+
 const listeners = new Set()
 let switchTimer = null
 let tailTimer = null
@@ -52,8 +60,10 @@ function hydrate(activeId, canUseLive) {
     }
     state.mode = 'test'
   }
+  if (typeof window !== 'undefined') localStorage.setItem(LAST_KEY, state.mode)
   emit()
 }
+
 
 function requestMode(next) {
   if (!state.activeId) return
@@ -71,10 +81,12 @@ function requestMode(next) {
 
   switchTimer = setTimeout(() => {
     state.mode = next
-    if (typeof window !== 'undefined' && state.activeId) {
-      localStorage.setItem(key(state.activeId), next)
+    if (typeof window !== 'undefined') {
+      if (state.activeId) localStorage.setItem(key(state.activeId), next)
+      localStorage.setItem(LAST_KEY, next)
     }
     emit()
+
     tailTimer = setTimeout(() => {
       state.switching = false
       state.pendingMode = null

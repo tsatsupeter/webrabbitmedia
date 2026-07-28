@@ -1,23 +1,22 @@
-## Fix: mode switch overlay never shows because state isn't shared
+## Fix: mode flashes Test → Live on refresh
 
 ### Root cause
 
-`useMerchantMode` keeps `switching` and `pendingMode` in per-component `useState`. When the Sidebar toggle calls `setMode('live')`, only the Sidebar's own instance flips to `switching=true`. `ModeSwitchOverlay`, pages, and every other consumer each hold their own separate copy, so the overlay never renders and pages don't re-fetch during the transition — they jump straight to live-mode data.
+`useMerchantMode` initializes `state.mode = 'test'` at module load. On refresh the sidebar toggle paints "Test" immediately, then `useBusinesses` resolves, `hydrate()` runs, reads `localStorage.wr.merchantMode.<id>`, and flips to "Live". That flip is the flash the user sees.
 
-### Fix — lift the hook state into a module-level store
+We can't read the per-business key before we know the active business id, but we can remember the last-used mode globally as a paint hint so the first render already matches what hydrate will land on.
 
-Convert `useMerchantMode` into a tiny global store (module-scoped state + `useSyncExternalStore` subscription) so every consumer reads the same `mode`, `switching`, and `pendingMode`.
+### Fix
 
-- File: `src/hooks/useMerchantMode.js`
-- Keep the public API identical: `{ mode, setMode, canUseLive, loading, business, switching, pendingMode }` — no consumer changes needed.
-- Internals:
-  - Module-scoped `state = { mode, switching, pendingMode, activeId, canUseLive }` + `listeners: Set`.
-  - `subscribe(fn)` / `getSnapshot()` for `useSyncExternalStore`.
-  - `setMode(next)` runs on the module (not per instance): guards against `next === mode`, blocks live when unapproved (toast), sets `switching+pendingMode`, after `SWITCH_MS` commits the new mode and writes to `localStorage`, then clears `switching` and toasts success.
-  - Hydration effect (runs once per active business): reads `localStorage` and downgrades to test when live is not allowed.
+- On every successful mode commit in `requestMode`, also write a global hint: `localStorage.wr.merchantMode.last = next`.
+- On module load, seed `state.mode` from that hint (default `'test'` if absent). This makes the first paint match the last session.
+- In `hydrate`, if the per-business stored value differs from the current `state.mode`, update it silently — no toast, no overlay (we only trigger the overlay from `requestMode`, which is unchanged).
+- Guard against the hint being stale (e.g. business no longer approved): `hydrate` already downgrades to test when `canUseLive` is false. Keep that.
+
+That's the only file changed: `src/hooks/useMerchantMode.js`.
 
 ### Verification
 
-- Toggle Test → Live on `/merchant/payouts/balances`: overlay appears with the pulsing dot and "Switching to Live Mode…" for ~800ms before data updates.
-- Toggle back to Test: overlay shows orange variant, then Test data reloads.
-- Confirm the mode pill and page data update together (no flash of stale numbers).
+- Set mode to Live, refresh — sidebar renders "Live" on first paint, no flash.
+- Log out / switch to a business where `status !== 'approved'`, refresh — mode paints Test and stays Test.
+- Sidebar toggle still triggers the overlay animation on user-initiated changes.
