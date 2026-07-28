@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Machine-readable API documentation:
+#   https://webrabbitmedia.com/llms.txt        (index)
+#   https://webrabbitmedia.com/llms-full.txt   (full docs, one file)
+#   https://webrabbitmedia.com/docs/<page>.md  (per-page markdown)
