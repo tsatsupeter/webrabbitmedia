@@ -286,17 +286,23 @@ export default function Verification() {
                 icon="box"
                 title="Product Information"
                 desc="Tell us about your product so we can get you ready to accept payments. Takes about 2 minutes."
+                status={statusFor('product')}
+                onSubmit={() => completeStep('product')}
               />
               <DetailRow
                 icon="user"
                 title="Identity Verification"
                 desc="Verify it's really you with a quick photo of your ID and a selfie. Secure and takes under a minute."
+                status={statusFor('identity')}
+                onSubmit={() => completeStep('identity')}
               />
               {active.business_type === 'registered' && (
                 <DetailRow
                   icon="store"
                   title="Business Verification"
                   desc="Share your company details so we can confirm your business. You'll need your registration documents handy."
+                  status={statusFor('business')}
+                  onSubmit={() => completeStep('business')}
                 />
               )}
               <DetailRow
@@ -304,6 +310,8 @@ export default function Verification() {
                 title="Bank Verification"
                 desc="Add the bank account where you'd like to receive payouts. Make sure the account name matches your verified identity or business."
                 last
+                status={statusFor('bank')}
+                onSubmit={() => completeStep('bank')}
               />
             </div>
           </div>
