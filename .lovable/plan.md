@@ -1,77 +1,43 @@
-## Merchant Dashboard (UI shell)
+## /merchant/login auth page (UI only)
 
-Add a `/merchant` section to the app that mirrors the layout in your reference (dark sidebar + topbar + "Get Started" content), but re-skinned with Web Rabbit Media's green accent and branding. No auth, no backend — pure UI.
+Add a sign-in screen at `/merchant/login` styled after the Dodo reference but with our green branding. No auth logic, no Supabase wiring — buttons and inputs are visual placeholders.
 
-### 1. Fix build first
-`package.json` is missing a `build:dev` script that the deploy pipeline calls. Add:
+### Route
+Add to `src/App.jsx`, outside `MerchantLayout` (auth pages don't get the sidebar):
 ```
-"build:dev": "vite build --mode development"
-```
-
-### 2. Routing
-In `src/App.jsx`, add a second route tree that does NOT use the marketing `Layout`:
-```
-<Route path="/merchant" element={<MerchantLayout />}>
-  <Route index element={<GetStarted />} />
-</Route>
-```
-Marketing site (`/`, `/about`, …) stays untouched.
-
-### 3. New files
-```
-src/merchant/
-  MerchantLayout.jsx     ← dark shell: Sidebar + Topbar + <Outlet/>
-  Sidebar.jsx            ← logo, nav groups, Test/Live mode toggle at bottom
-  Topbar.jsx             ← page title, search (Press /), brand chip, theme icon, bell, avatar
-  pages/GetStarted.jsx   ← "Create a product" + "Integrate Payments" card grids
-  nav.js                 ← nav item definitions
+<Route path="/merchant/login" element={<MerchantLogin />} />
 ```
 
-### 4. Sidebar contents (all sections, static placeholders)
-- **Core:** Get Started, Home, Analytics
-- **Extras:** Verification, Sentra AI
-- **Commerce:** Products, Entitlements, Sales, Transactions, Payouts, Storefront
-- **Platform:** Developer, Support, Settings
+### New file
+`src/merchant/pages/Login.jsx` — self-contained page, uses the same dark tokens (`bg-merchant-bg`, `merchant-panel`, `accent`) already added.
 
-Only `Get Started` links to a real route (`/merchant`). The rest are visual-only buttons for now (cursor-default, muted hover) so the shell feels complete without dead routes. Collapsible groups (Products, Sales, Transactions, Payouts, Developer, Support) render with a chevron but don't expand yet.
+### Layout (matches reference)
+Full-viewport dark page, content vertically centered in a ~420px column:
 
-### 5. Get Started page
-Two sections matching the screenshot, rewritten for our brand:
+1. **Logo mark** — green circular badge with the Web Rabbit logo (`/webrabbitmedia-logo-green.jpeg`), 56×56, centered.
+2. **Heading** — "Sign in to Web Rabbit" (Space Grotesk, ~1.5rem, white).
+3. **Sub-line** — "Don't have an account? **Sign up**" (Sign up is a link — visual only, href="#").
+4. **OAuth row** — two equal-width buttons side by side:
+   - Google — `G` mark svg + "Sign in with Google"
+   - GitHub — GitHub mark svg + "Sign in with GitHub"
+   Both dark panel bg, border, white text, hover lift.
+5. **Divider** — thin lines with centered "Or".
+6. **Email field** — label "Enter your email", input styled with accent-green focus ring (matches reference).
+7. **Continue with password** button — full-width dark panel with border.
+8. **Log in with OTP** button — full-width dark panel with envelope icon.
+9. **Legal line** — "By signing in, you agree to our Terms & Conditions and Privacy Policy" (links to `/terms` and `/privacy`).
+10. **Support line** — "Need help? **Contact support**" (mailto).
+11. **Language chip** bottom-left of viewport — flag emoji + "English" + chevron (visual only).
 
-**Create a product**
-- One-time product — "Perfect for single purchases or lifetime deals."
-- Subscription product — "Recurring billing for SaaS and memberships."
-- Usage-based product — "Bill customers for actual usage or API calls."
-- Each card: colored icon tile, title, description, "Learn more" + "Create sample product" buttons (non-functional).
+### Visual details
+- Use existing `Icon` component; add `google`, `github`, `mail`, `globe` glyphs.
+- Focus ring on inputs/buttons: `focus:ring-2 ring-accent/50 border-accent`.
+- Buttons: 44px height, rounded-lg, subtle hover `bg-white/[0.06]`.
+- Page background: `bg-merchant-bg`; no header/footer chrome.
 
-**Integrate Web Rabbit Payments**
-- No-Code Checkout (Fastest)
-- Inline / Overlay Checkout
-- Full SDK Integration
-- Each card: icon tile, title, description, "Learn more" button.
+### Wiring
+- Add a "Sign in" link in `Topbar` avatar area? — **no**, out of scope. Just the route exists; user navigates manually.
+- Form `onSubmit` prevents default; buttons log to console. That's it.
 
-### 6. Design tokens (reuse existing, add a few)
-Keep `--color-surface-dark: #0e1a12` and `--color-accent: #1a8a4a` from `src/index.css`. Add merchant-scoped helpers in the same file:
-```
---color-merchant-bg: #0a0f0c;         /* page bg, slightly deeper than surface-dark */
---color-merchant-panel: #0f1712;      /* sidebar + card bg */
---color-merchant-border: rgba(255,255,255,0.06);
-```
-Cards: `bg-merchant-panel`, `border border-merchant-border`, `rounded-xl`, subtle hover ring in accent green. Icon tiles use tinted backgrounds (green / blue / purple / orange) at ~12% opacity with matching stroke icons. "Live Mode" pill uses `--color-accent`; "Test Mode" is muted.
-
-### 7. Topbar
-- Left: page title (e.g. "Get Started").
-- Center: search input with `Press /` kbd hint (visual only).
-- Right: brand chip "Web Rabbit" (replacing "Dodo Games"), theme toggle icon, bell w/ badge, avatar circle. All non-functional.
-
-### 8. Responsive
-- ≥ md: fixed 260px sidebar, content scrolls.
-- < md: sidebar hidden behind a hamburger in the topbar (slide-over), same pattern as the marketing header.
-
-### Out of scope (call out for later)
-Auth gate, real product creation, DB, checkout, per-nav-item pages, dark/light toggle wiring, search functionality.
-
-### Technical notes
-- All icons via inline SVG (no new deps) to match current codebase style.
-- No shadcn usage — the marketing site is hand-rolled Tailwind; keep merchant consistent.
-- Marketing header/footer must NOT render on `/merchant/*` — that's why MerchantLayout is a sibling route, not nested under `Layout`.
+### Out of scope
+Supabase auth, OAuth provider setup, `/merchant/signup` route, password page, OTP verification screen, route guard on `/merchant`, i18n. All to be added later.
