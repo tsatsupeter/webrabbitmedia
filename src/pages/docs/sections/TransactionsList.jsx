@@ -1,12 +1,16 @@
 import EndpointHeader from '../ui/EndpointHeader'
 import ParamTable from '../ui/ParamTable'
 import { CodeBlock } from '../ui/CodeBlock'
+import Callout from '../ui/Callout'
 import { API_VERSION } from '../../../lib/apiBase'
 
 export default function TransactionsList() {
   return (
     <>
       <p>Paginate through every transaction for the business tied to your API key, newest first. Results are automatically scoped to the key's mode (test or live).</p>
+      <Callout type="info" title="Requires read access">
+        Any valid key (read or read + write) can call this endpoint.
+      </Callout>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="GET" path={`/${API_VERSION}/transactions`} />

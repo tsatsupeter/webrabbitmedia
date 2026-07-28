@@ -11,6 +11,10 @@ export default function CollectMomo() {
         Charge a customer over Mobile Money. The customer receives a prompt on their phone to authorise the
         payment.
       </p>
+      <Callout type="warn" title="Requires write access">
+        The API key must have <code>write</code> access. Read-only keys receive{' '}
+        <code>403 insufficient_scope</code>.
+      </Callout>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/momo`} />
