@@ -426,11 +426,12 @@ export default function Balances() {
                   <button
                     key={c}
                     onClick={() => { setChannelFilter(c); setOpenPop(null) }}
-                    className={`w-full text-left px-2 py-1.5 rounded text-sm inline-flex items-center gap-2 ${channelFilter === c ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
+                    className={`w-full text-left px-2 py-1.5 rounded text-sm ${channelFilter === c ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
                   >
-                    <span>{(CHANNEL_META[c] || { flag: '💠' }).flag}</span> {c}
+                    {c}
                   </button>
                 ))}
+
               </div>
             </Popover>
           </div>
