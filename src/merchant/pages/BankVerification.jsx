@@ -151,13 +151,17 @@ export default function BankVerification() {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const { data } = await supabase
-        .from('bank_verification')
-        .select('*')
-        .eq('business_id', active.id)
-        .maybeSingle()
+      if (isNew) {
+        setLoading(false)
+        return
+      }
+      let query = supabase.from('bank_verification').select('*').eq('business_id', active.id)
+      query = editId ? query.eq('id', editId).maybeSingle() : query.order('is_primary', { ascending: false }).order('created_at', { ascending: true }).limit(1).maybeSingle()
+      const { data } = await query
       if (cancelled) return
       if (data) {
+        setRowId(data.id)
+        setIsPrimary(!!data.is_primary)
         setHolderName(data.account_holder_name ?? '')
         setAccountNumber(data.account_number ?? '')
         setConfirmAccount(data.account_number ?? '')
@@ -174,7 +178,7 @@ export default function BankVerification() {
       setLoading(false)
     })()
     return () => { cancelled = true }
-  }, [active?.id])
+  }, [active?.id, isNew, editId])
 
   const acctClean = accountNumber.replace(/\s+/g, '')
   const acctValid = /^[A-Za-z0-9]{6,34}$/.test(acctClean)
