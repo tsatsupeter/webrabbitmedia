@@ -60,3 +60,33 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
           git push --force git@github.com:tsatsupeter/webrabbitmedia.git HEAD:main
+
+  # Deploys worker/ (api.webrabbitmedia.com) whenever it changes.
+  # Needs a CLOUDFLARE_API_TOKEN repo secret ("Edit Cloudflare Workers"
+  # token template); until it exists this job warns and skips.
+  worker:
+    if: github.repository == 'tsatsupeter/WEBRABBITMEDIA-COMPANY'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy worker if changed
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN secret not set; skipping worker deploy"
+            exit 0
+          fi
+          if [ "${{ github.event_name }}" = "push" ] && git diff --quiet HEAD^ HEAD -- worker/; then
+            echo "worker/ unchanged; skipping deploy"
+            exit 0
+          fi
+          cd worker
+          npm install --no-audit --no-fund
+          npx wrangler deploy

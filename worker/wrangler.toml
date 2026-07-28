@@ -2,12 +2,12 @@ name = "webrabbit-api"
 main = "src/index.ts"
 compatibility_date = "2026-07-01"
 
-# Route the public API to this worker. Requires the webrabbitmedia.com zone
-# to be active on your Cloudflare account, plus a proxied DNS record for
-# `api` (see README).
+# Custom domain: Cloudflare auto-creates the DNS record and TLS cert, so no
+# manual A record is needed. The worker owns all of api.webrabbitmedia.com
+# and 404s anything outside /v1/*.
 [[routes]]
-pattern = "api.webrabbitmedia.com/v1/*"
-zone_name = "webrabbitmedia.com"
+pattern = "api.webrabbitmedia.com"
+custom_domain = true
 
 [vars]
 SUPABASE_FUNCTIONS_URL = "https://eydjkasswyygiycitnml.supabase.co/functions/v1"
@@ -20,4 +20,4 @@ RATE_LIMIT_PER_10S = "60"
 # then paste the returned id below.
 [[kv_namespaces]]
 binding = "RL"
-id = "REPLACE_WITH_KV_ID"
+id = "685c786de65b462ea023e1d0e8298214"
