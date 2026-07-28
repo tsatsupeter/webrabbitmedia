@@ -65,18 +65,27 @@ Deno.serve(async (req) => {
       status: 'pending',
     })
 
-    const { json } = await payswitchPost(mode, '/v1.1/transaction/process', {
-      amount: fmtAmount(amount),
-      processing_code: '000200',
-      transaction_id: provider_transaction_id,
-      desc,
-      merchant_id: merchantId,
-      subscriber_number,
-      'r-switch': network,
-    })
+    let json: any = null
+    let upstreamErr: Error | null = null
+    try {
+      const res = await payswitchPost(mode, '/v1.1/transaction/process', {
+        amount: fmtAmount(amount),
+        processing_code: '000200',
+        transaction_id: provider_transaction_id,
+        desc,
+        merchant_id: merchantId,
+        subscriber_number,
+        'r-switch': network,
+      })
+      json = res.json
+    } catch (e) {
+      upstreamErr = e instanceof Error ? e : new Error(String(e))
+    }
 
-    const approved = json?.code === '000' || json?.status === 'approved'
-    const status = approved ? 'approved' : (json?.status === 'pending' ? 'pending' : 'failed')
+    const approved = !upstreamErr && (json?.code === '000' || json?.status === 'approved')
+    const status = upstreamErr
+      ? 'failed'
+      : (approved ? 'approved' : (json?.status === 'pending' ? 'pending' : 'failed'))
     const fee = approved ? Math.round(amount * (auth.commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
 
@@ -85,24 +94,37 @@ Deno.serve(async (req) => {
         status,
         fee_amount: fee,
         net_amount: net,
-        provider_code: json?.code ?? null,
-        provider_reason: json?.reason ?? null,
-        raw_response: json,
+        provider_code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
+        provider_reason: upstreamErr ? upstreamErr.message : (json?.reason ?? null),
+        raw_response: upstreamErr ? { error: upstreamErr.message } : json,
       })
       .eq('provider_transaction_id', provider_transaction_id)
       .eq('business_id', auth.business.id)
 
-    const responseBody = {
-      transaction_id: provider_transaction_id,
-      status,
-      code: json?.code != null ? String(json.code) : null,
-      reason: json?.reason ?? null,
-      gross_amount: amount,
-      fee_amount: fee,
-      net_amount: net,
-      currency: 'GHS',
-    }
-    const httpStatus = approved ? 201 : (status === 'pending' ? 202 : 200)
+    const responseBody = upstreamErr
+      ? {
+          transaction_id: provider_transaction_id,
+          status: 'failed',
+          code: 'upstream_error',
+          reason: 'Upstream provider unavailable',
+          gross_amount: amount,
+          fee_amount: 0,
+          net_amount: amount,
+          currency: 'GHS',
+        }
+      : {
+          transaction_id: provider_transaction_id,
+          status,
+          code: json?.code != null ? String(json.code) : null,
+          reason: json?.reason ?? null,
+          gross_amount: amount,
+          fee_amount: fee,
+          net_amount: net,
+          currency: 'GHS',
+        }
+    const httpStatus = upstreamErr
+      ? 502
+      : (approved ? 201 : (status === 'pending' ? 202 : 200))
 
     if (idem.mode === 'new') {
       await completeIdempotency({
@@ -116,6 +138,7 @@ Deno.serve(async (req) => {
     }
 
     return jsonResponse(responseBody, httpStatus, meta)
+
   } catch (e) {
     return handleError(e)
   }
