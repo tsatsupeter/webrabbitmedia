@@ -1,49 +1,40 @@
+## Identity Verification — plan
 
-## Problem
+Build a real Identity Verification submit flow, styled to match Product Information, with file uploads to Supabase Storage.
 
-Two issues on `/merchant/verification/product-information`:
+### Database
+New table `public.identity_verification`:
+- `business_id`, `user_id`
+- `full_name`, `date_of_birth` (date)
+- `country`, `address_line1`, `address_line2`, `city`, `state`, `postal_code`
+- `id_type` (`passport` | `national_id` | `drivers_license`), `id_number`
+- `id_document_front_path`, `id_document_back_path`, `selfie_path` (storage paths)
+- `status` (`draft` | `submitted`), `submitted_at`, timestamps
+- RLS: owner-only (mirrors `product_information`), plus GRANTs.
 
-1. **Checkboxes don't toggle.** The `Checkbox` and confirmation controls wrap a hidden `<input type="checkbox">` inside a `<label>` AND put an `onClick` handler on the visible span. Clicking the span fires `onChange(!checked)` once, then the label's default behavior also toggles the hidden input which fires `onChange` again — net effect is no change. This blocks the Submit button from ever enabling.
-2. **Nothing is saved.** Submit only writes to `localStorage`. The user wants real persistence and a real success toast on submit.
+### Storage
+Private bucket `identity-docs`. RLS on `storage.objects`:
+- Users can insert/select/update/delete only objects under `identity-docs/{auth.uid()}/…`.
 
-## Fix
+### Route & page
+- New route `/merchant/verification/identity` in `App.jsx`.
+- New page `src/merchant/pages/IdentityVerification.jsx`:
+  - Header/back link like Product Information.
+  - Sections (matching card style):
+    1. Personal details — Full name, DOB.
+    2. Address — Country, address lines, city, state/region, postal code.
+    3. Government ID — ID type select, ID number, upload front, upload back.
+    4. Selfie — upload.
+  - Confirm checkbox + footer with **Save as Draft** and **Submit & Proceed**.
+  - Load existing draft on mount; upsert on save.
+  - Uploads go to `identity-docs/{user_id}/{business_id}/{field}-{filename}`; store returned path in the row.
+  - Toasts: "Draft saved" / "Identity information submitted".
 
-### 1. Fix the checkbox controls (UI only)
-In `src/merchant/pages/ProductInformation.jsx`:
-- Rewrite `Checkbox` as a single controlled `<input type="checkbox">` visually hidden with a styled span sibling — no duplicate `onClick` on the span.
-- Same fix for the confirmation checkbox at the bottom.
+### Wiring
+- `Verification.jsx`: Identity Verification row's Submit navigates to `/merchant/verification/identity`; marks step complete on submit via existing `verificationProgress` helper, so Business/Bank rows unlock in order.
+- Reuse existing Input/Select/Checkbox components for design consistency.
 
-### 2. Persist the form to Supabase
-Create a `public.product_information` table keyed by `business_id` (one row per business, upsert):
-
-```
-id uuid pk, business_id uuid unique fk → businesses, user_id uuid,
-websites text[], description text, category text,
-receive_methods text[], receive_flow text,
-delivery_level text, risks text[],
-integrations text[], acquisitions text[], other_acquisition text,
-socials text[], stage text, payment_platform text,
-status text default 'submitted',   -- 'draft' | 'submitted'
-confirmed_at timestamptz,
-created_at, updated_at
-```
-- RLS: owner-only via `user_id = auth.uid()` (matches `businesses` pattern).
-- GRANTs to `authenticated` + `service_role`.
-- `updated_at` trigger reusing existing `update_updated_at_column()`.
-
-### 3. Wire the page to the table
-In `ProductInformation.jsx`:
-- On mount, load existing row for `active.id` and hydrate state (so returning users see their data).
-- **Save as Draft**: upsert with `status='draft'` → toast `"Draft saved"` → back to `/merchant/verification`.
-- **Submit & Proceed**: upsert with `status='submitted'`, `confirmed_at=now()` → on success `markStepComplete(active.id, 'product')` → `toast.success('Product information submitted', { description: "We'll review it shortly." })` → navigate back.
-- Surface Supabase errors via `toast.error(error.message)`.
-- Disable both buttons while the request is in flight.
-
-### 4. Verification page sync
-`Verification.jsx` already reads completed steps from `localStorage` on `active.id` change — no change needed; the product row will show as Completed after submit and Identity Verification will unlock.
-
-## Files touched
-- `supabase/migrations/*` — new `product_information` table (via migration tool).
-- `src/merchant/pages/ProductInformation.jsx` — checkbox fix + load/save/submit against Supabase.
-
-No other pages change.
+### Technical notes
+- Signed URLs (short expiry) when re-displaying previously uploaded docs.
+- Client-side zod validation (lengths, DOB in past, ID number pattern) before submit.
+- No new deps.
