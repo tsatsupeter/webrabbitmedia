@@ -96,14 +96,28 @@ export async function authenticateKey(req: Request): Promise<AuthedKey> {
 
 export class HttpError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  body?: Record<string, unknown>
+  constructor(status: number, message: string, body?: Record<string, unknown>) {
     super(message)
     this.status = status
+    this.body = body
+  }
+}
+
+export function requireScope(auth: AuthedKey, required: 'read' | 'write') {
+  if (required === 'write' && auth.key.access !== 'write') {
+    throw new HttpError(403, 'Write access required', {
+      error: 'insufficient_scope',
+      required: 'write',
+      granted: auth.key.access,
+    })
   }
 }
 
 export function handleError(e: unknown) {
-  if (e instanceof HttpError) return jsonResponse({ error: e.message }, e.status)
+  if (e instanceof HttpError) {
+    return jsonResponse(e.body ?? { error: e.message }, e.status)
+  }
   const msg = e instanceof Error ? e.message : 'Internal error'
   console.error('handler error', e)
   return jsonResponse({ error: msg }, 500)

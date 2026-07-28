@@ -1,4 +1,4 @@
-import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
+import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError, requireScope } from '../_shared/auth.ts'
 import { creds, fmtAmount, newTxnId, payswitchPost } from '../_shared/payswitch.ts'
 
 const SCHEMES = new Set(['VIS', 'MAS'])
@@ -8,6 +8,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
   try {
     const auth = await authenticateKey(req)
+    requireScope(auth, 'write')
     const body = await req.json().catch(() => ({}))
     const amount = Number(body.amount)
     const scheme = String(body.scheme || '').toUpperCase()

@@ -1,0 +1,3 @@
+INSERT INTO public.api_keys (business_id, user_id, name, key_prefix, key_hash, access, mode, expires_at) VALUES
+('aa6fead6-bb93-4db1-9b77-136fddf73487','09d70a47-05e5-4a8b-8c50-c8219e7259d8','__scope_audit_read','wr_test_QO5S','3f35b10df2c0f515e45ea272dc91bf73b90d0f45d73fec2f05014490ea278bd6','read','test', now()+interval '1 hour'),
+('aa6fead6-bb93-4db1-9b77-136fddf73487','09d70a47-05e5-4a8b-8c50-c8219e7259d8','__scope_audit_write','wr_test_Peon','12d257a1438a5efa2a9bdf44e443986bb2fca368b89044674d3fb7d343eaba21','write','test', now()+interval '1 hour');

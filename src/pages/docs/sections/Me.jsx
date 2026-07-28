@@ -11,6 +11,9 @@ export default function Me() {
         of the business it belongs to — without moving any money. Use it on deploy to detect misconfigured
         keys (test-in-prod, live-in-staging) and to confirm the business is cleared for live charges.
       </p>
+      <Callout type="info" title="Requires read access">
+        Any valid key (read or read + write) can call this endpoint.
+      </Callout>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="GET" path={`/${API_VERSION}/me`} />

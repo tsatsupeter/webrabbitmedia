@@ -12,6 +12,10 @@ export default function CollectCard() {
         bank's ACS page and then back to your <code>redirect_url</code>. Always confirm the final state with{' '}
         <code>GET /v1/transactions/{'{id}'}</code> — never trust the query params on the redirect alone.
       </p>
+      <Callout type="warn" title="Requires write access">
+        The API key must have <code>write</code> access. Read-only keys receive{' '}
+        <code>403 insufficient_scope</code>.
+      </Callout>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/card`} />

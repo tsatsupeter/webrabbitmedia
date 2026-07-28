@@ -1,4 +1,4 @@
-import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
+import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError, requireScope } from '../_shared/auth.ts'
 import { creds, fmtAmount, newTxnId, payswitchPost } from '../_shared/payswitch.ts'
 import { tryClaimIdempotency, completeIdempotency } from '../_shared/idempotency.ts'
 
@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
   try {
     const auth = await authenticateKey(req)
-    if (auth.key.access !== 'write') throw new HttpError(403, 'Write access required')
+    requireScope(auth, 'write')
     const meta = {
       'x-wr-mode': auth.key.mode,
       'x-wr-business-id': auth.business.id,

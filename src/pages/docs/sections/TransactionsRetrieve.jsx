@@ -11,6 +11,9 @@ export default function TransactionsRetrieve() {
         is still pending we poll the upstream provider and reconcile our ledger before responding; terminal
         transactions (approved or failed) are served straight from our ledger.
       </p>
+      <Callout type="info" title="Requires read access">
+        Any valid key (read or read + write) can call this endpoint.
+      </Callout>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="GET" path={`/${API_VERSION}/transactions/{transaction_id}`} />

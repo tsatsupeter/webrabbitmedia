@@ -1,60 +1,76 @@
+## Goal
+Make the existing **"Enable write access"** checkbox on the API-key creation form real and enforced end-to-end. Unchecked = **read-only**, checked = **read + write**. UI stays as it is today.
 
-Two threads: (a) properly wire the card 3-DS `redirect_url` and document it; (b) full audit sweep of merchant + API + docs, fixing anything material found.
+## Current state (verified)
+- `api_keys.access` already stores `'read' | 'write'`. Schema is fine.
+- `ApiKeys.jsx` already has the checkbox and writes the right value at creation.
+- `_shared/auth.ts` already loads the value into `auth.key.access`.
+- **Only `payout-momo` enforces write today.** `collect-momo` and `collect-card` accept read-only keys — a read-only key can currently charge customers. That's the actual bug.
+- `list-transactions`, `transaction-status`, `me` correctly accept any valid key.
 
-## A. Card 3-DS redirect_url
+## Scope matrix (target)
+| Endpoint | Required scope |
+|---|---|
+| `GET /v1/me` | read |
+| `GET /v1/transactions` | read |
+| `GET /v1/transactions/{id}` | read |
+| `POST /v1/collect/momo` | **write** |
+| `POST /v1/collect/card` | **write** |
+| `POST /v1/payout/momo` | **write** (already enforced) |
 
-Current state: `collect-card/index.ts` already reads `body.redirect_url` and forwards it to Payswitch as `3d_url_response`, but:
-- The doc `CollectCard.jsx` doesn't mention it (integrators can't know it exists).
-- Field names in the doc don't match the endpoint: doc says `card_number`, endpoint expects `pan`; doc omits required `scheme` (`VIS`|`MAS`) and `card_holder`.
-- No validation: empty `redirect_url` is silently forwarded; malformed URLs go straight to upstream.
+## Changes
 
-Fix:
-1. `supabase/functions/collect-card/index.ts` — if `redirect_url` is provided, validate it parses as an http(s) URL (400 if not). Only forward `3d_url_response` when non-empty.
-2. `src/pages/docs/sections/CollectCard.jsx` — rewrite the request table to match the endpoint (`pan`, `scheme`, `exp_month`, `exp_year`, `cvv`, `card_holder`, `customer_email`, `currency`, `desc`, `redirect_url`), fix the cURL body accordingly, add a "3-DS redirect" section explaining that Payswitch redirects the customer to `redirect_url` with `?code=&status=&reason=&transaction_id=` appended, and that the merchant must still call `GET /v1/transactions/{id}` on landing (never trust query-string params as authoritative).
+### 1. Backend enforcement (the real fix)
+- Add a small `requireScope(auth, 'write')` helper in `supabase/functions/_shared/auth.ts` that throws a standardized `403` with body:
+  ```json
+  { "error": "insufficient_scope", "required": "write", "granted": "read" }
+  ```
+- Use it in:
+  - `supabase/functions/collect-momo/index.ts`
+  - `supabase/functions/collect-card/index.ts`
+  - `supabase/functions/payout-momo/index.ts` (replace its inline check so all three return the same error shape)
 
-## B. Full audit — findings & fixes
+### 2. UI (minimal, keeps the checkbox)
+`src/merchant/pages/developer/ApiKeys.jsx`:
+- Keep the "Enable write access" checkbox exactly as it is.
+- Add a one-line helper under it: *"Unchecked = read-only (can retrieve data). Checked = read + write (can create collections and payouts)."*
+- On the post-creation reveal dialog, add a line: **Scope: read** or **Scope: read + write**.
+- Access pill in the list: neutral for read, green for write (already close to this — small colour tidy).
 
-Sweep planned across the three surfaces. Non-material items will be listed but not fixed; genuine bugs will be patched in this same pass.
+No schema change. No change to how the value is written to the DB.
 
-### API / edge functions
-- `me` — added last turn; verify it deploys and returns the documented shape (curl through `supabase--curl_edge_functions`).
-- `transaction-status` — verify 404 for unknown, terminal-from-ledger, pending-reconciled behaviour with a live curl.
-- `list-transactions?idempotency_key=` — verify shape.
-- `collect-momo` — check idempotency insert path doesn't crash on `customer_email` being empty (currently stored as `''`).
-- Confirm `merchant-collect-momo` (dashboard-only fn) also stringifies `code` in returned payload — should match the API surface so the dashboard and API don't drift.
-- Confirm every edge function that returns `code` uses `String(...)`.
-- `_shared/idempotency.ts` — its `endpoint` type union is `'collect-momo' | 'payout-momo'`; `merchant-collect-momo` doesn't use it, so no impact, but note if the merchant flow should also be idempotent (out of scope for this pass, flag only).
+### 3. Docs
+- `src/pages/docs/sections/Authentication.jsx`: add a compact **"Scopes"** subsection with the matrix above and an example `403 insufficient_scope` body.
+- Endpoint pages get a one-line "Requires: write scope" or "Requires: read scope" note at the top:
+  - `CollectMomo.jsx`, `CollectCard.jsx`, `PayoutMomo.jsx` → write
+  - `TransactionsList.jsx`, `TransactionsRetrieve.jsx`, `Me.jsx` → read
 
-### Worker
-- Confirm `GET /v1/me` route is present and rate-limit-bucketed like the other GETs.
-- Confirm 404 from `transaction-status` propagates as 404 (worker passes upstream status through — verify).
+### 4. Verification (end-to-end against live API)
+Mint two temporary audit keys for ECHODATE (test mode, expire in 1 hour) — one read, one write — then run against `https://api.webrabbitmedia.com/v1`:
+1. Read key → `GET /me` → `200`, `scopes: ["read"]`.
+2. Read key → `POST /collect/momo` (demo number `0240000000`, GHS 0.10) → **`403 insufficient_scope`**; confirm via SQL no row was written.
+3. Write key → `POST /collect/momo` → `2xx`; confirm row exists.
+4. Read key → `GET /transactions` → `200`.
+5. Write key → `GET /me` → `scopes: ["read","write"]`.
 
-### Docs
-- `CollectCard.jsx` request-body drift (fixed above).
-- `registry.js` — verify Me is in the sidebar, headings render, prev/next pager stays in order.
-- `ProviderCodes.jsx` — confirm `not-found` heading link works.
-- `Authentication.jsx` — confirm the "legacy keys" and "preflight" sections show up.
-- `Idempotency.jsx` — confirm the new "recovery" section is present.
+Both audit keys revoked at the end.
 
-### Merchant dashboard
-- `ApiKeys.jsx` — after last turn keys now mint with `wr_{mode}_` prefix; verify the reveal modal shows the prefixed value, and the list `key_prefix` column truncates cleanly (was `slice(0,8)`, now `slice(0,12)` — check the UI doesn't overflow).
-- Spot-check that mode-switch isolation still holds on Payments, Balances, Analytics.
-- Confirm no page still references removed routes (Refunds/Disputes/Storefront/etc.).
+## Out of scope
+- No new scopes beyond read/write.
+- No changes to internal `merchant-*` functions (those authenticate via user JWT).
+- No Cloudflare worker changes — it's a transparent proxy; scope enforcement lives in the edge functions.
+- No database migration.
 
-Anything found that's a bug I'll fix in the same turn. Anything cosmetic or subjective I'll list for your call.
-
-## Not doing
-- MoMo webhooks. Payswitch/theTeller has no server-to-server webhook API — only the card 3-DS browser redirect. Confirmed via their public API docs. Building our own outbound webhook system remains a future item.
-
-## Technical section
-
-Files to touch:
-- `supabase/functions/collect-card/index.ts` — validate + conditionally forward `redirect_url`.
-- `src/pages/docs/sections/CollectCard.jsx` — full rewrite of request params + new 3-DS redirect section.
-- Any file the audit exposes as broken (unknown until the sweep runs).
-
-Verification:
-- `supabase--curl_edge_functions` against `me`, `transaction-status` (unknown + real id), `list-transactions?idempotency_key=`.
-- `curl -sf http://localhost:8080/docs/collect-card` + view page.
-- Manual read of `ApiKeys.jsx` reveal modal.
-- `tsgo` typecheck on worker + `bun run build` gate.
+## Files touched
+- `supabase/functions/_shared/auth.ts`
+- `supabase/functions/collect-momo/index.ts`
+- `supabase/functions/collect-card/index.ts`
+- `supabase/functions/payout-momo/index.ts`
+- `src/merchant/pages/developer/ApiKeys.jsx` (helper text + reveal-dialog line only; checkbox unchanged)
+- `src/pages/docs/sections/Authentication.jsx`
+- `src/pages/docs/sections/CollectMomo.jsx`
+- `src/pages/docs/sections/CollectCard.jsx`
+- `src/pages/docs/sections/PayoutMomo.jsx`
+- `src/pages/docs/sections/TransactionsList.jsx`
+- `src/pages/docs/sections/TransactionsRetrieve.jsx`
+- `src/pages/docs/sections/Me.jsx`
