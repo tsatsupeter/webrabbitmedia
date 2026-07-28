@@ -140,7 +140,22 @@ export default function Verification() {
   }, [active?.id, active?.business_type])
 
   useEffect(() => {
-    if (active?.id) setCompletedStepsState(getCompletedSteps(active.id))
+    if (!active?.id) return
+    let cancelled = false
+    ;(async () => {
+      const [{ data: prod }, { data: ident }] = await Promise.all([
+        supabase.from('product_information').select('status').eq('business_id', active.id).maybeSingle(),
+        supabase.from('identity_verification').select('status').eq('business_id', active.id).maybeSingle(),
+      ])
+      if (cancelled) return
+      const done = []
+      if (prod?.status === 'submitted') done.push('product')
+      if (ident?.status === 'submitted') done.push('identity')
+      // merge any locally-tracked steps that don't have a DB source yet (business, bank)
+      const local = getCompletedSteps(active.id).filter((s) => s === 'business' || s === 'bank')
+      setCompletedStepsState([...done, ...local])
+    })()
+    return () => { cancelled = true }
   }, [active?.id])
 
   const state = !active?.business_type ? 'basics' : mode === 'edit' ? 'editType' : 'overview'
