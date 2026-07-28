@@ -1,37 +1,34 @@
-# Plan: API Keys page full width + delete confirmation modal
+## Bank Verification
 
-## Problem
-- The API Keys page is constrained to `max-w-[1400px]` and centered, so it does not fill the available dashboard width.
-- The delete action currently uses a generic "X" icon and the browser's native `confirm()` prompt, which does not match the design reference.
+Add a real Bank Verification step, matching the pattern of Identity/Business Verification.
 
-## Changes
+### Database (migration)
+New table `public.bank_verification`:
+- `business_id`, `user_id`
+- `account_holder_name`, `account_number`, `routing_code` (IFSC/routing/SWIFT), `routing_type` ('ifsc'|'routing'|'swift')
+- `bank_name`, `branch_name`, `branch_address`, `country`, `currency`
+- `proof_doc_path` (cancelled cheque / statement in `identity-docs` bucket)
+- `status` ('draft'|'submitted'), `submitted_at`, `created_at`, `updated_at`
+- GRANTs to `authenticated` + `service_role`, RLS with owner-only policies (same as identity/business tables)
+- `updated_at` trigger
 
-1. **Make the API Keys page full-width**
-   - In `src/merchant/pages/developer/ApiKeys.jsx`, remove the `max-w-[1400px] mx-auto` wrapper so the page content fills the main dashboard area.
+### Frontend
+- New page `src/merchant/pages/BankVerification.jsx` — same layout language as `BusinessVerification.jsx`:
+  - Section 1: Account holder details (name — with helper note "must match verified identity/business")
+  - Section 2: Bank account (account number, confirm account number, routing code + type, currency)
+  - Section 3: Bank details (bank name, branch name, branch address, country)
+  - Section 4: Upload cancelled cheque / recent bank statement (PDF/JPG/PNG, private bucket)
+  - Save as Draft + Submit & Proceed buttons, toast on submit
+- Register route `/merchant/verification/bank` in `src/App.jsx`
+- Update `src/merchant/pages/Verification.jsx`:
+  - Navigate to `/merchant/verification/bank` when the Bank row is clicked (remove localStorage fallback for bank)
+  - Fetch `bank_verification.status` alongside the other three and mark step complete when `submitted`
 
-2. **Add a trash icon**
-   - In `src/merchant/Icon.jsx`, add a `trash` icon path to the `paths` map so the delete button can use a proper delete icon.
+### Validation
+Zod schema in the page: required strings with length limits, account number 6–34 chars digits/letters, confirm-match check, routing code length by type, file size ≤ 10 MB and mime in pdf/jpg/png.
 
-3. **Build a delete confirmation modal**
-   - Reuse the existing `Modal` component for the overlay and backdrop.
-   - Add local state to track which API key is pending deletion.
-   - Render a modal body matching the reference:
-     - Red trash icon inside a red circular background.
-     - Title: "Are you sure you want to delete?"
-     - Subtitle: "You will have to create a new API Key for this usecase."
-     - Two buttons: "Close" (neutral dark) and "Delete" (red).
-   - On confirm, perform the existing Supabase soft-delete (`revoked_at = now()`).
-   - On cancel, close the modal and clear the pending key.
-
-4. **Replace the native `confirm()` prompt**
-   - Change the delete button to use the new trash icon.
-   - On click, set the pending key and open the confirmation modal instead of calling `confirm()`.
-
-## Outcome
-- `/merchant/developer/api-keys` fills the full dashboard width.
-- Each row has a visible trash-can delete icon.
-- Clicking delete opens a styled confirmation modal matching the reference before revoking the key.
-
-## Files to modify
-- `src/merchant/pages/developer/ApiKeys.jsx`
-- `src/merchant/Icon.jsx`
+### Files
+- migration (new `bank_verification` table)
+- `src/merchant/pages/BankVerification.jsx` (new)
+- `src/App.jsx` (add route)
+- `src/merchant/pages/Verification.jsx` (wire status + navigation)
