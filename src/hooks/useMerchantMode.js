@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useCallback, useLayoutEffect, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { useBusinesses } from './useBusinesses'
 
@@ -108,7 +108,7 @@ export function useMerchantMode() {
   const canUseLive = active?.status === 'approved'
   const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (loading) return
     hydrate(active?.id ?? null, canUseLive)
   }, [active?.id, canUseLive, loading])
