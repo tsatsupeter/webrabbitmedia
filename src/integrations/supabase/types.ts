@@ -884,6 +884,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_email_hook_secret: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
