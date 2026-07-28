@@ -30,6 +30,20 @@ export default function Auth() {
   const [step, setStep] = useState('email') // 'email' | 'password' | 'otp'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [resendIn, setResendIn] = useState(0)
+  const otpInputRef = useRef(null)
+
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const t = setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(t)
+  }, [resendIn])
+
+  useEffect(() => {
+    if (step === 'otp') {
+      setTimeout(() => otpInputRef.current?.focus(), 50)
+    }
+  }, [step])
   const [otp, setOtp] = useState('')
   const [busy, setBusy] = useState(false)
 
