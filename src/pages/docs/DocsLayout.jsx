@@ -3,7 +3,7 @@ import { Link, NavLink, useParams, useLocation } from 'react-router-dom'
 import { groups, findBySlug, flat } from './registry'
 import SearchDialog from './ui/SearchDialog'
 import Pager from './ui/Pager'
-import logo from '../../assets/webrabbitmedia-logo-green.jpeg'
+const logo = '/webrabbitmedia-logo-green.jpeg'
 
 function useHash() {
   const { hash } = useLocation()
