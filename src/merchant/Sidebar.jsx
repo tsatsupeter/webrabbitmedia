@@ -72,7 +72,7 @@ function ExpandableItem({ item, onNavigate }) {
 }
 
 export default function Sidebar({ onNavigate }) {
-  const { mode, setMode, canUseLive } = useMerchantMode()
+  const { mode, setMode, canUseLive, modeReady, switching } = useMerchantMode()
 
   return (
     <aside className="w-[260px] shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border">
@@ -128,9 +128,17 @@ export default function Sidebar({ onNavigate }) {
 
       {/* Mode toggle: Test = red, Live = green. Live disabled until approved. */}
       <div className="p-3 border-t border-merchant-border">
-        <div className="flex items-center bg-white/[0.04] rounded-full p-1 text-[0.75rem] font-medium">
+        <div className="flex items-center bg-white/[0.04] rounded-full p-1 text-[0.75rem] font-medium min-h-[36px]">
+          {!modeReady ? (
+            <div className="w-full flex items-center gap-1 px-1" aria-label="Loading merchant mode">
+              <span className="flex-1 h-7 rounded-full bg-white/[0.06] animate-pulse" />
+              <span className="flex-1 h-7 rounded-full bg-white/[0.03] animate-pulse" />
+            </div>
+          ) : (
+            <>
           <button
             type="button"
+            disabled={switching}
             onClick={() => setMode('test')}
             className={`flex-1 py-1.5 rounded-full transition-colors ${
               mode === 'test'
@@ -142,7 +150,7 @@ export default function Sidebar({ onNavigate }) {
           </button>
           <button
             type="button"
-            disabled={!canUseLive}
+            disabled={!canUseLive || switching}
             onClick={() => setMode('live')}
             className={`flex-1 py-1.5 rounded-full transition-colors ${
               mode === 'live'
@@ -155,6 +163,8 @@ export default function Sidebar({ onNavigate }) {
           >
             Live Mode
           </button>
+            </>
+          )}
         </div>
       </div>
     </aside>
