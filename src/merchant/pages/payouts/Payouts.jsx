@@ -125,8 +125,10 @@ export default function Payouts() {
               </div>
               <div className="flex items-center gap-3">
                 {(() => {
-                  const canWithdraw = activated && totals.available >= MIN_WITHDRAW && !!primaryBank
-                  const reason = !activated
+                  const canWithdraw = modeReady && !!mode && activated && totals.available >= MIN_WITHDRAW && !!primaryBank
+                  const reason = !modeReady || !mode
+                    ? 'Loading payout mode'
+                    : !activated
                     ? 'Complete verification to enable withdrawals'
                     : !primaryBank ? 'Link a bank account first'
                     : totals.available < MIN_WITHDRAW ? `Minimum withdrawal is ${fmt(MIN_WITHDRAW)}`
