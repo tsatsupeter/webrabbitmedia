@@ -7,6 +7,7 @@ import Terms from './pages/Terms'
 import Powered from './pages/Powered'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
+import Login from './merchant/pages/Login'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="terms" element={<Terms />} />
           <Route path="powered" element={<Powered />} />
         </Route>
+        <Route path="/merchant/login" element={<Login />} />
         <Route path="/merchant" element={<MerchantLayout />}>
           <Route index element={<GetStarted />} />
         </Route>
