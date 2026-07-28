@@ -1,94 +1,45 @@
-## Cloudflare Worker: `api.webrabbitmedia.com` gateway
+# End-to-end API verification plan
 
-Scaffold a Cloudflare Worker that fronts `api.webrabbitmedia.com/v1/*` and proxies to the existing Supabase Edge Functions, adding routing, CORS, request ID injection, and basic per-key rate limiting. Keeps merchant Bearer API keys intact so the existing `authenticateKey` logic in Supabase still works unchanged.
+Goal: prove the full chain `api.webrabbitmedia.com → Cloudflare Worker → Supabase Edge Functions → Payswitch → transactions ledger` works for both test and live modes, without leaving stray data or live charges beyond the one already-approved GHS 1 pattern.
 
-### Endpoints (v1)
+## Steps
 
-| Method | Path | Proxies to |
-|---|---|---|
-| POST | `/v1/collect/momo` | `collect-momo` |
-| POST | `/v1/collect/card` | `collect-card` |
-| POST | `/v1/payout/momo` | `payout-momo` (write keys only) |
-| GET  | `/v1/transactions/:id` | `transaction-status?transaction_id=:id` |
-| GET  | `/v1/transactions` | new endpoint — list txns for the authed business |
-| GET  | `/v1/health` | worker-local, returns `{ ok: true }` |
+1. **Mint scoped API keys via SQL** (test + live, both write-scoped, tied to ECHODATE), capture the raw `sk_test_...` / `sk_live_...` once, store the SHA-256 in `api_keys`. Revoke both at the end of the run.
 
-### Repo layout
+2. **Public surface checks** (no auth):
+   - `GET /v1/health` → 200 JSON, `x-request-id` echoed
+   - `GET /v1/unknown` → 404
+   - `OPTIONS /v1/collect/momo` → CORS headers present
+   - `GET /v1/transactions` with no bearer → 401 "Missing bearer API key"
+   - `GET /v1/transactions` with a bogus bearer → 401 "Invalid API key"
 
-```text
-worker/
-  wrangler.toml          # name, main, compat date, routes, vars
-  package.json           # wrangler + typescript devDeps
-  tsconfig.json
-  src/
-    index.ts             # Router, CORS, error shape
-    routes/
-      collect.ts
-      payout.ts
-      transactions.ts
-    lib/
-      proxy.ts           # forward to Supabase edge fn, preserve Authorization
-      ratelimit.ts       # KV-backed sliding window per key hash
-      response.ts        # json(), error(), request-id
-  README.md              # deploy + custom-domain steps
-```
+3. **Auth + isolation checks** (test key):
+   - `GET /v1/transactions?limit=5` → 200, only test-mode rows for ECHODATE
+   - `GET /v1/transactions/<known_test_txn_id>` → 200, matches ledger
 
-### New Supabase Edge Function
+4. **Test-mode collection through the worker**:
+   - `POST /v1/collect/momo` with GHS 1, MTN, sandbox subscriber → expect provider response + row in `transactions` with `mode=test`, `fee=0.15`, `net=0.85`
+   - Poll `GET /v1/transactions/{id}` until resolved
 
-- `list-transactions` — `GET`, uses existing `authenticateKey`, returns the caller's business transactions for the key's mode with `limit`, `cursor`, `status`, `channel`, `from`, `to` query params. Deployed alongside the worker so `/v1/transactions` has a backend.
+5. **Rate-limit check**: fire ~70 rapid requests against `/v1/health` with the same bearer → confirm 429 after the 60-req/10s threshold, then recovery after the window.
 
-### Worker behavior
+6. **Live-mode read path only** (no new live charge — reuse the earlier live GHS 1 txn `521888807466`):
+   - `GET /v1/transactions?limit=5` with live key → returns only live rows
+   - `GET /v1/transactions/521888807466` with live key → 200
+   - Cross-check: same call with the test key → must NOT return the live row (mode isolation)
 
-- **Routing**: minimal router in `index.ts` (no framework). Unknown routes → `404 {error:"not_found"}`.
-- **CORS**: identical headers to the edge functions (`Access-Control-Allow-Origin: *`, allowed headers `authorization, content-type, apikey`). OPTIONS short-circuits.
-- **Auth passthrough**: the `Authorization: Bearer sk_...` header is forwarded verbatim; the worker does NOT validate keys — Supabase does. This keeps one source of truth.
-- **Rate limit**: KV namespace `RL`, sliding window 60 req / 10s per SHA-256(key). 429 with `Retry-After`. Skipped for `/v1/health`.
-- **Request ID**: worker generates `x-request-id` if absent, echoes on response, forwards to Supabase.
-- **Errors**: normalized `{error, request_id}` shape; upstream JSON is passed through when Supabase returns one.
+7. **Access-scope check**: create a read-only test key, attempt `POST /v1/payout/momo` → expect 403 "Write access required".
 
-### wrangler.toml
+8. **Cleanup**: revoke every key minted in step 1; leave a short report of status codes, transaction IDs, timings, and any anomalies.
 
-```toml
-name = "webrabbit-api"
-main = "src/index.ts"
-compatibility_date = "2026-07-01"
+## Technical notes
 
-[[routes]]
-pattern = "api.webrabbitmedia.com/v1/*"
-zone_name = "webrabbitmedia.com"
+- All requests go to `https://api.webrabbitmedia.com` (not the Supabase functions URL) so we exercise the worker's routing, CORS, request-id, and rate limiter.
+- Use `curl -sS -D -` to capture headers (`x-request-id`, `content-type`, CORS).
+- API keys minted via `supabase--migration` (insert into `api_keys` with `key_hash = encode(digest(...,'sha256'),'hex')`); raw values printed once in migration output, then discarded.
+- No new live charges beyond read-only verification — avoids spending real money and keeps the ledger clean.
+- If any step fails, stop and surface the failing request + response body verbatim before continuing.
 
-[vars]
-SUPABASE_FUNCTIONS_URL = "https://eydjkasswyygiycitnml.supabase.co/functions/v1"
-SUPABASE_ANON_KEY = "<publishable key>"   # required by Supabase functions gateway
+## Deliverable
 
-[[kv_namespaces]]
-binding = "RL"
-id = "<created via wrangler kv:namespace create RL>"
-```
-
-The publishable anon key is public and safe to inline. No service role, no Payswitch creds live in the worker.
-
-### End-to-end verification
-
-From the sandbox, once deployed I will:
-
-1. `curl https://api.webrabbitmedia.com/v1/health` → 200.
-2. Mint a test read key for ECHODATE, `GET /v1/transactions?limit=5` → returns the seeded test transactions.
-3. `GET /v1/transactions/521888807466` → resolves the earlier live GHS 1 charge status.
-4. `POST /v1/collect/momo` in test mode with a small amount → 200, ledger row created, mode = `test`.
-5. Rate-limit smoke test: 70 rapid calls → last ones return 429.
-
-Screenshots + JSON responses will be reported back.
-
-### Out of scope for this pass
-
-- Custom worker-level API key management (Supabase keeps owning that).
-- Card 3-D Secure callback handling (already handled by Supabase edge fn).
-- Webhook signing / delivery.
-
-### Technical notes
-
-- Worker is TypeScript, deployed via `wrangler deploy` from the `worker/` directory. It lives inside this repo so the Cloudflare/GitHub sync you use continues to build it.
-- Supabase Edge Functions require an `apikey` header (the anon publishable key) in addition to the merchant `Authorization` bearer; the proxy adds it automatically so merchants only send their own key.
-- List endpoint pagination uses `created_at` cursor to avoid offset drift as new rows arrive.
-- The DNS record for `api` on `webrabbitmedia.com` needs to be a proxied `AAAA` / `A` (e.g. `192.0.2.1` placeholder) so Cloudflare terminates TLS and routes to the worker. README will spell this out.
+A single summary in chat: pass/fail per step, transaction IDs created, and confirmation that test/live data never crossed.
