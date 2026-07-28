@@ -7,6 +7,8 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Powered from './pages/Powered'
 import Auth from './pages/Auth'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import CreateBusiness from './pages/CreateBusiness'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
@@ -42,6 +44,8 @@ function App() {
         </Route>
         {/* Auth stands alone: no marketing navbar/footer */}
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/docs/:section" element={<Docs />} />
         <Route

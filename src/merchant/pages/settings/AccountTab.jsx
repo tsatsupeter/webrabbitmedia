@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
@@ -239,43 +240,6 @@ function Field({ label, children }) {
   )
 }
 
-function ChangePasswordModal({ open, onClose }) {
-  const [pw, setPw] = useState('')
-  const [pw2, setPw2] = useState('')
-  const [busy, setBusy] = useState(false)
-  if (!open) return null
-  const submit = async (e) => {
-    e.preventDefault()
-    if (pw.length < 8) return toast.error('Password must be at least 8 characters')
-    if (pw !== pw2) return toast.error('Passwords do not match')
-    setBusy(true)
-    const { error } = await supabase.auth.updateUser({ password: pw })
-    setBusy(false)
-    if (error) return toast.error(error.message)
-    toast.success('Password updated')
-    setPw(''); setPw2('')
-    onClose()
-  }
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full max-w-md rounded-xl bg-merchant-panel border border-merchant-border p-6 space-y-4">
-        <h3 className="font-display text-[1.05rem] text-white">Change password</h3>
-        <div className="space-y-2">
-          <label className="text-[0.78rem] text-white/60">New password</label>
-          <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.85rem] outline-none focus:border-white/25" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-[0.78rem] text-white/60">Confirm new password</label>
-          <input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.85rem] outline-none focus:border-white/25" />
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="h-9 px-4 rounded-lg text-white/70 hover:text-white text-[0.82rem]">Cancel</button>
-          <button type="submit" disabled={busy} className="h-9 px-4 rounded-lg bg-white text-black text-[0.82rem] font-medium disabled:opacity-60">{busy ? 'Saving…' : 'Update password'}</button>
-        </div>
-      </form>
-    </div>
-  )
-}
 
 function MfaModal({ open, onClose, onDone }) {
   const [factorId, setFactorId] = useState(null)
@@ -340,7 +304,7 @@ export default function AccountTab() {
   const [profile, setProfile] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [editOpen, setEditOpen] = useState(false)
-  const [pwOpen, setPwOpen] = useState(false)
+  
   const [mfaOpen, setMfaOpen] = useState(false)
   const [mfaEnrolled, setMfaEnrolled] = useState(false)
 
@@ -414,7 +378,7 @@ export default function AccountTab() {
             <h3 className="text-[0.9rem] font-medium text-white mb-1">Password</h3>
             <p className="text-[0.8rem] text-white/55">Change your password to secure your account.</p>
           </div>
-          <button type="button" onClick={() => setPwOpen(true)} className="h-9 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium">Change Password</button>
+          <Link to={`/auth/forgot-password?email=${encodeURIComponent(user?.email || '')}`} className="h-9 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium inline-flex items-center no-underline">Change Password</Link>
         </div>
       </Card>
 
@@ -441,7 +405,7 @@ export default function AccountTab() {
         avatarUrl={avatarUrl}
         onSaved={handleSaved}
       />
-      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
+      
       <MfaModal open={mfaOpen} onClose={() => setMfaOpen(false)} onDone={loadMfa} />
     </div>
   )
