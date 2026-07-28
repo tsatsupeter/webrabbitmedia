@@ -1,19 +1,48 @@
-## Problem
-After creating a business, `CreateBusiness` correctly inserts the row and calls `navigate('/merchant')`. But `ProtectedRoute` (with `requireBusiness`) has a render race: when it mounts fresh, `useAuth` starts as `{ user: null, loading: true }`. The check effect sees no user and sets `checkingBiz=false`. When the session then loads (`loading=false`, `user` set), there is a render window before the async business-count query resolves where `loading=false && checkingBiz=false && hasBusiness=false` — so it redirects to `/auth/create-business` even though the business exists.
+## Goals
+1. "Submit details" on Get Started → navigates to `/merchant/verification`.
+2. Rebuild the Verification page as a three-state flow that matches the screenshots and persists the selection.
 
-Verified: the `businesses` row for the current user (`ECHODATE`, id `aa6fead6…`) exists in the DB, grants and RLS policies are correct, and `profiles.last_active_business_id` is set. The only defect is the guard.
+## Data
+Add a nullable `business_type` column (`text`, check-in `('individual','registered')`) to `public.businesses` via migration. No new grants/policies needed (existing RLS on `businesses` already covers it). Nullable → drives which state the page shows.
 
-## Fix — `src/components/ProtectedRoute.jsx`
-- Track the business check per-user with a `checkedForUserId` ref/state so the guard never renders "no business" until it has actually queried for the current user.
-- While `requireBusiness` is on and we don't yet have a check result for the current `user.id`, keep showing the loading placeholder (never fall through to the redirect).
-- In the effect, set `checkingBiz=true` synchronously before the await; only clear it after `setHasBusiness` for that same user id.
-- Also gate on `loading` from `useAuth` for the business branch: if auth is still loading, don't touch checking state.
+## State machine (`/merchant/verification`)
+Reads the active business's `business_type`. Three view states:
 
-Net effect: the only paths out of the loading state are (a) no session → `/auth`, (b) session + confirmed 0 businesses → `/auth/create-business`, (c) session + confirmed ≥1 business → render children.
+- **basics** (when `business_type IS NULL`) — matches image-14:
+  - Green pill banner: "Complete verification to activate live payments and payouts. Most reviews finish within 72 hours."
+  - Heading "Let's start with the basics" + subtitle.
+  - Card "Are you an individual or registered business?" with two selectable option-cards (Individual / Registered entity), each with the exact bullet copy from the screenshot. Selected card = accent border + filled radio.
+  - Bottom-right "Continue" button (disabled until a choice is made). On click → updates `businesses.business_type` for the active business, then switches to **overview**.
+
+- **overview** (when `business_type` is set) — matches image-11 + image-15:
+  - Two status pills at top: red "✕ LIVE PAYMENTS INACTIVE" and orange "⚠ ACTION REQUIRED : IDENTITY VERIFICATION PENDING" (static badges for now).
+  - Summary card: "You are a **Individual** / **Registered entity**" (green text) + subtext "You can update this here if your setup has changed.", pencil edit icon on the right → switches to **editType**.
+  - "Product & Payout Details" section with rows (each with icon, title, description, right-side "Submit" button, connector line down the left):
+    - Product Information
+    - Identity Verification
+    - Business Verification *(only when registered)*
+    - Bank Verification
+  - Buttons are placeholders (no forms wired yet).
+
+- **editType** (from clicking the pencil) — matches image-12 / image-13:
+  - Same top status pills.
+  - Heading "Update your business type" + subtitle.
+  - Same Individual / Registered option cards, preselected to current value.
+  - Bottom-right "Continue" button → saves new value, returns to **overview**. A subtle way back (click outside/cancel) not required per screenshot; just Continue.
+
+All colors via existing tokens (`accent`, `merchant-panel`, `merchant-border`) + small utility classes for the red/orange status pills using `bg-red-500/10 text-red-400 border-red-500/30` and `bg-orange-500/10 text-orange-400 border-orange-500/30`.
+
+## Files
+- `supabase/migrations/*` — add `business_type` column (via migration tool).
+- `src/merchant/pages/GetStarted.jsx` — make the "Submit details" button use `<Link to="/merchant/verification">` (or `useNavigate`).
+- `src/merchant/pages/Verification.jsx` — full rewrite implementing the three states, reading/updating via `useBusinesses` + supabase.
+- `src/merchant/Icon.jsx` — add any missing icons (`shieldCheck`, `alert`, `xCircle`, `idCard`, `building`) if not already present.
+- `src/hooks/useBusinesses.js` — expose the active row (already does) so the page can read `business_type` and call refresh after update.
 
 ## Verification
-- Sign in as the current user and hit `/merchant` directly → lands on Get Started (no bounce).
-- Fresh signup with 0 businesses → still redirected to `/auth/create-business`.
-- After submitting the create-business form → lands on `/merchant` Get Started page and stays there.
+- From `/merchant` click "Submit details" → land on `/merchant/verification` in **basics** state.
+- Pick Individual → Continue → **overview** shows "You are a **Individual**" + 3 rows (no Business Verification).
+- Click pencil → **editType** with Individual preselected. Switch to Registered → Continue → **overview** now shows 4 rows including Business Verification.
+- Reload page → state persists (comes from `businesses.business_type`).
 
-No DB, routing, or UI changes needed beyond this one file.
+No auth, routing, or DB-policy changes beyond the single column addition.
