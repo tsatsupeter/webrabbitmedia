@@ -124,9 +124,10 @@ export function useMerchantMode() {
 
   const setMode = useCallback((next) => requestMode(next), [])
   const modeReady = !loading && snap.hydrated && Boolean(snap.mode)
+  const mode = modeReady ? snap.mode : null
 
   return {
-    mode: snap.mode,
+    mode,
     setMode,
     canUseLive,
     loading,
