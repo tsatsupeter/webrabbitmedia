@@ -119,11 +119,16 @@ function FileUpload({ label, path, file, onFile, onClear }) {
 
 export default function BankVerification() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const editId = params.get('id')
+  const isNew = params.get('new') === '1'
   const { user } = useAuth()
   const { active } = useBusinesses()
-  const readOnly = active?.status === 'approved'
+  const readOnly = active?.status === 'approved' && !isNew && !editId
 
 
+  const [rowId, setRowId] = useState(null)
+  const [isPrimary, setIsPrimary] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
