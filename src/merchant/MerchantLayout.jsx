@@ -24,6 +24,10 @@ const titleByPath = {
 
 export default function MerchantLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [compactSidebar, setCompactSidebar] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('wr.compactSidebar') === 'true'
+  })
   const { pathname } = useLocation()
   const title = titleByPath[pathname] ?? 'Dashboard'
   // Sentra is a full-bleed chat canvas: no topbar, like the reference.
@@ -34,7 +38,7 @@ export default function MerchantLayout() {
       <ModeSwitchOverlay />
       {/* Desktop sidebar */}
       <div className="hidden md:block h-screen sticky top-0">
-        <Sidebar />
+        <Sidebar compact={compactSidebar} />
       </div>
 
       {/* Mobile sidebar */}
@@ -52,7 +56,14 @@ export default function MerchantLayout() {
       )}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {!bareCanvas && <Topbar title={title} onMenuClick={() => setMobileOpen(true)} />}
+        {!bareCanvas && (
+          <Topbar
+            title={title}
+            compactSidebar={compactSidebar}
+            setCompactSidebar={setCompactSidebar}
+            onMenuClick={() => setMobileOpen(true)}
+          />
+        )}
         {bareCanvas && (
           <button
             type="button"
