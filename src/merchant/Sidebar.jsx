@@ -143,13 +143,7 @@ export default function Sidebar({ onNavigate }) {
           <button
             type="button"
             disabled={!canUseLive}
-            onClick={() => {
-              if (!canUseLive) {
-                toast.info('Live Mode unlocks after your business is approved.')
-                return
-              }
-              setMode('live')
-            }}
+            onClick={() => setMode('live')}
             className={`flex-1 py-1.5 rounded-full transition-colors ${
               mode === 'live'
                 ? 'bg-emerald-500/90 text-white shadow-[0_0_0_1px_rgba(16,185,129,0.5)]'
