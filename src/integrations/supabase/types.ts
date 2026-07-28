@@ -23,6 +23,7 @@ export type Database = {
           id: string
           key_hash: string
           key_prefix: string
+          mode: string
           name: string
           revoked_at: string | null
           user_id: string
@@ -35,6 +36,7 @@ export type Database = {
           id?: string
           key_hash: string
           key_prefix: string
+          mode?: string
           name: string
           revoked_at?: string | null
           user_id: string
@@ -47,6 +49,7 @@ export type Database = {
           id?: string
           key_hash?: string
           key_prefix?: string
+          mode?: string
           name?: string
           revoked_at?: string | null
           user_id?: string
@@ -350,6 +353,30 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          business_id: string
+          commission_bps: number
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          commission_bps?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          commission_bps?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_information: {
         Row: {
           acquisitions: string[]
@@ -454,6 +481,93 @@ export type Database = {
           id?: string
           last_active_business_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          account_bank: string | null
+          account_number: string | null
+          api_key_id: string | null
+          business_id: string
+          channel: string
+          created_at: string
+          currency: string
+          customer_email: string | null
+          description: string | null
+          fee_amount: number
+          gross_amount: number
+          id: string
+          mode: string
+          net_amount: number
+          provider: string
+          provider_code: string | null
+          provider_reason: string | null
+          provider_reference: string | null
+          provider_transaction_id: string
+          r_switch: string | null
+          raw_response: Json | null
+          status: string
+          subscriber_number: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_bank?: string | null
+          account_number?: string | null
+          api_key_id?: string | null
+          business_id: string
+          channel: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          fee_amount?: number
+          gross_amount: number
+          id?: string
+          mode: string
+          net_amount: number
+          provider?: string
+          provider_code?: string | null
+          provider_reason?: string | null
+          provider_reference?: string | null
+          provider_transaction_id: string
+          r_switch?: string | null
+          raw_response?: Json | null
+          status?: string
+          subscriber_number?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_bank?: string | null
+          account_number?: string | null
+          api_key_id?: string | null
+          business_id?: string
+          channel?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          fee_amount?: number
+          gross_amount?: number
+          id?: string
+          mode?: string
+          net_amount?: number
+          provider?: string
+          provider_code?: string | null
+          provider_reason?: string | null
+          provider_reference?: string | null
+          provider_transaction_id?: string
+          r_switch?: string | null
+          raw_response?: Json | null
+          status?: string
+          subscriber_number?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

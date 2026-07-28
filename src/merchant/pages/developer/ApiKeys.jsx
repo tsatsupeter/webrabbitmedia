@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
 import { useBusinesses } from '../../../hooks/useBusinesses'
+import { useMerchantMode } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import Modal from '../../components/Modal'
 
@@ -47,6 +48,7 @@ function AccessPill({ access }) {
 export default function ApiKeys() {
   const { user } = useAuth()
   const { active } = useBusinesses()
+  const { mode } = useMerchantMode()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
@@ -63,11 +65,12 @@ export default function ApiKeys() {
       .from('api_keys')
       .select('*')
       .eq('business_id', active.id)
+      .eq('mode', mode)
       .is('revoked_at', null)
       .order('created_at', { ascending: false })
     setRows(data ?? [])
     setLoading(false)
-  }, [active])
+  }, [active, mode])
 
   useEffect(() => {
     load()
@@ -92,6 +95,7 @@ export default function ApiKeys() {
         key_prefix: fullKey.slice(0, 8),
         key_hash,
         access: enableWrite ? 'write' : 'read',
+        mode,
       })
       if (error) throw error
       setCreateOpen(false)
@@ -130,12 +134,24 @@ export default function ApiKeys() {
   return (
     <div className="w-full px-4 md:px-8 py-6">
       <div className="flex items-center justify-between mb-6">
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg bg-merchant-panel border border-merchant-border text-[0.8rem] text-white/80 hover:text-white hover:border-white/20"
-        >
-          <Icon name="gear" size={14} /> Edit Columns
-        </button>
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[0.72rem] font-medium border ${
+              mode === 'live'
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-orange-500/15 text-orange-400 border-orange-500/30'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${mode === 'live' ? 'bg-emerald-400' : 'bg-orange-400'}`} />
+            {mode === 'live' ? 'Live keys' : 'Test keys'}
+          </span>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg bg-merchant-panel border border-merchant-border text-[0.8rem] text-white/80 hover:text-white hover:border-white/20"
+          >
+            <Icon name="gear" size={14} /> Edit Columns
+          </button>
+        </div>
         <button
           type="button"
           onClick={openCreate}
