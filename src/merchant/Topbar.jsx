@@ -9,7 +9,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const { user } = useAuth()
-  const initials = (user?.email || 'WR').slice(0, 2).toUpperCase()
 
   const [searchValue, setSearchValue] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -17,6 +16,26 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
 
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef(null)
+
+  useEffect(() => {
+    function onDoc(e) {
+      if (!accountRef.current?.contains(e.target)) setAccountOpen(false)
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') setAccountOpen(false)
+    }
+    if (accountOpen) {
+      document.addEventListener('mousedown', onDoc)
+      document.addEventListener('keydown', onKey)
+    }
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [accountOpen])
 
   // Sync search input from URL when on payments page
   useEffect(() => {
