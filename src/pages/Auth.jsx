@@ -1,5 +1,9 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import Icon from '../merchant/Icon'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 
 function GoogleMark({ size = 18 }) {
   return (
@@ -17,121 +21,274 @@ function GithubMark({ size = 18 }) {
 }
 
 export default function Auth() {
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log('login submit (ui-only)')
+  const navigate = useNavigate()
+  const { session } = useAuth()
+  const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [step, setStep] = useState('email') // 'email' | 'password' | 'otp'
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (session) navigate('/merchant', { replace: true })
+  }, [session, navigate])
+
+  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/merchant` : undefined
+
+  async function handleOAuth(provider) {
+    setBusy(true)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: redirectUrl },
+    })
+    if (error) {
+      toast.error(error.message)
+      setBusy(false)
+    }
   }
+
+  async function handlePasswordSubmit(e) {
+    e.preventDefault()
+    if (!password) return
+    setBusy(true)
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: redirectUrl },
+        })
+        if (error) throw error
+        toast.success('Account created. Check your email to confirm.')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+      }
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function sendOtp() {
+    setBusy(true)
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectUrl, shouldCreateUser: mode === 'signup' },
+      })
+      if (error) throw error
+      toast.success('Code sent to your email')
+      setStep('otp')
+    } catch (err) {
+      toast.error(err.message || 'Failed to send code')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function verifyOtp(e) {
+    e.preventDefault()
+    if (!otp) return
+    setBusy(true)
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
+      if (error) throw error
+    } catch (err) {
+      toast.error(err.message || 'Invalid code')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function switchMode(next) {
+    setMode(next)
+    setStep('email')
+    setPassword('')
+    setOtp('')
+  }
+
+  const isSignup = mode === 'signup'
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex flex-col">
       <main className="flex-1 flex items-center justify-center px-5 py-12">
         <div className="w-full max-w-[420px]">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <div className="w-14 h-14 rounded-full bg-accent/15 ring-1 ring-accent/40 flex items-center justify-center overflow-hidden">
-              <img
-                src="/webrabbitmedia-logo-green.jpeg"
-                alt="Web Rabbit"
-                width="42"
-                height="42"
-                className="rounded-full"
-              />
+              <img src="/webrabbitmedia-logo-green.jpeg" alt="Web Rabbit" width="42" height="42" className="rounded-full" />
             </div>
           </div>
 
           <h1 className="font-display text-[1.5rem] font-semibold text-white text-center tracking-tight">
-            Sign in to Web Rabbit
+            {isSignup ? 'Get Started with Web Rabbit' : 'Sign in to Web Rabbit'}
           </h1>
           <p className="text-center text-[0.9rem] text-white/50 mt-2 mb-8">
-            Don't have an account?{' '}
-            <a href="#" className="text-white font-medium hover:text-accent-bright no-underline">
-              Sign up
-            </a>
+            {isSignup ? (
+              <>Already have an account?{' '}
+                <button type="button" onClick={() => switchMode('login')} className="text-white font-medium hover:text-accent-bright">Login</button>
+              </>
+            ) : (
+              <>Don't have an account?{' '}
+                <button type="button" onClick={() => switchMode('signup')} className="text-white font-medium hover:text-accent-bright">Sign up</button>
+              </>
+            )}
           </p>
 
-          {/* OAuth */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               type="button"
-              onClick={() => console.log('google (ui-only)')}
-              className="h-11 flex items-center justify-center gap-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.85rem] text-white hover:bg-white/[0.06] transition-colors"
+              disabled={busy}
+              onClick={() => handleOAuth('google')}
+              className="h-11 flex items-center justify-center gap-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.85rem] text-white hover:bg-white/[0.06] transition-colors disabled:opacity-60"
             >
               <GoogleMark />
-              <span className="hidden sm:inline">Sign in with</span> Google
+              <span className="hidden sm:inline">Continue with</span> Google
             </button>
             <button
               type="button"
-              onClick={() => console.log('github (ui-only)')}
-              className="h-11 flex items-center justify-center gap-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.85rem] text-white hover:bg-white/[0.06] transition-colors"
+              disabled={busy}
+              onClick={() => handleOAuth('github')}
+              className="h-11 flex items-center justify-center gap-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.85rem] text-white hover:bg-white/[0.06] transition-colors disabled:opacity-60"
             >
               <GithubMark />
-              <span className="hidden sm:inline">Sign in with</span> GitHub
+              <span className="hidden sm:inline">Continue with</span> GitHub
             </button>
           </div>
 
-          {/* Divider */}
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-[0.8rem] text-white/40">Or</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-[0.85rem] text-white/70 mb-2">
-                Enter your email
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="name@email.com"
-                className="w-full h-11 px-3.5 rounded-lg bg-merchant-panel border-2 border-accent/60 text-white placeholder:text-white/35 outline-none focus:border-accent-bright focus:ring-4 focus:ring-accent/20 transition-all text-[0.9rem]"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full h-11 rounded-lg bg-merchant-panel border border-merchant-border text-[0.9rem] font-medium text-white hover:bg-white/[0.06] transition-colors"
+          {step === 'email' && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!email) return
+                setStep('password')
+              }}
+              className="space-y-4"
             >
-              Continue with password
-            </button>
+              <div>
+                <label htmlFor="email" className="block text-[0.85rem] text-white/70 mb-2">Enter your email</label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@email.com"
+                  className="w-full h-11 px-3.5 rounded-lg bg-merchant-panel border-2 border-accent/60 text-white placeholder:text-white/35 outline-none focus:border-accent-bright focus:ring-4 focus:ring-accent/20 transition-all text-[0.9rem]"
+                />
+              </div>
 
-            <button
-              type="button"
-              onClick={() => console.log('otp (ui-only)')}
-              className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.9rem] font-medium text-white/80 hover:bg-white/[0.06] hover:text-white transition-colors"
-            >
-              <Icon name="mail" size={16} />
-              Log in with OTP
-            </button>
-          </form>
+              {isSignup ? (
+                <button
+                  type="submit"
+                  disabled={busy || !email}
+                  className="w-full h-11 rounded-lg bg-white text-black text-[0.9rem] font-medium hover:bg-white/90 transition-colors disabled:opacity-60"
+                >
+                  Sign up
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="submit"
+                    disabled={busy || !email}
+                    className="w-full h-11 rounded-lg bg-merchant-panel border border-merchant-border text-[0.9rem] font-medium text-white hover:bg-white/[0.06] transition-colors disabled:opacity-60"
+                  >
+                    Continue with password
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy || !email}
+                    onClick={sendOtp}
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.9rem] font-medium text-white/80 hover:bg-white/[0.06] hover:text-white transition-colors disabled:opacity-60"
+                  >
+                    <Icon name="mail" size={16} />
+                    Log in with OTP
+                  </button>
+                </>
+              )}
+            </form>
+          )}
 
-          {/* Legal */}
+          {step === 'password' && (
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div className="text-[0.85rem] text-white/60">
+                {email}{' '}
+                <button type="button" onClick={() => setStep('email')} className="text-accent-bright hover:underline ml-1">change</button>
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-[0.85rem] text-white/70 mb-2">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-11 px-3.5 rounded-lg bg-merchant-panel border-2 border-accent/60 text-white placeholder:text-white/35 outline-none focus:border-accent-bright focus:ring-4 focus:ring-accent/20 transition-all text-[0.9rem]"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={busy || !password}
+                className="w-full h-11 rounded-lg bg-white text-black text-[0.9rem] font-medium hover:bg-white/90 transition-colors disabled:opacity-60"
+              >
+                {busy ? 'Please wait…' : isSignup ? 'Create account' : 'Sign in'}
+              </button>
+            </form>
+          )}
+
+          {step === 'otp' && (
+            <form onSubmit={verifyOtp} className="space-y-4">
+              <div className="text-[0.85rem] text-white/60">
+                Code sent to {email}{' '}
+                <button type="button" onClick={() => setStep('email')} className="text-accent-bright hover:underline ml-1">change</button>
+              </div>
+              <div>
+                <label htmlFor="otp" className="block text-[0.85rem] text-white/70 mb-2">6-digit code</label>
+                <input
+                  id="otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456"
+                  className="w-full h-11 px-3.5 rounded-lg bg-merchant-panel border-2 border-accent/60 text-white placeholder:text-white/35 outline-none focus:border-accent-bright focus:ring-4 focus:ring-accent/20 transition-all text-[0.9rem] tracking-widest"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={busy || otp.length < 6}
+                className="w-full h-11 rounded-lg bg-white text-black text-[0.9rem] font-medium hover:bg-white/90 transition-colors disabled:opacity-60"
+              >
+                {busy ? 'Verifying…' : 'Verify code'}
+              </button>
+            </form>
+          )}
+
           <p className="text-center text-[0.8rem] text-white/45 mt-8 leading-relaxed">
-            By signing in, you agree to our{' '}
-            <Link to="/terms" className="underline hover:text-white/80">
-              Terms &amp; Conditions
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="underline hover:text-white/80">
-              Privacy Policy
-            </Link>
+            By {isSignup ? 'signing up' : 'signing in'}, you agree to our{' '}
+            <Link to="/terms" className="underline hover:text-white/80">Terms &amp; Conditions</Link> and{' '}
+            <Link to="/privacy" className="underline hover:text-white/80">Privacy Policy</Link>
           </p>
 
           <p className="text-center text-[0.85rem] text-white/50 mt-6">
             Need help?{' '}
-            <a
-              href="mailto:hello@webrabbitmedia.com"
-              className="text-white font-medium hover:text-accent-bright no-underline"
-            >
-              Contact support
-            </a>
+            <a href="mailto:hello@webrabbitmedia.com" className="text-white font-medium hover:text-accent-bright no-underline">Contact support</a>
           </p>
         </div>
       </main>
 
-      {/* Language chip */}
       <div className="p-5">
         <button
           type="button"
