@@ -171,11 +171,13 @@ export default function Payouts() {
           <section className="rounded-xl border border-white/10 bg-[hsl(var(--card))] p-6">
             <h2 className="text-base font-semibold text-white">Payout Schedule & Settings</h2>
             <dl className="mt-5 space-y-4 text-sm">
-              <Row label="Minimum Payout" value="GHS 50" action="Edit" />
-              <Row label="Payout Cycle" value={`${fmtShort(cyc.start)} - ${fmtShort(cyc.end)}`} />
-              <Row label="Next Payout" value={fmtLong(nextPayoutDate())} />
-              <Row label="Payout Frequency" value="Bi-monthly" />
+              <Row label="Minimum Payout" value="GHS 2,000.00" />
+              <Row label="Payout Frequency" value="Manual, after review" />
+              <Row label="Payment Method" value="Bank Transfer" />
             </dl>
+            <p className="mt-4 text-xs text-white/50">
+              Payouts are initiated manually after review. Once your available balance reaches the minimum, it will be transferred to your active bank account.
+            </p>
           </section>
 
           {/* Linked bank accounts */}
