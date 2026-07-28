@@ -1,6 +1,18 @@
+import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
+import { supabase } from './../integrations/supabase/client'
+import { useAuth } from './../hooks/useAuth'
 
 export default function Topbar({ title = 'Get Started', onMenuClick }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const initials = (user?.email || 'WR').slice(0, 2).toUpperCase()
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    navigate('/auth', { replace: true })
+  }
+
   return (
     <header className="h-16 shrink-0 flex items-center gap-3 px-4 md:px-6 border-b border-merchant-border bg-merchant-bg">
       <button
@@ -59,10 +71,12 @@ export default function Topbar({ title = 'Get Started', onMenuClick }) {
 
       <button
         type="button"
+        onClick={signOut}
+        title={user?.email ? `Sign out (${user.email})` : 'Sign out'}
         className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-accent-bright text-white text-[0.75rem] font-semibold flex items-center justify-center"
-        aria-label="Account"
+        aria-label="Sign out"
       >
-        WR
+        {initials}
       </button>
     </header>
   )

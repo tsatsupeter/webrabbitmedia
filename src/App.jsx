@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -12,10 +13,12 @@ import Verification from './merchant/pages/Verification'
 import MerchantHome from './merchant/pages/MerchantHome'
 import Analytics from './merchant/pages/Analytics'
 import Sentra from './merchant/pages/Sentra'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
     <BrowserRouter>
+      <Toaster theme="dark" position="top-center" richColors />
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
@@ -25,7 +28,7 @@ function App() {
           <Route path="powered" element={<Powered />} />
           <Route path="auth" element={<Auth />} />
         </Route>
-        <Route path="/merchant" element={<MerchantLayout />}>
+        <Route path="/merchant" element={<ProtectedRoute><MerchantLayout /></ProtectedRoute>}>
           <Route index element={<GetStarted />} />
           <Route path="verification" element={<Verification />} />
           <Route path="home" element={<MerchantHome />} />
