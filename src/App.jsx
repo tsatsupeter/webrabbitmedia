@@ -5,6 +5,8 @@ import About from './pages/About'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Powered from './pages/Powered'
+import MerchantLayout from './merchant/MerchantLayout'
+import GetStarted from './merchant/pages/GetStarted'
 
 function App() {
   return (
@@ -16,6 +18,9 @@ function App() {
           <Route path="privacy" element={<Privacy />} />
           <Route path="terms" element={<Terms />} />
           <Route path="powered" element={<Powered />} />
+        </Route>
+        <Route path="/merchant" element={<MerchantLayout />}>
+          <Route index element={<GetStarted />} />
         </Route>
       </Routes>
     </BrowserRouter>
