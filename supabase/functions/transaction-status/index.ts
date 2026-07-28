@@ -44,8 +44,13 @@ Deno.serve(async (req) => {
     })
     const json = await res.json().catch(() => ({} as any))
 
-    const approved = json?.code === '000' || json?.status === 'approved'
-    const failed = !approved && json?.status && json?.status !== 'pending'
+    const code = json?.code != null ? String(json.code) : null
+    const approved = code === '000' || json?.status === 'approved'
+    // If upstream has no record of an id we created > 2 minutes ago, it's truly lost — mark failed.
+    const { data: row } = await db.from('transactions').select('created_at').eq('id', existing.id).maybeSingle()
+    const ageMs = row?.created_at ? Date.now() - new Date(row.created_at).getTime() : 0
+    const notFoundUpstream = code === '999' && ageMs > 2 * 60 * 1000
+    const failed = !approved && ((json?.status && json?.status !== 'pending') || notFoundUpstream)
     const newStatus = approved ? 'approved' : (failed ? 'failed' : 'pending')
 
     if (existing.status !== newStatus) {
@@ -55,19 +60,20 @@ Deno.serve(async (req) => {
       const net = Math.round((Number(existing.gross_amount) - fee) * 100) / 100
       await db.from('transactions').update({
         status: newStatus, fee_amount: fee, net_amount: net,
-        provider_code: json?.code != null ? String(json.code) : null,
-        provider_reason: json?.reason,
+        provider_code: code,
+        provider_reason: json?.reason ?? (notFoundUpstream ? 'Transaction not found upstream' : null),
         raw_response: json,
       }).eq('id', existing.id)
     }
 
     return jsonResponse({
       transaction_id: id,
-      code: json?.code != null ? String(json.code) : null,
+      code,
       reason: json?.reason ?? null,
       status: json?.status ?? newStatus,
       resolved_status: newStatus,
     })
+
   } catch (e) {
     return handleError(e)
   }
