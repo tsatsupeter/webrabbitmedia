@@ -211,9 +211,7 @@ export default function BankVerification() {
     setSaving(true)
     try {
       const pp = await uploadIfNeeded(proofFile, proofPath)
-      const payload = {
-        business_id: active.id,
-        user_id: user.id,
+      const basePayload = {
         account_holder_name: holderName.trim() || null,
         account_number: acctClean || null,
         routing_code: routingCode.trim() || null,
@@ -227,10 +225,24 @@ export default function BankVerification() {
         status,
         submitted_at: status === 'submitted' ? new Date().toISOString() : null,
       }
-      const { error } = await supabase
-        .from('bank_verification')
-        .upsert(payload, { onConflict: 'business_id' })
-      if (error) throw error
+
+      if (rowId) {
+        const { error } = await supabase.from('bank_verification').update(basePayload).eq('id', rowId)
+        if (error) throw error
+      } else {
+        // Determine if this should be primary: only when no bank exists yet for this business
+        const { count } = await supabase
+          .from('bank_verification').select('id', { count: 'exact', head: true })
+          .eq('business_id', active.id)
+        const shouldBePrimary = (count || 0) === 0
+        const { data: inserted, error } = await supabase
+          .from('bank_verification')
+          .insert({ ...basePayload, business_id: active.id, user_id: user.id, is_primary: shouldBePrimary })
+          .select('id, is_primary').single()
+        if (error) throw error
+        setRowId(inserted.id)
+        setIsPrimary(inserted.is_primary)
+      }
       setProofPath(pp); setProofFile(null)
       return { error: false }
     } catch (e) {
