@@ -128,7 +128,7 @@ export default function ApiKeys() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+    <div className="w-full px-4 md:px-8 py-6">
       <div className="flex items-center justify-between mb-6">
         <button
           type="button"
