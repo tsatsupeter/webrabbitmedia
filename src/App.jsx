@@ -7,6 +7,7 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Powered from './pages/Powered'
 import Auth from './pages/Auth'
+import CreateBusiness from './pages/CreateBusiness'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
 import Verification from './merchant/pages/Verification'
@@ -29,7 +30,16 @@ function App() {
         </Route>
         {/* Auth stands alone: no marketing navbar/footer */}
         <Route path="/auth" element={<Auth />} />
-        <Route path="/merchant" element={<ProtectedRoute><MerchantLayout /></ProtectedRoute>}>
+        <Route
+          path="/auth/create-business"
+          element={
+            <ProtectedRoute>
+              <CreateBusiness />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/merchant" element={<ProtectedRoute requireBusiness><MerchantLayout /></ProtectedRoute>}>
+
           <Route index element={<GetStarted />} />
           <Route path="verification" element={<Verification />} />
           <Route path="home" element={<MerchantHome />} />
