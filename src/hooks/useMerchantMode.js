@@ -3,13 +3,22 @@ import { toast } from 'sonner'
 import { useBusinesses } from './useBusinesses'
 
 const key = (id) => `wr.merchantMode.${id}`
+const ACTIVE_BUSINESS_KEY = 'wr.activeBusinessId'
 const SWITCH_MS = 650
 const TAIL_MS = 150
+
+function initialStoredMode() {
+  if (typeof window === 'undefined') return null
+  const activeId = localStorage.getItem(ACTIVE_BUSINESS_KEY)
+  if (!activeId) return null
+  const stored = localStorage.getItem(key(activeId))
+  return stored === 'live' || stored === 'test' ? stored : null
+}
 
 // Module-scoped shared store so every consumer (sidebar, overlay, pages)
 // sees the same `switching`/`pendingMode` state during a mode change.
 const state = {
-  mode: null,
+  mode: initialStoredMode(),
   hydrated: false,
   switching: false,
   pendingMode: null,
