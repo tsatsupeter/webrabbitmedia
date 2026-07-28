@@ -9,6 +9,7 @@ const titleByPath = {
   '/merchant/verification': 'Verification',
   '/merchant/home': 'Home',
   '/merchant/analytics': 'Analytics',
+  '/merchant/developer/api-keys': 'API Keys',
 }
 
 export default function MerchantLayout() {

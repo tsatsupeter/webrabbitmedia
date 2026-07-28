@@ -17,6 +17,7 @@ import BusinessVerification from './merchant/pages/BusinessVerification'
 import MerchantHome from './merchant/pages/MerchantHome'
 import Analytics from './merchant/pages/Analytics'
 import Sentra from './merchant/pages/Sentra'
+import ApiKeys from './merchant/pages/developer/ApiKeys'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -51,6 +52,7 @@ function App() {
           <Route path="home" element={<MerchantHome />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="sentra" element={<Sentra />} />
+          <Route path="developer/api-keys" element={<ApiKeys />} />
         </Route>
       </Routes>
     </BrowserRouter>
