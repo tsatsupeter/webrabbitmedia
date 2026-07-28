@@ -69,24 +69,30 @@ export default function CollectCard() {
       <h2 id="response">Response</h2>
       <CodeBlock
         lang="json"
-        filename="Response · 201"
+        filename="Response · 201 (approved) or 202 (3-DS required)"
         code={`{
   "transaction_id": "521888812345",
   "status": "approved",
   "code": "000",
   "reason": "Transaction Successful",
+  "authorization_url": null,
   "gross_amount": 50,
   "fee_amount": 7.5,
   "net_amount": 42.5,
   "currency": "GHS"
 }`}
       />
+      <p className="text-sm text-white/60 mt-2">
+        When the card is enrolled in 3-D Secure, the response is <code>HTTP 202</code> with{' '}
+        <code>status: "pending"</code>, <code>code: "200"</code>, and{' '}
+        <code>authorization_url</code> set to the ACS page the customer must complete.
+      </p>
 
       <h2 id="three-d-secure">3-D Secure redirect flow</h2>
       <p>
-        If the card is enrolled in 3-D Secure, the upstream provider issues a browser redirect to the
-        cardholder's bank. When the challenge completes the customer is sent to your <code>redirect_url</code>
-        with the outcome appended as query parameters:
+        On <code>202</code> responses, redirect the customer to <code>authorization_url</code>. When the
+        challenge completes, the provider sends them back to your <code>redirect_url</code> with the outcome
+        appended as query parameters:
       </p>
       <CodeBlock
         lang="text"
