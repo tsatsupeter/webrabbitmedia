@@ -58,7 +58,8 @@ export const navGroups = [
         label: 'Support',
         icon: 'life',
         children: [
-          { key: 'support-tickets', label: 'Tickets' },
+          { key: 'support-docs', label: 'Documentation', to: '/docs' },
+          { key: 'support-feature-request', label: 'Feature Request' },
         ],
       },
       { key: 'settings', label: 'Settings', icon: 'gear' },
