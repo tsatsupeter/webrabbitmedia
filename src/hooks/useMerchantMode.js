@@ -79,10 +79,12 @@ function requestMode(next) {
 
   switchTimer = setTimeout(() => {
     state.mode = next
-    if (typeof window !== 'undefined' && state.activeId) {
-      localStorage.setItem(key(state.activeId), next)
+    if (typeof window !== 'undefined') {
+      if (state.activeId) localStorage.setItem(key(state.activeId), next)
+      localStorage.setItem(LAST_KEY, next)
     }
     emit()
+
     tailTimer = setTimeout(() => {
       state.switching = false
       state.pendingMode = null
