@@ -60,8 +60,10 @@ function hydrate(activeId, canUseLive) {
     }
     state.mode = 'test'
   }
+  if (typeof window !== 'undefined') localStorage.setItem(LAST_KEY, state.mode)
   emit()
 }
+
 
 function requestMode(next) {
   if (!state.activeId) return
