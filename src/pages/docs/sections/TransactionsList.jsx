@@ -6,7 +6,7 @@ import { API_VERSION } from '../../../lib/apiBase'
 export default function TransactionsList() {
   return (
     <>
-      <p>Paginate through every transaction for your business, newest first.</p>
+      <p>Paginate through every transaction for the business tied to your API key, newest first. Results are automatically scoped to the key's mode (test or live).</p>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="GET" path={`/${API_VERSION}/transactions`} />
@@ -14,12 +14,13 @@ export default function TransactionsList() {
       <h2 id="query-parameters">Query parameters</h2>
       <ParamTable
         rows={[
-          { name: 'limit', type: 'integer', desc: 'Page size, 1-100. Defaults to 25.' },
-          { name: 'cursor', type: 'string', desc: 'Opaque cursor from the previous response.' },
+          { name: 'limit', type: 'integer', desc: 'Page size, 1–100. Defaults to 25.' },
+          { name: 'cursor', type: 'string · ISO 8601', desc: 'created_at value from the previous response\'s next_cursor.' },
           { name: 'status', type: 'enum', desc: 'Filter by status: approved · pending · failed.' },
-          { name: 'channel', type: 'enum', desc: 'MTN · VODAFONE · AIRTELTIGO · G-MONEY · CARD.' },
-          { name: 'created_from', type: 'string · ISO 8601', desc: 'Inclusive lower bound.' },
-          { name: 'created_to', type: 'string · ISO 8601', desc: 'Exclusive upper bound.' },
+          { name: 'channel', type: 'enum', desc: 'momo · card.' },
+          { name: 'type', type: 'enum', desc: 'collection · payout.' },
+          { name: 'from', type: 'string · ISO 8601', desc: 'Inclusive lower bound on created_at.' },
+          { name: 'to', type: 'string · ISO 8601', desc: 'Inclusive upper bound on created_at.' },
         ]}
       />
 
@@ -28,22 +29,35 @@ export default function TransactionsList() {
         lang="json"
         filename="Response · 200"
         code={`{
-  "data": [
+  "items": [
     {
-      "id": "tx_01HGZ3P8QN4R5D8G",
-      "status": "approved",
-      "channel": "MTN",
-      "gross_amount": "10.50",
-      "fee_amount": "1.58",
-      "net_amount": "8.92",
-      "currency": "GHS",
+      "provider_transaction_id": "521888807466",
+      "mode": "test",
+      "type": "collection",
+      "channel": "momo",
       "subscriber_number": "0248980332",
-      "created_at": "2026-07-28T12:04:22Z"
+      "account_number": null,
+      "r_switch": "MTN",
+      "description": "Invoice A104",
+      "customer_email": "customer@example.com",
+      "gross_amount": 10.5,
+      "fee_amount": 1.58,
+      "net_amount": 8.92,
+      "currency": "GHS",
+      "status": "approved",
+      "provider_code": "000",
+      "provider_reason": "Transaction Successful",
+      "created_at": "2026-07-28T12:04:22.117Z"
     }
   ],
-  "next_cursor": "eyJpZCI6InR4XzAxSEd..."
+  "next_cursor": "2026-07-28T12:04:22.117Z",
+  "limit": 25
 }`}
       />
+      <p className="text-sm text-white/60 mt-4">
+        <code>next_cursor</code> is the <code>created_at</code> of the last row. Pass it back as the
+        <code>cursor</code> query param to fetch the next page. <code>null</code> means you're on the last page.
+      </p>
     </>
   )
 }

@@ -34,11 +34,12 @@ export default function Quickstart() {
             code: `curl -X POST ${API_BASE}/${API_VERSION}/collect/momo \\
   -H "Authorization: Bearer wr_test_..." \\
   -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: order-1024" \\
   -d '{
-    "amount": "1.00",
+    "amount": 1.00,
     "subscriber_number": "0248980332",
     "network": "MTN",
-    "description": "Order #1024"
+    "desc": "Order 1024"
   }'`,
           },
           {
@@ -50,12 +51,13 @@ export default function Quickstart() {
   headers: {
     Authorization: "Bearer wr_test_...",
     "Content-Type": "application/json",
+    "Idempotency-Key": "order-1024",
   },
   body: JSON.stringify({
-    amount: "1.00",
+    amount: 1.00,
     subscriber_number: "0248980332",
     network: "MTN",
-    description: "Order #1024",
+    desc: "Order 1024",
   }),
 })
 const data = await res.json()
@@ -72,12 +74,13 @@ curl_setopt_array($ch, [
   CURLOPT_HTTPHEADER => [
     "Authorization: Bearer wr_test_...",
     "Content-Type: application/json",
+    "Idempotency-Key: order-1024",
   ],
   CURLOPT_POSTFIELDS => json_encode([
-    "amount" => "1.00",
+    "amount" => 1.00,
     "subscriber_number" => "0248980332",
     "network" => "MTN",
-    "description" => "Order #1024",
+    "desc" => "Order 1024",
   ]),
 ]);
 $response = curl_exec($ch);
