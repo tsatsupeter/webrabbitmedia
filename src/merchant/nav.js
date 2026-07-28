@@ -40,29 +40,26 @@ export const navGroups = [
       },
     ],
   },
-  {
-    label: null,
-    items: [
-      {
-        key: 'developer',
-        label: 'Developer',
-        icon: 'code',
-        children: [
-          { key: 'dev-keys', label: 'API Keys', to: '/merchant/developer/api-keys' },
-          { key: 'dev-webhooks', label: 'Webhooks' },
-          { key: 'dev-others', label: 'Others' },
-        ],
-      },
-      {
-        key: 'support',
-        label: 'Support',
-        icon: 'life',
-        children: [
-          { key: 'support-docs', label: 'Documentation', to: '/docs' },
-          { key: 'support-feature-request', label: 'Feature Request' },
-        ],
-      },
-      { key: 'settings', label: 'Settings', icon: 'gear' },
-    ],
-  },
+    {
+      label: null,
+      items: [
+        {
+          key: 'developer',
+          label: 'Developer',
+          icon: 'code',
+          children: [
+            { key: 'dev-keys', label: 'API Keys', to: '/merchant/developer/api-keys' },
+          ],
+        },
+        {
+          key: 'support',
+          label: 'Support',
+          icon: 'life',
+          children: [
+            { key: 'support-docs', label: 'Documentation', to: '/docs' },
+          ],
+        },
+        { key: 'settings', label: 'Settings', icon: 'gear', comingSoon: true },
+      ],
+    },
 ]
