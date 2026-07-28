@@ -191,7 +191,7 @@ export default function Balances() {
           className="px-3 py-2 rounded-lg border border-white/10 bg-[hsl(var(--card))] text-sm text-white/80 hover:bg-white/5 inline-flex items-center gap-2"
           title="Coming soon"
         >
-          <Icon name="settings" size={14} /> Edit Columns
+          <Icon name="columns" size={14} /> Edit Columns
         </button>
         <div className="ml-auto flex items-center gap-2">
           <button
