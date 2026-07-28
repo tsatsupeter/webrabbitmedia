@@ -1,24 +1,75 @@
-## Problem
+## Goal
 
-Visiting `/merchant/sales/collect` renders a blank area and the console shows `No routes matched location "/merchant/sales/collect"`. Two things are missing:
+Make `/merchant/analytics` show real numbers computed from the current business's `transactions` and `payouts` tables (mode-aware, GHS), and trim tabs down to what we actually track.
 
-1. `src/merchant/pages/sales/Collect.jsx` does not exist on disk (the `src/merchant/pages/sales/` directory is missing entirely).
-2. `src/App.jsx` does not register a route for `sales/collect` under the `/merchant` layout.
+## Tabs
 
-## Fix
+Keep: **Revenue**, **Customers**, **Success Rate**, **Recovery**
+Remove: **Subscriptions**, **Retention** (we don't have subscription/retention data)
 
-1. **Recreate `src/merchant/pages/sales/Collect.jsx`** — the manual Mobile Money collection form previously built:
-   - Fields: Amount (GHS), Customer Name, Mobile Network (MTN, Vodafone, AirtelTigo, G-Money), Phone Number.
-   - Uses `useMerchantMode` so it charges through the correct Payswitch environment (test vs live) automatically.
-   - Calls the existing `merchant-collect-momo` edge function with the active business's key context.
-   - Shows a live 15% platform fee / net breakdown as the amount is typed.
-   - Success/error toasts via `sonner`; resets form on success.
-   - Styled consistently with the rest of the merchant dashboard (dark theme, same card/input classes used in `ApiKeys`, `Payments`, etc.).
+## Data source
 
-2. **Register the route in `src/App.jsx`**:
-   - Import `Collect` from `./merchant/pages/sales/Collect`.
-   - Add `<Route path="sales/collect" element={<Collect />} />` inside the `/merchant` protected route block.
+Query Supabase directly from the client, scoped by:
+- `business_id = active.id`
+- `mode = current merchant mode` (test/live from `useMerchantMode`)
+- date range from the "Last X days" filter (default last 30 days)
+- comparison window = immediately preceding period of equal length
 
-3. **Verify**: reload `/merchant/sales/collect` and confirm the form renders (no router warning, no blank screen).
+Two fetches per view:
+- `transactions`: `created_at, status, gross_amount, fee_amount, net_amount, channel, customer_email, subscriber_number, provider_reason`
+- `payouts` (for Payouts Received card): `completed_at, net_amount, status`
 
-No schema, edge function, or sidebar changes needed — `merchant-collect-momo` and the Sales → Collect nav entry already exist.
+All amounts are GHS; format as `GHS 1,234.56`. No USD.
+
+## Filters (top-right)
+
+- **Date range** dropdown: Last 7 / 30 / 90 days, This month, Last month
+- **Compare** dropdown: Previous period (default), None
+- Remove "All Products" chip (we have no products)
+
+Filters live in Analytics page state; each tab re-derives its cards from the filtered result set.
+
+## Tab contents (all cards use existing `ChartCard` + `LineChart` + `DeltaLine`)
+
+**Revenue**
+- Gross Volume — cumulative sum of `gross_amount` where status in ('approved','success')
+- Net Volume — cumulative sum of `net_amount` (after 15% fee)
+- Fees Collected — cumulative sum of `fee_amount` (replaces "Payouts Received" position — or keep both)
+- Payouts Received — cumulative sum of `payouts.net_amount` where status='paid', bucketed by `completed_at`
+- Refunds — zeros for now (feature not implemented) with "No data" state
+
+**Customers**
+- Active Customers — distinct `subscriber_number || customer_email` per day (running unique count in range)
+- New Customers — first-seen customers per day in range
+- Top Customers by Spend — top 10 by summed `gross_amount`, styled like the reference (medals for top 3)
+
+**Success Rate**
+- Payment Success Rate — % of approved vs total attempted, daily
+- Payments Breakdown — Succeeded / Failed / Pending amounts (bar rows)
+- Payment Failure Reason — group failed txns by `provider_reason` (top 5)
+- By Payment Method — group by `channel` (MTN, Vodafone, AirtelTigo, G-Money, Card) with amount
+
+**Recovery**
+- Retry Success — % of same subscriber that failed then succeeded within range
+- Recovered Amount — sum of successful retries
+- If no recoveries in range, show empty state (not fake data)
+
+## Code structure
+
+- `src/merchant/pages/Analytics.jsx` — replace hardcoded arrays with real fetch + `useMemo` bucketing
+- New helper `src/merchant/analytics/useAnalyticsData.js` — takes `{ businessId, mode, start, end }`, returns `{ txns, prevTxns, payouts, prevPayouts, loading }`
+- New helper `src/merchant/analytics/bucket.js` — pure functions to bucket rows into daily cumulative series and compute deltas
+- Keep existing `Chart.jsx` primitives; no restyling
+
+## Empty / loading states
+
+- While loading: skeleton shimmer in cards (existing `ChartCard` gets a `loading` prop)
+- Empty range: card shows the metric title, `GHS 0.00`, and "No data in this period"
+
+## Out of scope
+
+- No new tables, no edge functions, no schema changes
+- No product/subscription tracking
+- No cross-business aggregation
+
+Verification: load `/merchant/analytics` in test mode after seeding transactions exist → numbers match Payments page totals for the same window; switch to Live mode → numbers change; switch tab to Subscriptions/Retention → tabs no longer present.
