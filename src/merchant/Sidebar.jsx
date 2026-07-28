@@ -4,7 +4,6 @@ import { navGroups } from './nav'
 import Icon from './Icon'
 import BusinessSwitcher from './BusinessSwitcher'
 import { useMerchantMode } from '../hooks/useMerchantMode'
-import { toast } from 'sonner'
 
 function ExpandableItem({ item, onNavigate }) {
   const { pathname } = useLocation()
