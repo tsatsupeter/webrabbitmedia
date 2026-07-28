@@ -1,11 +1,8 @@
-Remove the "Refund" column and "Initiate Refund" button from the Payments table on `/merchant/transactions/payments`. Keep the Refunds sub-route (`/merchant/transactions/refunds`) and everything else untouched.
+Update the transactions table to display the subscriber phone number as the customer identifier (matching the Payswitch reference layout).
 
-## Changes
+Changes:
+1. In `src/merchant/pages/transactions/Payments.jsx`, replace the "Customer" table column with a "Customer ID" column that renders `subscriber_number` instead of `customer_email`.
+2. Update the details drawer (`src/merchant/pages/transactions/TxDetailsDrawer.jsx`) to show the subscriber number first and keep the email as secondary if available.
+3. Keep the email field in the database/API intact; this is purely a UI display change.
 
-**`src/merchant/pages/transactions/Payments.jsx`**
-- Remove the `<th>Refund</th>` header cell (line ~294).
-- Remove the `<td>` containing the "Initiate Refund" button (lines ~353–362).
-- Adjust the empty-state `colSpan` accordingly.
-- Keep the row's share/details click behavior (drawer) intact.
-
-No changes to Refunds page, drawer, KPIs, filters, or backend.
+No backend or schema changes required.
