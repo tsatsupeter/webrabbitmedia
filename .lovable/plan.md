@@ -1,28 +1,37 @@
 ## Goal
-Enable Google + GitHub OAuth on `/auth` with the current, correct Google "G" logo, and make sure sign-in redirects users through the existing new-user → business onboarding flow.
+Make the "Log in with OTP" flow deliver a working 6-digit code.
 
 ## Findings
-- `src/pages/Auth.jsx` already calls `supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${origin}/merchant` } })` for both `google` and `github` — provider wiring is correct; only the Google glyph is outdated (single red path).
-- `handle_new_user` trigger already creates a `profiles` row from `raw_user_meta_data.full_name`/`name` + `avatar_url`, which Google and GitHub both provide — no DB changes needed.
-- `ProtectedRoute` handles the "no business yet" case and routes to `/auth/create-business`, so OAuth users land in the right place after redirect.
+- `src/pages/Auth.jsx` already implements the full OTP UI + logic:
+  - `sendOtp()` → `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: mode === 'signup' } })`
+  - `verifyOtp()` → `supabase.auth.verifyOtp({ email, token, type: 'email' })`
+- The frontend is correct; the reason it doesn't "work" today is the **Supabase Magic Link email template** ships with only the magic-link URL and no `{{ .Token }}` placeholder, so users receive a link but not the 6-digit code the UI asks for.
+- There is no `auth-email-hook` deployed, so auth emails are sent by Supabase's built-in mailer using the templates in the Supabase dashboard.
 
 ## Changes
 
-### 1. Refresh the Google mark (`src/pages/Auth.jsx`)
-Replace the `GoogleMark` component with the official 4-color "G" SVG (blue #4285F4, green #34A853, yellow #FBBC05, red #EA4335) at 18px. No other markup changes.
+### 1. Frontend polish (`src/pages/Auth.jsx`)
+Small robustness fixes only — no redesign:
+- After `sendOtp` succeeds, focus the OTP input.
+- Add a "Resend code" button on the OTP step with a 30s cooldown (calls `sendOtp` again).
+- Show a clearer error if `verifyOtp` fails (invalid/expired) and reset the input.
+- Trim the OTP input to digits (already done) and auto-submit when 6 digits are entered.
 
-### 2. OAuth redirect hardening (`src/pages/Auth.jsx`)
-Keep `redirectTo: ${origin}/merchant`. Confirm `useAuth`'s `onAuthStateChange` picks up the session; nothing else to change.
+No changes to backend, DB, or edge functions.
 
-### 3. User-facing verification steps (no code)
-Tell the user to confirm in Supabase Dashboard → Authentication → URL Configuration:
-- Site URL: `https://webrabbitmedia.com`
-- Additional Redirect URLs include: `https://webrabbitmedia.com/**`, the Lovable preview origin `**`, and `http://localhost:8080/**` for local dev.
+### 2. User action required (manual — I'll link it)
+In Supabase Dashboard → Authentication → Email Templates → **Magic Link**, replace the template body with one that includes both the OTP token and (optional) magic link. Minimum required snippet:
 
-And in each provider console:
-- Google Cloud OAuth client → Authorized redirect URI includes `https://eydjkasswyygiycitnml.supabase.co/auth/v1/callback`.
-- GitHub OAuth App → Authorization callback URL = same Supabase callback URL above.
+```html
+<h2>Your login code</h2>
+<p>Enter this code to sign in:</p>
+<p style="font-size:24px;font-weight:700;letter-spacing:4px">{{ .Token }}</p>
+<p>Or click the link: <a href="{{ .ConfirmationURL }}">Sign in</a></p>
+<p>This code expires in 1 hour.</p>
+```
+
+Without `{{ .Token }}` in the template, the 6-digit code field cannot work — this is the actual blocker. I'll provide a direct link to the template editor.
 
 ## Out of scope
-- No changes to backend, RLS, edge functions, email templates, or the merchant dashboard.
-- No new providers beyond Google + GitHub.
+- Not scaffolding a custom `auth-email-hook` (would replace the current Supabase-mailer flow and require additional DNS/domain setup; can be done later if you want fully branded auth emails matching the transactional template).
+- No changes to Google/GitHub OAuth, password login, or the merchant dashboard.

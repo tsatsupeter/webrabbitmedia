@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import Icon from '../merchant/Icon'
@@ -30,6 +30,20 @@ export default function Auth() {
   const [step, setStep] = useState('email') // 'email' | 'password' | 'otp'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [resendIn, setResendIn] = useState(0)
+  const otpInputRef = useRef(null)
+
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const t = setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(t)
+  }, [resendIn])
+
+  useEffect(() => {
+    if (step === 'otp') {
+      setTimeout(() => otpInputRef.current?.focus(), 50)
+    }
+  }, [step])
   const [otp, setOtp] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -85,6 +99,8 @@ export default function Auth() {
       if (error) throw error
       toast.success('Code sent to your email')
       setStep('otp')
+      setOtp('')
+      setResendIn(30)
     } catch (err) {
       toast.error(err.message || 'Failed to send code')
     } finally {
@@ -93,14 +109,16 @@ export default function Auth() {
   }
 
   async function verifyOtp(e) {
-    e.preventDefault()
-    if (!otp) return
+    if (e && e.preventDefault) e.preventDefault()
+    if (!otp || otp.length < 6) return
     setBusy(true)
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
       if (error) throw error
     } catch (err) {
-      toast.error(err.message || 'Invalid code')
+      toast.error(err.message || 'Invalid or expired code')
+      setOtp('')
+      otpInputRef.current?.focus()
     } finally {
       setBusy(false)
     }
@@ -269,12 +287,17 @@ export default function Auth() {
                 <label htmlFor="otp" className="block text-[0.85rem] text-white/70 mb-2">6-digit code</label>
                 <input
                   id="otp"
+                  ref={otpInputRef}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   required
                   maxLength={6}
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 6)
+                    setOtp(v)
+                    if (v.length === 6 && !busy) verifyOtp()
+                  }}
                   placeholder="123456"
                   className="w-full h-11 px-3.5 rounded-lg bg-merchant-panel border-2 border-accent/60 text-white placeholder:text-white/35 outline-none focus:border-accent-bright focus:ring-4 focus:ring-accent/20 transition-all text-[0.9rem] tracking-widest"
                 />
@@ -285,6 +308,14 @@ export default function Auth() {
                 className="w-full h-11 rounded-lg bg-white text-black text-[0.9rem] font-medium hover:bg-white/90 transition-colors disabled:opacity-60"
               >
                 {busy ? 'Verifying…' : 'Verify code'}
+              </button>
+              <button
+                type="button"
+                disabled={busy || resendIn > 0}
+                onClick={sendOtp}
+                className="w-full h-10 rounded-lg text-[0.85rem] text-white/70 hover:text-white disabled:opacity-50"
+              >
+                {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
               </button>
             </form>
           )}
