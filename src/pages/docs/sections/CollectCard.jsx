@@ -1,26 +1,31 @@
 import EndpointHeader from '../ui/EndpointHeader'
 import ParamTable from '../ui/ParamTable'
 import { CodeTabs, CodeBlock } from '../ui/CodeBlock'
+import Callout from '../ui/Callout'
 import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function CollectCard() {
   return (
     <>
-      <p>Charge a Visa or Mastercard. 3-D Secure is handled automatically when the issuer requires it.</p>
+      <p>Charge a Visa or Mastercard. 3-D Secure is handled by the upstream provider when the issuer requires it.</p>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/card`} />
+      <Callout type="warn" title="PCI scope">
+        Card fields transit our servers; only send them from a PCI-compliant environment. If you are not PCI
+        certified, use <code>/v1/collect/momo</code> instead.
+      </Callout>
 
       <h2 id="request">Request</h2>
       <ParamTable
         rows={[
-          { name: 'amount', type: 'string', required: true, desc: 'Amount in GHS with two decimals.' },
+          { name: 'amount', type: 'number', required: true, desc: 'Amount in GHS.' },
           { name: 'card_number', type: 'string', required: true, desc: 'Full PAN, digits only.' },
           { name: 'exp_month', type: 'string', required: true, desc: 'Two-digit month, e.g. "09".' },
           { name: 'exp_year', type: 'string', required: true, desc: 'Two-digit year, e.g. "27".' },
           { name: 'cvv', type: 'string', required: true, desc: 'Card verification value.' },
-          { name: 'email', type: 'string', required: true, desc: 'Customer email for receipts and 3DS.' },
-          { name: 'description', type: 'string', desc: 'Optional description.' },
+          { name: 'customer_email', type: 'string', desc: 'Optional email captured with the transaction.' },
+          { name: 'desc', type: 'string', desc: 'Description shown in your dashboard.' },
         ]}
       />
 
@@ -34,12 +39,12 @@ export default function CollectCard() {
   -H "Authorization: Bearer wr_test_..." \\
   -H "Content-Type: application/json" \\
   -d '{
-    "amount": "50.00",
+    "amount": 50.00,
     "card_number": "4242424242424242",
     "exp_month": "09",
     "exp_year": "27",
     "cvv": "123",
-    "email": "customer@example.com"
+    "customer_email": "customer@example.com"
   }'`,
           },
         ]}
@@ -50,15 +55,14 @@ export default function CollectCard() {
         lang="json"
         filename="Response · 201"
         code={`{
-  "id": "tx_01HGZ3P8XX9Y8CARD",
+  "transaction_id": "521888812345",
   "status": "approved",
-  "channel": "CARD",
-  "gross_amount": "50.00",
-  "fee_amount": "7.50",
-  "net_amount": "42.50",
-  "currency": "GHS",
-  "card_last4": "4242",
-  "created_at": "2026-07-28T12:14:02Z"
+  "code": "000",
+  "reason": "Transaction Successful",
+  "gross_amount": 50,
+  "fee_amount": 7.5,
+  "net_amount": 42.5,
+  "currency": "GHS"
 }`}
       />
     </>

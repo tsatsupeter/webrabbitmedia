@@ -1,10 +1,14 @@
 import Introduction from './sections/Introduction'
 import Quickstart from './sections/Quickstart'
 import Authentication from './sections/Authentication'
+import Idempotency from './sections/Idempotency'
+import RateLimits from './sections/RateLimits'
+import RequestIds from './sections/RequestIds'
 import Errors from './sections/Errors'
 import Fees from './sections/Fees'
 import CollectMomo from './sections/CollectMomo'
 import CollectCard from './sections/CollectCard'
+import PayoutMomo from './sections/PayoutMomo'
 import TransactionsList from './sections/TransactionsList'
 import TransactionsRetrieve from './sections/TransactionsRetrieve'
 
@@ -48,6 +52,39 @@ export const groups = [
         ],
       },
       {
+        slug: 'idempotency',
+        title: 'Idempotency',
+        summary: 'Retry money-moving requests safely with an Idempotency-Key header.',
+        Component: Idempotency,
+        headings: [
+          { id: 'how-it-works', text: 'How it works', depth: 2 },
+          { id: 'example', text: 'Example', depth: 2 },
+          { id: 'conflicts', text: 'Conflicts', depth: 2 },
+          { id: 'best-practices', text: 'Best practices', depth: 2 },
+        ],
+      },
+      {
+        slug: 'rate-limits',
+        title: 'Rate limits',
+        summary: 'Per-key and per-IP limits enforced at the Cloudflare edge.',
+        Component: RateLimits,
+        headings: [
+          { id: 'limits', text: 'Limits', depth: 2 },
+          { id: 'response', text: '429 response', depth: 2 },
+          { id: 'handling', text: 'Handling', depth: 2 },
+        ],
+      },
+      {
+        slug: 'request-ids',
+        title: 'Request IDs & logs',
+        summary: 'Every response is tagged with an x-request-id; we log it for 30 days.',
+        Component: RequestIds,
+        headings: [
+          { id: 'using-request-ids', text: 'Using request ids', depth: 2 },
+          { id: 'logs-retention', text: 'Logs & retention', depth: 2 },
+        ],
+      },
+      {
         slug: 'errors',
         title: 'Errors',
         summary: 'HTTP status codes, error shapes, and how to recover.',
@@ -88,6 +125,22 @@ export const groups = [
         title: 'Card',
         summary: 'Charge a Visa or Mastercard.',
         Component: CollectCard,
+        headings: [
+          { id: 'endpoint', text: 'Endpoint', depth: 2 },
+          { id: 'request', text: 'Request', depth: 2 },
+          { id: 'response', text: 'Response', depth: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Payouts',
+    items: [
+      {
+        slug: 'payout-momo',
+        title: 'Mobile Money payout',
+        summary: 'Send funds from your balance to any Ghanaian MoMo wallet.',
+        Component: PayoutMomo,
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
           { id: 'request', text: 'Request', depth: 2 },

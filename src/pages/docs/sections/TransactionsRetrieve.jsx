@@ -1,34 +1,39 @@
 import EndpointHeader from '../ui/EndpointHeader'
 import { CodeBlock } from '../ui/CodeBlock'
+import Callout from '../ui/Callout'
 import { API_VERSION } from '../../../lib/apiBase'
 
 export default function TransactionsRetrieve() {
   return (
     <>
-      <p>Fetch a single transaction by its Web Rabbit id.</p>
+      <p>
+        Fetch the live status of a single transaction by its <code>transaction_id</code>. This endpoint
+        polls the upstream provider and reconciles our ledger before responding, so it always returns the
+        freshest state.
+      </p>
 
       <h2 id="endpoint">Endpoint</h2>
-      <EndpointHeader method="GET" path={`/${API_VERSION}/transactions/{id}`} />
+      <EndpointHeader method="GET" path={`/${API_VERSION}/transactions/{transaction_id}`} />
+      <Callout type="info" title="ID format">
+        <code>transaction_id</code> is the 12-digit id returned from <code>/v1/collect/*</code> or <code>/v1/payout/*</code>.
+      </Callout>
 
       <h2 id="response">Response</h2>
       <CodeBlock
         lang="json"
         filename="Response · 200"
         code={`{
-  "id": "tx_01HGZ3P8QN4R5D8G",
+  "transaction_id": "521888807466",
+  "code": "000",
+  "reason": "Transaction Successful",
   "status": "approved",
-  "channel": "MTN",
-  "gross_amount": "10.50",
-  "fee_amount": "1.58",
-  "net_amount": "8.92",
-  "currency": "GHS",
-  "subscriber_number": "0248980332",
-  "description": "Invoice #A104",
-  "reference": "inv_a104",
-  "provider_reference": "521888807466",
-  "created_at": "2026-07-28T12:04:22Z"
+  "resolved_status": "approved"
 }`}
       />
+      <p className="text-sm text-white/60 mt-4">
+        <code>resolved_status</code> is our normalised status (<code>approved</code> · <code>pending</code> · <code>failed</code>)
+        after reconciling the upstream response with our ledger.
+      </p>
     </>
   )
 }
