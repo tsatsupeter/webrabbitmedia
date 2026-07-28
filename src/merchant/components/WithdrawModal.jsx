@@ -20,14 +20,14 @@ export default function WithdrawModal({ open, onClose, businessId, mode, availab
   }, [open, available])
 
   const amt = Number(amount)
-  const valid = Number.isFinite(amt) && amt >= MIN && amt <= Number(available || 0)
+  const valid = Boolean(mode) && Number.isFinite(amt) && amt >= MIN && amt <= Number(available || 0)
   const errMsg = !amount ? '' :
     !Number.isFinite(amt) ? 'Enter a valid amount' :
     amt < MIN ? `Minimum withdrawal is ${fmt(MIN)}` :
     amt > Number(available || 0) ? 'Amount exceeds available balance' : ''
 
   async function submit() {
-    if (!valid || busy) return
+    if (!valid || busy || !mode) return
     setBusy(true)
     try {
       const { data, error } = await supabase.functions.invoke('merchant-create-payout', {
