@@ -113,6 +113,7 @@ export default function IdentityVerification() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { active } = useBusinesses()
+  const readOnly = active?.status === 'approved'
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -265,7 +266,7 @@ export default function IdentityVerification() {
         Verify it's really you with a quick photo of your ID and a selfie. Secure and takes under a minute.
       </p>
 
-      <div className={`bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
+      <div className={`bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8 ${loading ? 'opacity-60 pointer-events-none' : ''} ${readOnly ? 'pointer-events-none opacity-90 select-none' : ''}`}>
         {/* Personal */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
@@ -353,14 +354,23 @@ export default function IdentityVerification() {
       </div>
 
       <div className="flex justify-end gap-3">
-        <button type="button" disabled={saving} onClick={handleDraft}
-          className="h-11 px-5 rounded-lg bg-white/[0.06] border border-white/10 text-white/80 text-[0.85rem] hover:bg-white/10 disabled:opacity-40">
-          {saving ? 'Saving…' : 'Save as Draft'}
-        </button>
-        <button type="button" disabled={!canSubmit} onClick={handleSubmit}
-          className="h-11 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed">
-          {saving ? 'Submitting…' : 'Submit & Proceed'}
-        </button>
+        {readOnly ? (
+          <button type="button" onClick={() => navigate('/merchant/verification')}
+            className="h-11 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90">
+            Back to verification
+          </button>
+        ) : (
+          <>
+            <button type="button" disabled={saving} onClick={handleDraft}
+              className="h-11 px-5 rounded-lg bg-white/[0.06] border border-white/10 text-white/80 text-[0.85rem] hover:bg-white/10 disabled:opacity-40">
+              {saving ? 'Saving…' : 'Save as Draft'}
+            </button>
+            <button type="button" disabled={!canSubmit} onClick={handleSubmit}
+              className="h-11 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed">
+              {saving ? 'Submitting…' : 'Submit & Proceed'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

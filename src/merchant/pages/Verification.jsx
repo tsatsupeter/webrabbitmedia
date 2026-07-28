@@ -4,7 +4,6 @@ import { supabase } from '../../integrations/supabase/client'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { toast } from 'sonner'
 import Icon from '../Icon'
-import { getCompletedSteps, markStepComplete } from '../verificationProgress'
 
 function StatusPills() {
   return (
@@ -16,6 +15,14 @@ function StatusPills() {
         <Icon name="info" size={16} /> ACTION REQUIRED : IDENTITY VERIFICATION PENDING
       </span>
     </div>
+  )
+}
+
+function LivePill() {
+  return (
+    <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-accent/10 border border-accent/40 text-accent-bright font-mono text-[0.78rem] tracking-[0.12em]">
+      <Icon name="seal" size={16} /> LIVE PAYMENTS ACTIVE
+    </span>
   )
 }
 
@@ -87,14 +94,23 @@ function TypePicker({ value, onChange }) {
   )
 }
 
-function DetailRow({ icon, title, desc, last, status, onSubmit }) {
+function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
   // status: 'active' | 'locked' | 'completed'
+  const isVerified = verified || status === 'completed'
   return (
-    <div className="relative flex items-start gap-4 p-4 rounded-xl border border-merchant-border bg-black/20">
+    <div className={`relative flex items-start gap-4 p-4 rounded-xl border ${
+      isVerified && verified
+        ? 'border-accent/30 bg-accent/[0.04]'
+        : 'border-merchant-border bg-black/20'
+    }`}>
       {!last && (
         <span className="absolute left-[38px] top-[68px] bottom-[-16px] w-px bg-white/10" />
       )}
-      <div className="w-11 h-11 shrink-0 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/80">
+      <div className={`w-11 h-11 shrink-0 rounded-lg flex items-center justify-center border ${
+        isVerified && verified
+          ? 'bg-accent/15 border-accent/30 text-accent-bright'
+          : 'bg-white/[0.05] border-white/10 text-white/80'
+      }`}>
         <Icon name={icon} size={20} />
       </div>
       <div className="flex-1 min-w-0 pt-0.5">
@@ -104,7 +120,20 @@ function DetailRow({ icon, title, desc, last, status, onSubmit }) {
         </div>
         <p className="text-[0.85rem] text-white/55 leading-relaxed mt-1">{desc}</p>
       </div>
-      {status === 'completed' ? (
+      {verified ? (
+        <div className="shrink-0 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright text-[0.78rem]">
+            Verified
+          </span>
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="h-8 px-3 rounded-lg bg-white/[0.06] border border-white/10 text-white/85 text-[0.78rem] hover:bg-white/10"
+          >
+            View form
+          </button>
+        </div>
+      ) : status === 'completed' ? (
         <span className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-accent/10 border border-accent/30 text-accent-bright text-[0.8rem]">
           <Icon name="checkCircle" size={15} /> Completed
         </span>
@@ -134,6 +163,9 @@ export default function Verification() {
   const [choice, setChoice] = useState(null)
   const [saving, setSaving] = useState(false)
   const [completedSteps, setCompletedStepsState] = useState([])
+  const [bankHolder, setBankHolder] = useState(null)
+
+  const approved = active?.status === 'approved'
 
   useEffect(() => {
     setChoice(active?.business_type ?? null)
@@ -147,7 +179,7 @@ export default function Verification() {
         supabase.from('product_information').select('status').eq('business_id', active.id).maybeSingle(),
         supabase.from('identity_verification').select('status').eq('business_id', active.id).maybeSingle(),
         supabase.from('business_verification').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('bank_verification').select('status').eq('business_id', active.id).maybeSingle(),
+        supabase.from('bank_verification').select('status, account_holder_name').eq('business_id', active.id).maybeSingle(),
       ])
       if (cancelled) return
       const done = []
@@ -156,6 +188,7 @@ export default function Verification() {
       if (biz?.status === 'submitted') done.push('business')
       if (bank?.status === 'submitted') done.push('bank')
       setCompletedStepsState(done)
+      setBankHolder(bank?.account_holder_name ?? null)
     })()
     return () => { cancelled = true }
   }, [active?.id])
@@ -192,25 +225,11 @@ export default function Verification() {
   }
 
   function completeStep(key) {
-    if (key === 'product') {
-      navigate('/merchant/verification/product-information')
-      return
-    }
-    if (key === 'identity') {
-      navigate('/merchant/verification/identity')
-      return
-    }
-    if (key === 'business') {
-      navigate('/merchant/verification/business')
-      return
-    }
-    if (key === 'bank') {
-      navigate('/merchant/verification/bank')
-      return
-    }
+    if (key === 'product') return navigate('/merchant/verification/product-information')
+    if (key === 'identity') return navigate('/merchant/verification/identity')
+    if (key === 'business') return navigate('/merchant/verification/business')
+    if (key === 'bank') return navigate('/merchant/verification/bank')
   }
-
-
 
   if (loading && !active) {
     return <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8" />
@@ -255,7 +274,7 @@ export default function Verification() {
 
       {state === 'editType' && (
         <>
-          <StatusPills />
+          {approved ? <LivePill /> : <StatusPills />}
           <div>
             <h2 className="font-display text-white text-[1.15rem] font-semibold">
               Update your business type
@@ -293,29 +312,31 @@ export default function Verification() {
 
       {state === 'overview' && (
         <>
-          <StatusPills />
+          {approved ? <LivePill /> : <StatusPills />}
 
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-merchant-border bg-merchant-panel p-5">
-            <div>
-              <div className="text-white text-[0.95rem]">
-                You are a{' '}
-                <span className="text-accent-bright font-medium">
-                  {active.business_type === 'registered' ? 'Registered entity' : 'Individual'}
-                </span>
+          {!approved && (
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-merchant-border bg-merchant-panel p-5">
+              <div>
+                <div className="text-white text-[0.95rem]">
+                  You are a{' '}
+                  <span className="text-accent-bright font-medium">
+                    {active.business_type === 'registered' ? 'Registered entity' : 'Individual'}
+                  </span>
+                </div>
+                <p className="text-[0.85rem] text-white/55 mt-1">
+                  You can update this here if your setup has changed.
+                </p>
               </div>
-              <p className="text-[0.85rem] text-white/55 mt-1">
-                You can update this here if your setup has changed.
-              </p>
+              <button
+                type="button"
+                onClick={() => setMode('edit')}
+                className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10"
+                aria-label="Edit business type"
+              >
+                <Icon name="pencil" size={15} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setMode('edit')}
-              className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10"
-              aria-label="Edit business type"
-            >
-              <Icon name="pencil" size={15} />
-            </button>
-          </div>
+          )}
 
           <div>
             <h3 className="font-display text-white text-[1rem] font-medium mb-4">
@@ -327,6 +348,7 @@ export default function Verification() {
                 title="Product Information"
                 desc="Tell us about your product so we can get you ready to accept payments. Takes about 2 minutes."
                 status={statusFor('product')}
+                verified={approved && completedSteps.includes('product')}
                 onSubmit={() => completeStep('product')}
               />
               <DetailRow
@@ -334,6 +356,7 @@ export default function Verification() {
                 title="Identity Verification"
                 desc="Verify it's really you with a quick photo of your ID and a selfie. Secure and takes under a minute."
                 status={statusFor('identity')}
+                verified={approved && completedSteps.includes('identity')}
                 onSubmit={() => completeStep('identity')}
               />
               {active.business_type === 'registered' && (
@@ -342,6 +365,7 @@ export default function Verification() {
                   title="Business Verification"
                   desc="Share your company details so we can confirm your business. You'll need your registration documents handy."
                   status={statusFor('business')}
+                  verified={approved && completedSteps.includes('business')}
                   onSubmit={() => completeStep('business')}
                 />
               )}
@@ -351,8 +375,25 @@ export default function Verification() {
                 desc="Add the bank account where you'd like to receive payouts. Make sure the account name matches your verified identity or business."
                 last
                 status={statusFor('bank')}
+                verified={approved && completedSteps.includes('bank')}
                 onSubmit={() => completeStep('bank')}
               />
+
+              {approved && completedSteps.includes('bank') && bankHolder && (
+                <div className="flex items-center justify-between px-4 h-12 rounded-xl border border-merchant-border bg-black/20">
+                  <div className="flex items-center gap-3 text-white/80 text-[0.88rem]">
+                    <Icon name="bank" size={16} className="text-white/60" />
+                    {bankHolder}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/merchant/verification/bank')}
+                    className="text-accent-bright text-[0.82rem] hover:underline"
+                  >
+                    Manage accounts
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>
