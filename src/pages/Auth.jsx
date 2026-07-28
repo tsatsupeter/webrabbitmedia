@@ -224,7 +224,17 @@ export default function Auth() {
                 <button type="button" onClick={() => setStep('email')} className="text-accent-bright hover:underline ml-1">change</button>
               </div>
               <div>
-                <label htmlFor="password" className="block text-[0.85rem] text-white/70 mb-2">Password</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="password" className="block text-[0.85rem] text-white/70">Password</label>
+                  {!isSignup && (
+                    <Link
+                      to={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+                      className="text-[0.8rem] text-accent-bright hover:underline no-underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
                 <input
                   id="password"
                   type="password"
