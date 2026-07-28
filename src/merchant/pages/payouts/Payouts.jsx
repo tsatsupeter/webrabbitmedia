@@ -43,15 +43,19 @@ export default function Payouts() {
     let cancel = false
     ;(async () => {
       setLoading(true)
-      const [txRes, bankRes] = await Promise.all([
-        supabase.from('transactions').select('net_amount,status,type,created_at,mode')
+      const [txRes, bankRes, payoutRes] = await Promise.all([
+        supabase.from('transactions').select('net_amount,status,type,created_at,mode,payout_id')
           .eq('business_id', active.id).eq('mode', mode).eq('type', 'collection'),
         supabase.from('bank_verification').select('*').eq('business_id', active.id)
           .order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
+        supabase.from('payouts').select('net_amount,status,initiated_at')
+          .eq('business_id', active.id).eq('mode', mode),
       ])
       if (cancel) return
       const rows = txRes.data || []
-      const available = rows.filter((r) => r.status === 'approved').reduce((s, r) => s + Number(r.net_amount || 0), 0)
+      const available = rows
+        .filter((r) => r.status === 'approved' && !r.payout_id)
+        .reduce((s, r) => s + Number(r.net_amount || 0), 0)
       const incoming = rows.filter((r) => r.status === 'pending').reduce((s, r) => s + Number(r.net_amount || 0), 0)
       setTotals({ available, incoming })
 
@@ -61,12 +65,12 @@ export default function Payouts() {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
         buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleDateString('en-US', { month: 'short' }), value: 0 })
       }
-      rows.forEach((r) => {
-        if (r.status !== 'approved') return
-        const d = new Date(r.created_at)
+      ;(payoutRes.data || []).forEach((p) => {
+        if (p.status !== 'success') return
+        const d = new Date(p.initiated_at)
         const key = `${d.getFullYear()}-${d.getMonth()}`
         const b = buckets.find((x) => x.key === key)
-        if (b) b.value += Number(r.net_amount || 0)
+        if (b) b.value += Number(p.net_amount || 0)
       })
       setMonthly(buckets)
       setBanks(bankRes.data || [])
@@ -167,11 +171,13 @@ export default function Payouts() {
           <section className="rounded-xl border border-white/10 bg-[hsl(var(--card))] p-6">
             <h2 className="text-base font-semibold text-white">Payout Schedule & Settings</h2>
             <dl className="mt-5 space-y-4 text-sm">
-              <Row label="Minimum Payout" value="GHS 50" action="Edit" />
-              <Row label="Payout Cycle" value={`${fmtShort(cyc.start)} - ${fmtShort(cyc.end)}`} />
-              <Row label="Next Payout" value={fmtLong(nextPayoutDate())} />
-              <Row label="Payout Frequency" value="Bi-monthly" />
+              <Row label="Minimum Payout" value="GHS 2,000.00" />
+              <Row label="Payout Frequency" value="Manual, after review" />
+              <Row label="Payment Method" value="Bank Transfer" />
             </dl>
+            <p className="mt-4 text-xs text-white/50">
+              Payouts are initiated manually after review. Once your available balance reaches the minimum, it will be transferred to your active bank account.
+            </p>
           </section>
 
           {/* Linked bank accounts */}
