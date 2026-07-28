@@ -1,64 +1,37 @@
+# Plan: API Keys page full width + delete confirmation modal
 
-## Goals
+## Problem
+- The API Keys page is constrained to `max-w-[1400px]` and centered, so it does not fill the available dashboard width.
+- The delete action currently uses a generic "X" icon and the browser's native `confirm()` prompt, which does not match the design reference.
 
-1. Make the Test/Live mode toggle in the sidebar meaningful:
-   - Test Mode pill = **red**, Live Mode pill = **green**.
-   - If the active business is **not approved**, force Test Mode (Live disabled + tooltip "Available after approval").
-   - If approved, user can freely switch; **default to Live Mode**.
-   - Persist selection per-business (localStorage), expose via a shared hook so pages (e.g. Get Started "Test Mode" pill) reflect it.
-2. Expand the sidebar **Developer** group into a collapsible submenu with **API Keys**, **Webhooks**, **Others** (matches uploaded screenshot).
-3. Build **/merchant/developer/api-keys** page:
-   - Header "API Keys" + `Edit Columns` + `Add API key` (top right).
-   - Table: Name, Created, Expires At, Access (Read Only / Read/Write pill), delete icon.
-   - "Rows per page" + pager footer.
-   - `Add API key` opens **Create New API** modal (name input + "Enable write access" checkbox + Cancel/Create).
-   - On create → show **reveal modal** once with the generated key + Copy button + toast "Api key created successfully".
-4. End-to-end sanity pass on the merchant surface (routes, guards, sidebar collapse state, mode gating).
+## Changes
 
-## Approval rule
+1. **Make the API Keys page full-width**
+   - In `src/merchant/pages/developer/ApiKeys.jsx`, remove the `max-w-[1400px] mx-auto` wrapper so the page content fills the main dashboard area.
 
-A business counts as **approved** when `businesses.status = 'approved'` (add column, default `'pending'`). No admin UI yet — status stays `pending` until changed manually in DB. Live Mode is locked while pending.
+2. **Add a trash icon**
+   - In `src/merchant/Icon.jsx`, add a `trash` icon path to the `paths` map so the delete button can use a proper delete icon.
 
-## Data model
+3. **Build a delete confirmation modal**
+   - Reuse the existing `Modal` component for the overlay and backdrop.
+   - Add local state to track which API key is pending deletion.
+   - Render a modal body matching the reference:
+     - Red trash icon inside a red circular background.
+     - Title: "Are you sure you want to delete?"
+     - Subtitle: "You will have to create a new API Key for this usecase."
+     - Two buttons: "Close" (neutral dark) and "Delete" (red).
+   - On confirm, perform the existing Supabase soft-delete (`revoked_at = now()`).
+   - On cancel, close the modal and clear the pending key.
 
-New table `public.api_keys`:
-- `id uuid pk`, `business_id uuid fk`, `user_id uuid`, `name text`, `key_prefix text` (first 8 chars, shown in list if needed), `key_hash text` (sha256 of full key — full key never stored), `access text check in ('read','write')`, `created_at`, `expires_at` (default now()+10y to match screenshot pattern), `revoked_at`.
-- RLS: owner-only via `business_id` → `businesses.user_id = auth.uid()`.
-- Grants for `authenticated` + `service_role`.
-- Full key generated client-side (`crypto.randomUUID`-based, base64url, ~40 chars) shown once; only hash persisted.
+4. **Replace the native `confirm()` prompt**
+   - Change the delete button to use the new trash icon.
+   - On click, set the pending key and open the confirmation modal instead of calling `confirm()`.
 
-`businesses` table: add `status text default 'pending'` (values: pending/approved/rejected).
+## Outcome
+- `/merchant/developer/api-keys` fills the full dashboard width.
+- Each row has a visible trash-can delete icon.
+- Clicking delete opens a styled confirmation modal matching the reference before revoking the key.
 
-## Sidebar / nav changes
-
-- `nav.js`: give Developer group `children: [{label:'API Keys', to:'/merchant/developer/api-keys'}, {label:'Webhooks'}, {label:'Others'}]`. Same shape reusable for other expandable items later.
-- `Sidebar.jsx`: expandable items toggle open/close, chevron rotates, children render as indented links with left guide-line (matches screenshot).
-- Mode toggle: red active state for Test, green for Live, disabled Live when `!approved`.
-
-## Mode state
-
-- `src/hooks/useMerchantMode.js` — reads/writes `merchant_mode_{businessId}` in localStorage; defaults to `'live'` if approved else `'test'`; exposes `{mode, setMode, canUseLive}`.
-- `GetStarted.jsx` "Test Mode" pill switches label/color from this hook.
-
-## Files
-
-New:
-- `src/hooks/useMerchantMode.js`
+## Files to modify
 - `src/merchant/pages/developer/ApiKeys.jsx`
-- `src/merchant/components/Modal.jsx` (small shared dialog for reuse)
-
-Edited:
-- `src/merchant/nav.js` (children on Developer)
-- `src/merchant/Sidebar.jsx` (expandable groups + red/green mode toggle + disabled state)
-- `src/merchant/MerchantLayout.jsx` (title map entry)
-- `src/merchant/pages/GetStarted.jsx` (mode pill from hook)
-- `src/App.jsx` (route for api-keys)
-- Migration: add `businesses.status`, create `api_keys` (+ grants + RLS + policies).
-
-## End-to-end scan
-
-After build:
-- Verify `/merchant`, `/merchant/verification/*`, `/merchant/developer/api-keys` render.
-- Confirm Live Mode disabled for a pending business, enabled + default when approved.
-- Confirm API key creation flow: create → reveal-once modal → list refresh → delete works.
-- Run `bun run build` to catch import/route errors.
+- `src/merchant/Icon.jsx`

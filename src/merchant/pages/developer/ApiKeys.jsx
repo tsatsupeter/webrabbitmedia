@@ -51,6 +51,7 @@ export default function ApiKeys() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [revealKey, setRevealKey] = useState(null) // {name, key}
+  const [pendingDelete, setPendingDelete] = useState(null) // {id, name}
   const [name, setName] = useState('')
   const [enableWrite, setEnableWrite] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -104,15 +105,21 @@ export default function ApiKeys() {
     }
   }
 
-  const revoke = async (id) => {
-    if (!confirm('Delete this API key? This cannot be undone.')) return
+  const revoke = async () => {
+    if (!pendingDelete) return
+    setSubmitting(true)
     const { error } = await supabase
       .from('api_keys')
       .update({ revoked_at: new Date().toISOString() })
-      .eq('id', id)
-    if (error) return toast.error(error.message)
-    toast.success('API key deleted.')
-    load()
+      .eq('id', pendingDelete.id)
+    if (error) {
+      toast.error(error.message)
+    } else {
+      toast.success('API key deleted.')
+      load()
+    }
+    setSubmitting(false)
+    setPendingDelete(null)
   }
 
   const copy = (v) => {
@@ -121,7 +128,7 @@ export default function ApiKeys() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+    <div className="w-full px-4 md:px-8 py-6">
       <div className="flex items-center justify-between mb-6">
         <button
           type="button"
@@ -174,11 +181,11 @@ export default function ApiKeys() {
                   <td className="px-5 py-4 text-right">
                     <button
                       type="button"
-                      onClick={() => revoke(r.id)}
+                      onClick={() => setPendingDelete({ id: r.id, name: r.name })}
                       className="w-8 h-8 inline-flex items-center justify-center rounded-md text-white/45 hover:text-red-400 hover:bg-white/[0.05]"
                       aria-label="Delete key"
                     >
-                      <Icon name="x" size={16} />
+                      <Icon name="trash" size={16} />
                     </button>
                   </td>
                 </tr>
@@ -295,6 +302,38 @@ export default function ApiKeys() {
               className="h-10 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90"
             >
               Copy API Key
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete confirmation modal */}
+      <Modal open={!!pendingDelete} onClose={() => setPendingDelete(null)} width={420}>
+        <div className="p-7">
+          <div className="w-12 h-12 rounded-full bg-red-500/15 flex items-center justify-center mb-5">
+            <Icon name="trash" size={22} className="text-red-500" />
+          </div>
+          <h3 className="font-display text-[1.05rem] font-semibold text-white mb-2">
+            Are you sure you want to delete?
+          </h3>
+          <p className="text-[0.85rem] text-white/55 leading-relaxed">
+            You will have to create a new API Key for this usecase.
+          </p>
+          <div className="flex items-center gap-3 mt-7">
+            <button
+              type="button"
+              onClick={() => setPendingDelete(null)}
+              className="flex-1 h-10 px-4 rounded-lg bg-white/[0.05] border border-white/10 text-[0.85rem] text-white/80 hover:text-white hover:bg-white/[0.08]"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={revoke}
+              className="flex-1 h-10 px-4 rounded-lg bg-red-600 text-white text-[0.85rem] font-medium hover:bg-red-500 disabled:opacity-50"
+            >
+              {submitting ? 'Deleting…' : 'Delete'}
             </button>
           </div>
         </div>
