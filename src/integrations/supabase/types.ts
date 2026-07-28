@@ -356,6 +356,90 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          bank_id: string | null
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          currency: string
+          currency_conversion: number
+          fees: number
+          gross_amount: number
+          id: string
+          initiated_at: string
+          mode: string
+          name: string
+          net_amount: number
+          notes: string | null
+          payment_method: string
+          provider_reference: string | null
+          status: string
+          tax_deducted: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_id?: string | null
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          currency_conversion?: number
+          fees?: number
+          gross_amount?: number
+          id?: string
+          initiated_at?: string
+          mode?: string
+          name: string
+          net_amount?: number
+          notes?: string | null
+          payment_method?: string
+          provider_reference?: string | null
+          status?: string
+          tax_deducted?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_id?: string | null
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          currency_conversion?: number
+          fees?: number
+          gross_amount?: number
+          id?: string
+          initiated_at?: string
+          mode?: string
+          name?: string
+          net_amount?: number
+          notes?: string | null
+          payment_method?: string
+          provider_reference?: string | null
+          status?: string
+          tax_deducted?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "bank_verification"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           business_id: string
@@ -503,6 +587,7 @@ export type Database = {
           id: string
           mode: string
           net_amount: number
+          payout_id: string | null
           provider: string
           provider_code: string | null
           provider_reason: string | null
@@ -531,6 +616,7 @@ export type Database = {
           id?: string
           mode: string
           net_amount: number
+          payout_id?: string | null
           provider?: string
           provider_code?: string | null
           provider_reason?: string | null
@@ -559,6 +645,7 @@ export type Database = {
           id?: string
           mode?: string
           net_amount?: number
+          payout_id?: string | null
           provider?: string
           provider_code?: string | null
           provider_reason?: string | null
@@ -572,7 +659,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
