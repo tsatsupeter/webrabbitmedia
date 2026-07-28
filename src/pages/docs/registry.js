@@ -203,6 +203,7 @@ export const groups = [
           { id: 'approved', text: 'Approved', depth: 2 },
           { id: 'declined', text: 'Declined by customer / issuer', depth: 2 },
           { id: 'auth', text: 'Auth / configuration', depth: 2 },
+          { id: 'not-found', text: 'Not found', depth: 2 },
         ],
       },
       {
