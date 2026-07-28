@@ -43,10 +43,6 @@ Deno.serve(async (req) => {
     if (!event || !validEvents.includes(event)) return json({ error: 'invalid_event' }, 400)
     if (!userId) return json({ error: 'user_id_required' }, 400)
 
-    const db = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
 
     const [{ data: profile }, { data: prefs }, { data: business }] = await Promise.all([
       db.from('profiles').select('email, full_name').eq('id', userId).maybeSingle(),
