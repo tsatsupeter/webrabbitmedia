@@ -1,0 +1,104 @@
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Icon from './Icon'
+import { useBusinesses } from '../hooks/useBusinesses'
+
+function Avatar({ name, className = '' }) {
+  const letter = (name || '?').charAt(0).toUpperCase()
+  const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-cyan-500', 'bg-accent']
+  const idx = (name || '').charCodeAt(0) % colors.length
+  return (
+    <div
+      className={`shrink-0 w-8 h-8 rounded-full ${colors[idx]} flex items-center justify-center text-white text-[0.8rem] font-semibold ${className}`}
+    >
+      {letter}
+    </div>
+  )
+}
+
+export default function BusinessSwitcher() {
+  const navigate = useNavigate()
+  const { businesses, active, activeId, setActive } = useBusinesses()
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+
+  useEffect(() => {
+    function onDoc(e) {
+      if (!wrapRef.current?.contains(e.target)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  const title = active?.name || 'Web Rabbit'
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full h-16 px-4 flex items-center gap-2.5 border-b border-merchant-border hover:bg-white/[0.03] transition-colors"
+      >
+        {active ? (
+          <Avatar name={active.name} />
+        ) : (
+          <img
+            src="/webrabbitmedia-logo-green.jpeg"
+            alt=""
+            width="30"
+            height="30"
+            className="rounded-md ring-1 ring-white/10"
+          />
+        )}
+        <div className="flex-1 min-w-0 text-left">
+          <div className="font-display font-semibold text-[0.9rem] text-white truncate">{title}</div>
+          <div className="text-[0.65rem] text-white/40 uppercase tracking-wider">Merchant</div>
+        </div>
+        <div className="w-6 h-6 flex items-center justify-center rounded text-white/40">
+          <Icon name="chevron" size={14} className="rotate-90" />
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute z-40 top-full left-3 right-3 mt-2 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-merchant-border">
+            <div className="text-[0.8rem] font-semibold text-white">My Businesses</div>
+          </div>
+          <div className="max-h-[260px] overflow-y-auto py-1">
+            {businesses.length === 0 && (
+              <div className="px-4 py-3 text-[0.8rem] text-white/40">No businesses yet</div>
+            )}
+            {businesses.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => {
+                  setActive(b.id)
+                  setOpen(false)
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/[0.04] text-left"
+              >
+                <Avatar name={b.name} />
+                <span className="flex-1 text-[0.85rem] text-white/80 truncate">{b.name}</span>
+                {b.id === activeId && <Icon name="check" size={14} className="text-accent-bright" />}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false)
+              navigate('/auth/create-business')
+            }}
+            className="w-full flex items-center gap-3 px-3 py-3 border-t border-merchant-border hover:bg-white/[0.04] text-left"
+          >
+            <div className="shrink-0 w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/70">
+              <Icon name="plus" size={14} />
+            </div>
+            <span className="text-[0.85rem] text-white/85">Add new</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
