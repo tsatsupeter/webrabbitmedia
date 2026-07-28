@@ -51,6 +51,7 @@ export default function ApiKeys() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [revealKey, setRevealKey] = useState(null) // {name, key}
+  const [pendingDelete, setPendingDelete] = useState(null) // {id, name}
   const [name, setName] = useState('')
   const [enableWrite, setEnableWrite] = useState(true)
   const [submitting, setSubmitting] = useState(false)
