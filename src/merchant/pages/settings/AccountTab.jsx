@@ -378,7 +378,7 @@ export default function AccountTab() {
             <h3 className="text-[0.9rem] font-medium text-white mb-1">Password</h3>
             <p className="text-[0.8rem] text-white/55">Change your password to secure your account.</p>
           </div>
-          <button type="button" onClick={() => setPwOpen(true)} className="h-9 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium">Change Password</button>
+          <Link to={`/auth/forgot-password?email=${encodeURIComponent(user?.email || '')}`} className="h-9 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium inline-flex items-center no-underline">Change Password</Link>
         </div>
       </Card>
 
@@ -405,7 +405,7 @@ export default function AccountTab() {
         avatarUrl={avatarUrl}
         onSaved={handleSaved}
       />
-      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
+      
       <MfaModal open={mfaOpen} onClose={() => setMfaOpen(false)} onDone={loadMfa} />
     </div>
   )
