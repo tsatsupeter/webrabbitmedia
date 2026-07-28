@@ -85,7 +85,8 @@ function TypePicker({ value, onChange }) {
   )
 }
 
-function DetailRow({ icon, title, desc, last }) {
+function DetailRow({ icon, title, desc, last, status, onSubmit }) {
+  // status: 'active' | 'locked' | 'completed'
   return (
     <div className="relative flex items-start gap-4 p-4 rounded-xl border border-merchant-border bg-black/20">
       {!last && (
@@ -101,15 +102,28 @@ function DetailRow({ icon, title, desc, last }) {
         </div>
         <p className="text-[0.85rem] text-white/55 leading-relaxed mt-1">{desc}</p>
       </div>
-      <button
-        type="button"
-        className="shrink-0 h-9 px-4 rounded-lg bg-white/[0.06] border border-white/10 text-white/70 text-[0.8rem] hover:bg-white/10 hover:text-white"
-      >
-        Submit
-      </button>
+      {status === 'completed' ? (
+        <span className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-accent/10 border border-accent/30 text-accent-bright text-[0.8rem]">
+          <Icon name="checkCircle" size={15} /> Completed
+        </span>
+      ) : (
+        <button
+          type="button"
+          disabled={status !== 'active'}
+          onClick={onSubmit}
+          className={`shrink-0 h-9 px-4 rounded-lg border text-[0.8rem] ${
+            status === 'active'
+              ? 'bg-white/[0.06] border-white/10 text-white/80 hover:bg-white/10 hover:text-white'
+              : 'bg-white/[0.02] border-white/5 text-white/30 cursor-not-allowed'
+          }`}
+        >
+          Submit
+        </button>
+      )}
     </div>
   )
 }
+
 
 export default function Verification() {
   const { active, refresh, loading } = useBusinesses()
