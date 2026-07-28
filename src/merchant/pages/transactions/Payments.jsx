@@ -113,7 +113,7 @@ function ToolbarBtn({ icon, children, onClick, active }) {
 
 export default function Payments({ scope = 'all' }) {
   const { active } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -125,7 +125,10 @@ export default function Payments({ scope = 'all' }) {
   const [selected, setSelected] = useState(null)
 
   const load = useCallback(async () => {
-    if (!active) return
+    if (!active || !modeReady || !mode) {
+      setLoading(Boolean(active))
+      return
+    }
     setLoading(true)
     setError(null)
     let q = supabase
@@ -143,7 +146,7 @@ export default function Payments({ scope = 'all' }) {
     if (error) setError(error.message)
     else setRows(data ?? [])
     setLoading(false)
-  }, [active, mode, range, scope])
+  }, [active, mode, modeReady, range, scope])
 
   useEffect(() => { load() }, [load])
 

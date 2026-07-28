@@ -31,7 +31,7 @@ const fmtLong = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'l
 
 export default function Payouts() {
   const { active } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [totals, setTotals] = useState({ available: 0, incoming: 0 })
   const [monthly, setMonthly] = useState([])
   const [banks, setBanks] = useState([])
@@ -44,7 +44,10 @@ export default function Payouts() {
   const activated = active?.status === 'approved' && !!primaryBank && primaryBank.status && primaryBank.status !== 'draft'
 
   useEffect(() => {
-    if (!active) return
+    if (!active?.id || !modeReady || !mode) {
+      setLoading(Boolean(active?.id))
+      return
+    }
     let cancel = false
     ;(async () => {
       setLoading(true)
@@ -82,7 +85,7 @@ export default function Payouts() {
       setLoading(false)
     })()
     return () => { cancel = true }
-  }, [active?.id, mode, refreshKey])
+  }, [active?.id, mode, modeReady, refreshKey])
 
   const maxVal = useMemo(() => Math.max(1, ...monthly.map((m) => m.value)), [monthly])
   const totalBar = totals.available + totals.incoming

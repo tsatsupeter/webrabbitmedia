@@ -11,7 +11,10 @@ export function useAnalyticsData({ businessId, mode, start, end, prevStart, prev
   })
 
   useEffect(() => {
-    if (!businessId) return
+    if (!businessId || !mode) {
+      setState({ loading: Boolean(businessId), txns: [], prevTxns: [], payouts: [], prevPayouts: [] })
+      return
+    }
     let cancelled = false
     setState((s) => ({ ...s, loading: true }))
     ;(async () => {

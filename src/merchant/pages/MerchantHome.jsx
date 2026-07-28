@@ -91,7 +91,7 @@ function nextTuesday(from = new Date()) {
 
 export default function MerchantHome() {
   const { active: business } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [rangeKey, setRangeKey] = useState('30')
   const [compareOn, setCompareOn] = useState('prev')
   const [loading, setLoading] = useState(true)
@@ -117,7 +117,10 @@ export default function MerchantHome() {
   }, [rangeKey])
 
   useEffect(() => {
-    if (!business) return
+    if (!business?.id || !modeReady || !mode) {
+      setLoading(Boolean(business?.id))
+      return
+    }
     let cancelled = false
     setLoading(true)
     ;(async () => {
@@ -156,7 +159,7 @@ export default function MerchantHome() {
       setLoading(false)
     })()
     return () => { cancelled = true }
-  }, [business?.id, mode, start.getTime(), end.getTime(), prevStart.getTime(), prevEnd.getTime(), todayStart.getTime(), yesterdayStart.getTime()])
+  }, [business?.id, mode, modeReady, start.getTime(), end.getTime(), prevStart.getTime(), prevEnd.getTime(), todayStart.getTime(), yesterdayStart.getTime()])
 
   // --- Today ---
   const todaySeries = hourlyCumulative(data.todayTxns, todayStart)

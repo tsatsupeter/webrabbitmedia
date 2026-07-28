@@ -48,7 +48,7 @@ function AccessPill({ access }) {
 export default function ApiKeys() {
   const { user } = useAuth()
   const { active } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
@@ -59,7 +59,10 @@ export default function ApiKeys() {
   const [submitting, setSubmitting] = useState(false)
 
   const load = useCallback(async () => {
-    if (!active) return
+    if (!active || !modeReady || !mode) {
+      setLoading(Boolean(active))
+      return
+    }
     setLoading(true)
     const { data } = await supabase
       .from('api_keys')
@@ -70,7 +73,7 @@ export default function ApiKeys() {
       .order('created_at', { ascending: false })
     setRows(data ?? [])
     setLoading(false)
-  }, [active, mode])
+  }, [active, mode, modeReady])
 
   useEffect(() => {
     load()
@@ -83,7 +86,7 @@ export default function ApiKeys() {
   }
 
   const create = async () => {
-    if (!name.trim() || !user || !active) return
+    if (!name.trim() || !user || !active || !modeReady || !mode) return
     setSubmitting(true)
     try {
       const fullKey = generateKey()

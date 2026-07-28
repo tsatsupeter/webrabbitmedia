@@ -26,13 +26,16 @@ const STATUS_STYLES = {
 
 export default function Balances() {
   const { active } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
   const [payouts, setPayouts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    if (!active?.id) return
+    if (!active?.id || !modeReady || !mode) {
+      setLoading(Boolean(active?.id))
+      return
+    }
     let cancel = false
     ;(async () => {
       setLoading(true)
@@ -50,7 +53,7 @@ export default function Balances() {
     return () => {
       cancel = true
     }
-  }, [active?.id, mode])
+  }, [active?.id, mode, modeReady])
 
   function buildReport() {
     if (!payouts.length) return
@@ -73,7 +76,7 @@ export default function Balances() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `payouts-${mode}-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `payouts-${mode || 'mode'}-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
