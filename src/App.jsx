@@ -22,6 +22,7 @@ import ApiKeys from './merchant/pages/developer/ApiKeys'
 import Payments from './merchant/pages/transactions/Payments'
 import Payouts from './merchant/pages/payouts/Payouts'
 import Balances from './merchant/pages/payouts/Balances'
+import History from './merchant/pages/payouts/History'
 import Refunds from './merchant/pages/transactions/Refunds'
 import Disputes from './merchant/pages/transactions/Disputes'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -65,6 +66,7 @@ function App() {
           <Route path="transactions/disputes" element={<Disputes />} />
           <Route path="payouts" element={<Payouts />} />
           <Route path="payouts/balances" element={<Balances />} />
+          <Route path="payouts/history" element={<History />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -139,7 +139,7 @@ export default function Payouts() {
                     </button>
                   )
                 })()}
-                <Link to="/merchant/payouts/balances" className="text-sm text-emerald-400 hover:text-emerald-300">View Details</Link>
+                <Link to="/merchant/payouts/history" className="text-sm text-emerald-400 hover:text-emerald-300">View Details</Link>
               </div>
             </div>
 
