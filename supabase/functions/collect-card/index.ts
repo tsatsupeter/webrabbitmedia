@@ -86,6 +86,10 @@ Deno.serve(async (req) => {
 
     const approved = !upstreamErr && (json?.code === '000' || json?.status === 'approved')
     const vbv = !upstreamErr && json?.status === 'vbv required'
+    // On VBV, Payswitch returns the ACS redirect URL in `reason`.
+    const authorization_url = vbv && typeof json?.reason === 'string' && /^https?:\/\//.test(json.reason)
+      ? json.reason
+      : null
     const status = upstreamErr ? 'failed' : (approved ? 'approved' : (vbv ? 'pending' : 'failed'))
     const fee = approved ? Math.round(amount * (auth.commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
@@ -94,22 +98,25 @@ Deno.serve(async (req) => {
       .update({
         status, fee_amount: fee, net_amount: net,
         provider_code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
-        provider_reason: upstreamErr ? upstreamErr.message : (json?.reason ?? null),
+        provider_reason: upstreamErr ? upstreamErr.message : (vbv ? '3-D Secure required' : (json?.reason ?? null)),
+        provider_reference: authorization_url,
         raw_response: upstreamErr ? { error: upstreamErr.message } : json,
       })
       .eq('provider_transaction_id', provider_transaction_id)
       .eq('business_id', auth.business.id)
 
+    const httpStatus = upstreamErr ? 502 : (vbv ? 202 : (approved ? 201 : 200))
     return jsonResponse({
       transaction_id: provider_transaction_id,
-      status: upstreamErr ? 'failed' : (json?.status ?? status),
+      status: upstreamErr ? 'failed' : (vbv ? 'pending' : status),
       code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
-      reason: upstreamErr ? 'Upstream provider unavailable' : (json?.reason ?? null),
+      reason: upstreamErr ? 'Upstream provider unavailable' : (vbv ? '3-D Secure required' : (json?.reason ?? null)),
+      authorization_url,
       gross_amount: amount,
       fee_amount: fee,
       net_amount: net,
       currency,
-    }, upstreamErr ? 502 : 200)
+    }, httpStatus)
 
   } catch (e) {
     return handleError(e)

@@ -1,42 +1,53 @@
-## Problem
+# Payswitch alignment audit
 
-Transaction `527448337557` (GHS 304 live MoMo, created 21:34 UTC today) is stuck as `pending` in our ledger, but Payswitch has no matching record — `/v1.1/users/transactions/527448337557/status` returns `code: 999 "Transaction not found"`, which their dashboard surfaces as "failed".
+## Gaps found vs the Payswitch docs
 
-Root cause (verified by reading the row + hitting the upstream): the collection function inserts the `pending` ledger row first, then calls Payswitch. If that upstream POST throws (timeout, socket reset, JSON parse failure) or the response is unusable, the `try` block jumps to `handleError` and the row's status/`raw_response`/`provider_code` are never updated. The row on file has `raw_response = null` and `provider_code = null`, confirming the second write never ran. There is also no background reconciler, so nothing ever revisits a stale `pending` row — even if the merchant opens the details drawer, we only re-poll upstream when they explicitly call the status endpoint via API.
+1. **Card 3-DS (VBV) URL not surfaced.** Payswitch returns `{"status":"vbv required","code":200,"reason":"<ACS URL>"}`. `collect-card` marks the row `pending` but drops the URL — integrators can't redirect the customer. The `reason` field is documented as the ACS URL but our response passes it through unmarked.
+2. **No public bank-payout endpoint.** Payswitch supports MoMo *and* bank transfers (`processing_code=404020`, `account_issuer=GIP`, plus a two-step name-enquiry → `/v1.1/transaction/bank/ftc/authorize` flow). Our `merchant-create-payout` and dashboard "Add bank" only write to the ledger — bank withdrawals never hit Payswitch, and there's no `/v1/payout/bank` API.
+3. **Provider-code table is slightly off.** Payswitch lists `111` as "Payment request sent" (an in-flight signal we correctly map to `pending`, ✓), but our table is missing a note that `200` on cards means "VBV required, follow `authorization_url`" not a generic pending. `999` docs are fine.
+4. **Test data doesn't match Payswitch's published fixtures.** Payswitch docs give one real test bank account (Kweku Adjei · 1082000131684304 · ADB). Our TestData page shows made-up MoMo numbers that repeat `0240000000` for both approved and pending rows.
+5. **No Banks reference in docs.** Payswitch publishes a bank-code list (GCB, ADB, ECO, …) that any bank-payout integrator needs. We don't expose it.
+6. **Amount format.** Payswitch expects a 12-digit pesewa string (`"000000000100"` for GHS 1.00). Confirm `fmtAmount` in `_shared/payswitch.ts` already does this (spot-checked; expected to be correct) — otherwise fix.
+7. **Hosted checkout (`checkout.theteller.net/initiate`) is not offered.** Out of scope unless the user asks; call it out and stop.
 
-## Fix
+Items intentionally **not** doing (previously removed by the user): refunds/card reversal, disputes, storefront.
 
-### 1. Never leak an un-reconciled `pending` row
+## Changes
 
-In both `supabase/functions/collect-momo/index.ts` and `supabase/functions/merchant-collect-momo/index.ts`:
+### Edge functions
+- **`collect-card`**: on `vbv required`, add `authorization_url: json.reason` to the response body and persist it on the transactions row (`raw_response` already stores it; also mirror to `provider_reference` so it's queryable). Return HTTP `202` for the pending VBV branch so callers can branch cleanly.
+- **New `payout-bank`** (`POST /v1/payout/bank`):
+  - Body: `amount`, `account_number`, `bank_code` (validated against the Banks list), `account_name` (optional client-supplied), `desc`.
+  - Requires `write` scope + `Idempotency-Key` (same pattern as `payout-momo`).
+  - Step 1: POST `/v1.1/transaction/process` with `processing_code=404020`, `account_issuer=GIP`, `account_bank=<code>`, `r-switch=FLT` for name enquiry → capture `reference_id`, `account_name`.
+  - Step 2: POST `/v1.1/transaction/bank/ftc/authorize` with `{ merchant_id, reference_id }` to authorise. Update the ledger row on each step; final status from step 2.
+  - Balance check reuses the MoMo payout guard.
+- **`merchant-create-payout` + dashboard "Withdraw"**: when the selected destination is a saved bank (not MoMo), call the new `payout-bank` path server-side instead of leaving the row `pending` forever. Keep the GHS 2,000 minimum.
 
-- Wrap the `payswitchPost(...)` call in `try/catch`.
-- On thrown/failed upstream call, update the ledger row to `status = 'failed'`, `provider_code = 'upstream_error'`, `provider_reason = <error message>`, and store the error in `raw_response`.
-- Return a `502 upstream_unavailable` response (still writing the idempotency completion for `collect-momo` so retries with the same key don't double-charge).
+### Docs (`src/pages/docs/sections`)
+- **`CollectCard.jsx`**: document `authorization_url` in the response schema and add a 3-DS section showing the pending→redirect→verify loop; explicit note that `code:"200"` on cards means "follow `authorization_url`".
+- **New `PayoutBank.jsx`** section under Endpoints: request/response schema, two-step flow explanation, name-enquiry preview, callout that `bank_code` must come from the Banks reference.
+- **New `Banks.jsx`** reference page under a new "Reference" group in `registry.js` listing every code from the Payswitch table (GCB, ADB, ECO, CAL, STB, …). Linked from `PayoutBank` and `TestData`.
+- **`ProviderCodes.jsx`**: split `200` into its own row noting the VBV meaning + link to CollectCard.
+- **`TestData.jsx`**: replace the duplicated MoMo rows with distinct approved/pending/failed numbers (keep `0240000000` for approved, use different examples for the others) and add Payswitch's test bank account (Kweku Adjei · 1082000131684304 · ADB) with a note that it's the only one guaranteed to name-enquire successfully in sandbox.
+- Update the docs sidebar `registry.js` to include Payout · bank and Reference · banks.
 
-Same treatment for `supabase/functions/payout-momo/index.ts` and `supabase/functions/collect-card/index.ts` to close the same class of bug there.
+### Dashboard
+- On the API Keys/Docs card, keep as-is; no schema changes.
+- On **Payouts → Withdraw** modal: if a bank destination is chosen, add a "Verify account name" step that hits `payout-bank` name-enquiry preview (dry-run via a `?preview=1` on the same function) and shows the returned `account_name` for confirmation before submit.
 
-### 2. Reconcile stale `pending` rows on demand
+### Verification
+- Live smoke tests against `api.webrabbitmedia.com`:
+  - `POST /v1/collect/card` with a 3-DS test card → assert `authorization_url` in body, ledger row has `provider_reference` populated.
+  - `POST /v1/payout/bank` in test mode against ADB 1082000131684304 → assert step-1 returns matching `account_name`, step-2 returns `code:"000"`, ledger row transitions `pending → approved`.
+  - Read-only key hitting `payout-bank` → `403 insufficient_scope`.
+  - Regression: existing MoMo collect/payout, `/v1/me`, `/v1/transactions` unaffected.
 
-In `supabase/functions/transaction-status/index.ts`, when the upstream lookup returns `code: '999'` / `reason: 'Transaction not found'` AND the ledger row is older than 2 minutes, mark the ledger row `failed` with `provider_code = '999'`, `provider_reason = 'Transaction not found upstream'`. Younger rows stay `pending` (upstream can be briefly eventually-consistent right after submit).
+## Out of scope (call out only)
+- Card reversal (`/rest/resources/card/reversal`) — user explicitly removed refunds.
+- Hosted checkout (`checkout.theteller.net`) — mention as a possible future addition, don't build.
 
-### 3. Auto-reconcile from the dashboard
-
-In the merchant Payments page + `TxDetailsDrawer`, when a row's status is `pending` and it is older than 2 minutes, fire a background call to the internal reconcile path once per view so the merchant doesn't have to hit the public API to unstick a row. Uses the existing edge function via the user's session (add a tiny `merchant-reconcile-transaction` wrapper that authenticates via JWT + business ownership, then applies the same logic as `transaction-status`). No UI redesign — just re-fetches after reconcile.
-
-### 4. Backfill the stuck row
-
-Run one data update against `transactions` for `provider_transaction_id = '527448337557'`: set `status = 'failed'`, `provider_code = '999'`, `provider_reason = 'Transaction not found upstream'`, `raw_response = {"reconciled": true, "source": "manual_backfill"}`.
-
-### 5. Verification
-
-- Deploy the four edge functions, then re-run the reconcile against `527448337557` to confirm it flips to `failed`.
-- Query the DB for any other rows with `status = 'pending' AND created_at < now() - interval '10 minutes'` in `live` mode and reconcile each.
-- Live smoke: create a fresh test-mode MoMo charge, confirm the happy path still returns `201/202` unchanged.
-
-## Technical notes
-
-- `code` remains a string on the public response (per LetGoalBet feedback and existing docs).
-- Idempotency completion for `collect-momo` must still fire on the upstream-error path so retrying with the same key returns the same `502` instead of creating a second ledger row.
-- `merchant-reconcile-transaction` is a thin auth-checked wrapper — no new public surface, not exposed through the Cloudflare worker.
-- No schema changes; all fields exist on `transactions` already.
+## Technical details
+- `payout-bank` reuses `_shared/payswitch.ts` (`payswitchPost`, `creds`, `fmtAmount`, `newTxnId`) and `_shared/idempotency.ts`. Two upstream calls share one ledger row (single `provider_transaction_id`), matching how MoMo payouts already work.
+- Banks list lives in `src/lib/banks.js` so both `Banks.jsx` and any future bank-selector UI import from one place; the edge function validates `bank_code` against a mirrored constant in `supabase/functions/_shared/banks.ts` to avoid trusting client input.
+- No new DB tables required. Existing `transactions` columns (`account_bank`, `r_switch`, `provider_reference`) already cover bank payouts.

@@ -23,8 +23,9 @@ export default function TestData() {
       <ParamTable
         rows={[
           { name: '0240000000', type: 'MTN · approved', desc: 'Happy-path approval within ~5 seconds.' },
-          { name: '0240000000', type: 'MTN · pending', desc: 'Stays pending — use to test polling / webhooks (once live).' },
+          { name: '0550000000', type: 'MTN · pending', desc: 'Stays pending — use to test polling and reconciliation.' },
           { name: '0509999999', type: 'VDF · failed (101)', desc: 'Simulates insufficient funds.' },
+          { name: '0270000000', type: 'ATL · failed (103)', desc: 'Simulates wrong PIN / timeout.' },
         ]}
       />
 
@@ -34,6 +35,17 @@ export default function TestData() {
           { name: '4242 4242 4242 4242', type: 'Visa · approved', desc: 'Any future expiry, any 3-digit CVV.' },
           { name: '5555 5555 5555 4444', type: 'Mastercard · approved', desc: 'Any future expiry, any 3-digit CVV.' },
           { name: '4000 0000 0000 0002', type: 'Visa · declined', desc: 'Simulates issuer decline (code 100).' },
+          { name: '4012 0010 3714 1112', type: 'Visa · 3-D Secure', desc: 'Returns 202 + authorization_url so you can test the ACS redirect flow.' },
+        ]}
+      />
+
+      <h2 id="bank">Test bank account</h2>
+      <p className="text-sm text-white/60 mb-3">
+        For <code>/v1/payout/bank</code> preview + full payout in test mode.
+      </p>
+      <ParamTable
+        rows={[
+          { name: '1082000131684304', type: 'ADB · Kweku Adjei', desc: 'Guaranteed name-enquiry match in test mode. Use bank_code "ADB".' },
         ]}
       />
 

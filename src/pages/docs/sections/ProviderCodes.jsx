@@ -40,7 +40,7 @@ export default function ProviderCodes() {
       <h2 id="auth">Auth / configuration</h2>
       <ParamTable
         rows={[
-          { name: '200', type: 'pending', desc: 'VBV / 3-D Secure required — handled transparently for card collections.' },
+          { name: '200', type: 'pending', desc: '3-D Secure (VBV) required on a card charge — the response includes authorization_url; redirect the customer there and verify server-side afterwards. See Collect · Card.' },
           { name: '600', type: 'failed', desc: 'Access denied by the upstream provider.' },
           { name: '909', type: 'failed', desc: 'Duplicate provider transaction id — should not happen; retry with an Idempotency-Key.' },
           { name: '979', type: 'failed', desc: 'Access denied — invalid upstream credential. Contact support.' },

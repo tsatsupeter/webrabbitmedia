@@ -1,5 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { bankNameEnquiry, bankAuthorize } from '../_shared/bankPayout.ts'
+import { isValidBankCode } from '../_shared/banks.ts'
+import { newTxnId } from '../_shared/payswitch.ts'
 
 const MIN_PAYOUT = 2000
 
@@ -38,7 +41,7 @@ Deno.serve(async (req) => {
     if (biz.status !== 'approved') return json({ error: 'Business must be approved to withdraw' }, 403)
 
     const { data: bankRow } = await admin.from('bank_verification')
-      .select('id,is_primary,status')
+      .select('id,is_primary,status,account_number,account_holder_name,bank_name,routing_code')
       .eq('business_id', business_id)
       .order('is_primary', { ascending: false }).limit(1).maybeSingle()
     if (!bankRow) return json({ error: 'No bank account linked' }, 400)
@@ -93,7 +96,52 @@ Deno.serve(async (req) => {
       await admin.from('transactions').update({ payout_id: payout.id }).in('id', ids)
     }
 
-    return json({ payout, transaction_count: ids.length }, 200)
+    // If the linked bank has a Payswitch-compatible bank code, attempt the
+    // two-step transfer inline so the payout actually settles on-rails.
+    // Otherwise leave it as pending for manual admin processing.
+    const bankCode = String(bankRow.routing_code || '').toUpperCase()
+    let providerResult: Record<string, unknown> | null = null
+
+    if (isValidBankCode(bankCode) && bankRow.account_number) {
+      const provider_transaction_id = newTxnId()
+      try {
+        const { enquiry } = await bankNameEnquiry(mode as 'test' | 'live', {
+          account_number: String(bankRow.account_number),
+          bank_code: bankCode,
+          amount: amt,
+          desc: note || name,
+          transaction_id: provider_transaction_id,
+        })
+        providerResult = { step: 'name_enquiry', ...enquiry }
+
+        if (enquiry.ok && enquiry.reference_id) {
+          const authRes = await bankAuthorize(mode as 'test' | 'live', enquiry.reference_id)
+          providerResult = { step: 'authorize', enquiry, authorize: authRes }
+          const finalStatus = authRes.ok ? 'success' : 'failed'
+          await admin.from('payouts').update({
+            status: finalStatus,
+            provider_reference: provider_transaction_id,
+            completed_at: authRes.ok ? new Date().toISOString() : null,
+            notes: [note, authRes.reason].filter(Boolean).join(' • ') || null,
+          }).eq('id', payout.id)
+        } else {
+          await admin.from('payouts').update({
+            status: 'failed',
+            provider_reference: provider_transaction_id,
+            notes: [note, enquiry.reason || 'Name enquiry failed'].filter(Boolean).join(' • '),
+          }).eq('id', payout.id)
+        }
+      } catch (err) {
+        providerResult = { step: 'error', error: String((err as Error).message || err) }
+        await admin.from('payouts').update({
+          status: 'failed',
+          notes: [note, `Upstream error: ${String((err as Error).message || err)}`].filter(Boolean).join(' • '),
+        }).eq('id', payout.id)
+      }
+    }
+
+    const { data: refreshed } = await admin.from('payouts').select('*').eq('id', payout.id).single()
+    return json({ payout: refreshed || payout, transaction_count: ids.length, provider: providerResult }, 200)
   } catch (e) {
     return json({ error: String((e as Error).message || e) }, 500)
   }

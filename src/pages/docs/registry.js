@@ -9,10 +9,12 @@ import Fees from './sections/Fees'
 import CollectMomo from './sections/CollectMomo'
 import CollectCard from './sections/CollectCard'
 import PayoutMomo from './sections/PayoutMomo'
+import PayoutBank from './sections/PayoutBank'
 import TransactionsList from './sections/TransactionsList'
 import TransactionsRetrieve from './sections/TransactionsRetrieve'
 import ProviderCodes from './sections/ProviderCodes'
 import TestData from './sections/TestData'
+import Banks from './sections/Banks'
 import Webhooks from './sections/Webhooks'
 import Me from './sections/Me'
 
@@ -151,6 +153,19 @@ export const groups = [
           { id: 'response', text: 'Response', depth: 2 },
         ],
       },
+      {
+        slug: 'payout-bank',
+        title: 'Bank payout',
+        summary: 'Two-step name enquiry + authorise transfer to any Ghanaian bank account.',
+        Component: PayoutBank,
+        headings: [
+          { id: 'endpoint', text: 'Endpoint', depth: 2 },
+          { id: 'request', text: 'Request', depth: 2 },
+          { id: 'preview', text: 'Preview (name enquiry only)', depth: 2 },
+          { id: 'charge', text: 'Full payout', depth: 2 },
+          { id: 'response', text: 'Response', depth: 2 },
+        ],
+      },
     ],
   },
   {
@@ -215,6 +230,15 @@ export const groups = [
           { id: 'momo', text: 'Test Mobile Money numbers', depth: 2 },
           { id: 'cards', text: 'Test cards', depth: 2 },
           { id: 'example', text: 'Example test charge', depth: 2 },
+        ],
+      },
+      {
+        slug: 'banks',
+        title: 'Banks',
+        summary: 'Every three-letter bank_code accepted by /v1/payout/bank.',
+        Component: Banks,
+        headings: [
+          { id: 'codes', text: 'Bank codes', depth: 2 },
         ],
       },
       {
