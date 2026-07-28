@@ -1,0 +1,23 @@
+name = "webrabbit-api"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+# Route the public API to this worker. Requires the webrabbitmedia.com zone
+# to be active on your Cloudflare account, plus a proxied DNS record for
+# `api` (see README).
+[[routes]]
+pattern = "api.webrabbitmedia.com/v1/*"
+zone_name = "webrabbitmedia.com"
+
+[vars]
+SUPABASE_FUNCTIONS_URL = "https://eydjkasswyygiycitnml.supabase.co/functions/v1"
+# Publishable anon key is safe to ship (public by design; RLS enforces access).
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZGprYXNzd3l5Z2l5Y2l0bm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxOTM0ODYsImV4cCI6MjEwMDc2OTQ4Nn0.Y7IKnmjSUeWMXs5PabDNSd2YeciPFmpmhokiJBbOnSI"
+RATE_LIMIT_PER_10S = "60"
+
+# Sliding-window rate limit storage. Create with:
+#   wrangler kv:namespace create RL
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "RL"
+id = "REPLACE_WITH_KV_ID"
