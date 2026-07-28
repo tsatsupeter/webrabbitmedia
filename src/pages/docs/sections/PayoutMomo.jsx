@@ -14,6 +14,10 @@ export default function PayoutMomo() {
       <Callout type="warn" title="Requires write access">
         The API key must have <code>write</code> access. Read-only keys receive <code>403</code>.
       </Callout>
+      <Callout type="note" title="Bank payouts">
+        Direct bank-account payouts are available from the dashboard (<strong>Payouts → Withdraw</strong>)
+        but are not yet exposed via the public API. Contact support if you need programmatic bank payouts.
+      </Callout>
 
       <h2 id="request">Request</h2>
       <ParamTable

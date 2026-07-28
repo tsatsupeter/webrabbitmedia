@@ -28,6 +28,10 @@ export default function Fees() {
         The full breakdown is visible on every transaction in the dashboard and returned on every API
         response as <code>gross_amount</code>, <code>fee_amount</code>, and <code>net_amount</code>.
       </p>
+      <Callout type="note" title="Only charged on approved">
+        The fee is only deducted on <code>approved</code> collections. Pending charges show{' '}
+        <code>fee_amount = 0</code> until they resolve, and failed charges never accrue a fee.
+      </Callout>
     </>
   )
 }

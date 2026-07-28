@@ -32,7 +32,9 @@ export default function TransactionsRetrieve() {
       />
       <p className="text-sm text-white/60 mt-4">
         <code>resolved_status</code> is our normalised status (<code>approved</code> · <code>pending</code> · <code>failed</code>)
-        after reconciling the upstream response with our ledger.
+        after reconciling the upstream response with our ledger. While signed webhooks are on the way, poll
+        this endpoint every ~3 seconds for up to 60 seconds — see the pattern in{' '}
+        <a href="/docs/webhooks" className="text-primary hover:underline">Webhooks</a>.
       </p>
     </>
   )

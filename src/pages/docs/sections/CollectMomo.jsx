@@ -17,8 +17,14 @@ export default function CollectMomo() {
       <Callout type="info" title="Supported networks">
         Pass the <code>network</code> field using one of these codes:{' '}
         <code>MTN</code> · <code>VDF</code> (Vodafone) · <code>ATL</code> (AirtelTigo) ·{' '}
-        <code>TGO</code> (Tigo legacy) · <code>ZPY</code> (Zeepay) · <code>GMY</code> (G-Money).
+        <code>TGO</code> (Tigo — legacy, still accepted) · <code>ZPY</code> (Zeepay) ·{' '}
+        <code>GMY</code> (G-Money).
       </Callout>
+      <p className="text-sm text-white/60 mt-2">
+        <code>subscriber_number</code> accepts either the local format <code>0248980332</code> or the
+        international format <code>233248980332</code>. <code>amount</code> is decimal <strong>GHS</strong> —
+        no pesewa padding. See <a href="/docs/test-data" className="text-primary hover:underline">test numbers</a>.
+      </p>
 
       <h2 id="request">Request</h2>
       <ParamTable
@@ -107,7 +113,11 @@ const tx = await res.json()`,
       <Callout type="note" title="HTTP status">
         <code>201</code> for approved, <code>202</code> for pending (customer still to authorise on their phone),
         <code>200</code> for a resolved failure. All responses include an <code>x-request-id</code> header
-        — save it if you need support.
+        — save it if you need support. See{' '}
+        <a href="/docs/provider-codes" className="text-primary hover:underline">provider codes</a> for the
+        full <code>code</code> field reference, and{' '}
+        <a href="/docs/webhooks" className="text-primary hover:underline">webhooks</a> for the recommended
+        polling pattern while a charge is pending.
       </Callout>
     </>
   )

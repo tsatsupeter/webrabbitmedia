@@ -39,6 +39,11 @@ export default function Errors() {
         <li><code>429 Too Many Requests</code> — rate limit exceeded, retry after the <code>Retry-After</code> header.</li>
         <li><code>5xx</code> — retry idempotent requests with exponential backoff and the same <code>Idempotency-Key</code>.</li>
       </ul>
+      <p className="text-sm text-white/60 mt-4">
+        The upstream provider's <code>code</code> field (e.g. <code>101</code> for insufficient MoMo funds)
+        is separate from the HTTP status — see{' '}
+        <a href="/docs/provider-codes" className="text-primary hover:underline">Provider codes</a>.
+      </p>
     </>
   )
 }

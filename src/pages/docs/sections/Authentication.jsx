@@ -11,8 +11,11 @@ export default function Authentication() {
 
       <h2 id="api-keys">API keys</h2>
       <p>
-        Manage keys from <strong>Developer → API Keys</strong>. Each key is either test or live. Test keys
-        can be used at any time; live keys only work once your business is approved.
+        Manage keys from <strong>Developer → API Keys</strong>. Keys are prefixed by mode
+        (<code>wr_test_...</code> or <code>wr_live_...</code>) and scoped by access
+        (<strong>read</strong> or <strong>read + write</strong>, chosen at creation). Test keys work any time;
+        live keys only work once your business is approved. Write scope is required for{' '}
+        <code>/v1/payout/*</code>.
       </p>
       <Callout type="warn" title="Keep secrets server-side">
         Never embed a secret key in a mobile app, browser bundle, or public repo. Anyone with your key can

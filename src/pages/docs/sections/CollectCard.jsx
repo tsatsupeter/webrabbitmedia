@@ -7,13 +7,14 @@ import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 export default function CollectCard() {
   return (
     <>
-      <p>Charge a Visa or Mastercard. 3-D Secure is handled by the upstream provider when the issuer requires it.</p>
+      <p>Charge a Visa or Mastercard. 3-D Secure is handled by the upstream provider when the issuer requires it — the customer is redirected to their bank's ACS page, then back to your app. Poll <code>GET /v1/transactions/{'{id}'}</code> to observe the final state.</p>
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/card`} />
       <Callout type="warn" title="PCI scope">
         Card fields transit our servers; only send them from a PCI-compliant environment. If you are not PCI
-        certified, use <code>/v1/collect/momo</code> instead.
+        certified, use <code>/v1/collect/momo</code> instead. Test PANs live on the{' '}
+        <a href="/docs/test-data" className="text-primary hover:underline">Test data</a> page.
       </Callout>
 
       <h2 id="request">Request</h2>
