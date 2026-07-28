@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Icon from '../Icon'
 
 function IconTile({ tint, icon }) {
@@ -69,12 +70,12 @@ function ActivateBanner() {
             </a>
             .
           </p>
-          <button
-            type="button"
-            className="h-10 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90"
+          <Link
+            to="/merchant/verification"
+            className="inline-flex items-center h-10 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 no-underline"
           >
             Submit details
-          </button>
+          </Link>
         </div>
 
         {/* Progress rail */}
