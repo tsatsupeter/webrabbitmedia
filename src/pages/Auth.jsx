@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import Icon from '../Icon'
+import Icon from '../merchant/Icon'
 
 function GoogleMark({ size = 18 }) {
   return (
@@ -16,7 +16,7 @@ function GithubMark({ size = 18 }) {
   )
 }
 
-export default function Login() {
+export default function Auth() {
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log('login submit (ui-only)')
