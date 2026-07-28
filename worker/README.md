@@ -11,6 +11,7 @@ the Supabase Edge Functions that implement the actual Payswitch integration.
 | POST | `/v1/collect/momo` | `collect-momo` |
 | POST | `/v1/collect/card` | `collect-card` |
 | POST | `/v1/payout/momo` | `payout-momo` (write-scoped keys only) |
+| POST | `/v1/payout/bank` | `payout-bank` (write-scoped keys only) |
 | GET  | `/v1/transactions/:id` | `transaction-status` |
 | GET  | `/v1/transactions` | `list-transactions` |
 

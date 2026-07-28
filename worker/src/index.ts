@@ -101,6 +101,17 @@ export default {
           api_key_id: r.meta.apiKeyId,
           idempotency: r.idempotency,
         })
+      // POST /v1/payout/bank
+      if (req.method === 'POST' && path === '/v1/payout/bank') {
+        const r = await forward(env, 'payout-bank', req, {}, requestId)
+        return finish(r.response, {
+          rl_source: rl.source,
+          upstream_status: r.upstreamStatus,
+          mode: r.meta.mode,
+          business_id: r.meta.businessId,
+          api_key_id: r.meta.apiKeyId,
+          idempotency: r.idempotency,
+        })
       }
       // GET /v1/me
       if (req.method === 'GET' && path === '/v1/me') {
