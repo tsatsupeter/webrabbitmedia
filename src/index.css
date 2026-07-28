@@ -14,6 +14,9 @@
   --color-accent-bright: #22c55e;
   --color-border: #e4e6e4;
   --color-border-light: #f0f2f0;
+  --color-merchant-bg: #0a0f0c;
+  --color-merchant-panel: #0f1712;
+  --color-merchant-border: rgba(255,255,255,0.06);
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "DM Sans", system-ui, sans-serif;
 }
