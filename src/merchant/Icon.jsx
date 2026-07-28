@@ -43,6 +43,10 @@ const paths = {
   info: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 5h.01M11 12h1v5h1" />,
   logout: <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l-5-5 5-5m-5 5h13" />,
   userPlus: <path d="M12 4a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0113-6.3M18 14v6m-3-3h6" />,
+  target: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 4a5 5 0 100 10 5 5 0 000-10zm0 3a2 2 0 100 4 2 2 0 000-4z" />,
+  checkCircle: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-4 9l3 3 5-6" />,
+  package: <path d="M3 7l9-4 9 4v10l-9 4-9-4V7zm0 0l9 4m0 0l9-4m-9 4v10" />,
+  receipt: <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zm3 5h6m-6 4h6m-6 4h4" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {
