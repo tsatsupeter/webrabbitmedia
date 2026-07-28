@@ -252,6 +252,16 @@ export default function Payouts() {
           </section>
         </div>
       </div>
+
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        businessId={active?.id}
+        mode={mode}
+        available={totals.available}
+        bank={primaryBank}
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   )
 }
