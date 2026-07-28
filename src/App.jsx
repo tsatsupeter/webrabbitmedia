@@ -12,6 +12,7 @@ import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
 import Verification from './merchant/pages/Verification'
 import ProductInformation from './merchant/pages/ProductInformation'
+import IdentityVerification from './merchant/pages/IdentityVerification'
 import MerchantHome from './merchant/pages/MerchantHome'
 import Analytics from './merchant/pages/Analytics'
 import Sentra from './merchant/pages/Sentra'
@@ -44,6 +45,7 @@ function App() {
           <Route index element={<GetStarted />} />
           <Route path="verification" element={<Verification />} />
           <Route path="verification/product-information" element={<ProductInformation />} />
+          <Route path="verification/identity" element={<IdentityVerification />} />
           <Route path="home" element={<MerchantHome />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="sentra" element={<Sentra />} />

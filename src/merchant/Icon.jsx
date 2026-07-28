@@ -48,6 +48,8 @@ const paths = {
   checkCircle: <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-4 9l3 3 5-6" />,
   package: <path d="M3 7l9-4 9 4v10l-9 4-9-4V7zm0 0l9 4m0 0l9-4m-9 4v10" />,
   receipt: <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zm3 5h6m-6 4h6m-6 4h4" />,
+  upload: <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 9l5-5 5 5M12 4v12" />,
+  file: <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9l-6-6zm0 0v6h6" />,
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 1.75 }) {
