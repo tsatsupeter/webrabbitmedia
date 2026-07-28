@@ -106,3 +106,45 @@ body {
 .legal-content li {
   margin-bottom: 0.35rem;
 }
+
+/* ============ Docs page (Mintlify-style) ============ */
+.docs-root { font-family: 'Inter', system-ui, sans-serif; }
+.docs-root h1, .docs-root .font-serif { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
+
+.docs-prose { color: #334155; font-size: 15.5px; line-height: 1.72; }
+.docs-prose > * + * { margin-top: 1.1em; }
+.docs-prose h2 {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 22px; font-weight: 650; letter-spacing: -0.01em;
+  color: #0f172a; margin-top: 2.4em; margin-bottom: 0.4em;
+  scroll-margin-top: 5rem;
+}
+.docs-prose h3 {
+  font-size: 16.5px; font-weight: 600; color: #0f172a;
+  margin-top: 1.8em; margin-bottom: 0.3em; scroll-margin-top: 5rem;
+}
+.docs-prose p { color: #475569; }
+.docs-prose a { color: #047857; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.docs-prose a:hover { color: #065f46; }
+.docs-prose strong { color: #0f172a; font-weight: 600; }
+.docs-prose code:not(pre code) {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86em; padding: 2px 6px; border-radius: 5px;
+  background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0;
+}
+.docs-prose ul { padding-left: 1.35em; list-style: disc; }
+.docs-prose ol { padding-left: 1.35em; list-style: decimal; }
+.docs-prose li { margin: 0.25em 0; color: #475569; }
+.docs-prose li::marker { color: #94a3b8; }
+.docs-prose hr { border: 0; border-top: 1px solid #e2e8f0; margin: 2.2em 0; }
+.docs-prose .not-prose { color: initial; font-size: initial; line-height: initial; }
+.docs-prose .not-prose * { color: revert; }
+
+/* Syntax highlight tokens */
+.tok-key  { color: #7dd3fc; }
+.tok-str  { color: #86efac; }
+.tok-kw   { color: #f0abfc; }
+.tok-num  { color: #fdba74; }
+.tok-com  { color: #64748b; font-style: italic; }
+.tok-flag { color: #fcd34d; }
+.tok-var  { color: #fca5a5; }
