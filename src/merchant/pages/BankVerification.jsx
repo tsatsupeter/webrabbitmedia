@@ -253,30 +253,32 @@ export default function BankVerification() {
     }
   }
 
+  const returnTo = (isNew || editId) ? '/merchant/payouts' : '/merchant/verification'
+
   async function handleSubmit() {
     if (!canSubmit) { toast.error('Please complete all required fields'); return }
     const { error } = await persist('submitted')
     if (error) return
     toast.success('Bank details submitted', { description: "We'll verify your account shortly." })
-    navigate('/merchant/verification')
+    navigate(returnTo)
   }
 
   async function handleDraft() {
     const { error } = await persist('draft')
     if (error) return
     toast.success('Draft saved')
-    navigate('/merchant/verification')
+    navigate(returnTo)
   }
 
   return (
     <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-center gap-4">
-        <button type="button" onClick={() => navigate('/merchant/verification')}
+        <button type="button" onClick={() => navigate(returnTo)}
           className="w-10 h-10 rounded-lg border-2 border-accent-bright flex items-center justify-center text-white hover:bg-accent/10"
           aria-label="Back">
           <Icon name="chevronLeft" size={18} />
         </button>
-        <h1 className="font-display text-white text-[1.25rem] font-semibold">Bank Verification</h1>
+        <h1 className="font-display text-white text-[1.25rem] font-semibold">Bank Verification{isPrimary ? '' : (rowId || isNew ? ' — Additional Account' : '')}</h1>
       </div>
 
       <p className="text-[0.9rem] text-white/60">
