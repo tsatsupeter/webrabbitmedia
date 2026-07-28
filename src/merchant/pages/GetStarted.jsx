@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import Icon from '../Icon'
 import { useMerchantMode } from '../../hooks/useMerchantMode'
 import { getCompletedSteps } from '../verificationProgress'
+import ActionRequiredBanner from '../components/ActionRequiredBanner'
 
 const VERIF_STEPS = ['product', 'identity', 'business', 'bank']
 
@@ -155,7 +156,7 @@ export default function GetStarted() {
             </Link>
           </div>
         </div>
-      )}
+      <ActionRequiredBanner />
 
       {!approved && <ActivateBanner />}
 
