@@ -23,7 +23,7 @@ import Payments from './merchant/pages/transactions/Payments'
 import Payouts from './merchant/pages/payouts/Payouts'
 import Balances from './merchant/pages/payouts/Balances'
 import History from './merchant/pages/payouts/History'
-import Refunds from './merchant/pages/transactions/Refunds'
+import Collect from './merchant/pages/sales/Collect'
 import Disputes from './merchant/pages/transactions/Disputes'
 import ProtectedRoute from './components/ProtectedRoute'
 
