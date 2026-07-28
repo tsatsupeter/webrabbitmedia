@@ -1,0 +1,1 @@
+UPDATE public.api_keys SET revoked_at = now() WHERE name IN ('__scope_audit_read','__scope_audit_write');
