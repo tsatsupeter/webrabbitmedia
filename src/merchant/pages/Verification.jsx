@@ -1,77 +1,281 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../../integrations/supabase/client'
+import { useBusinesses } from '../../hooks/useBusinesses'
+import { toast } from 'sonner'
 import Icon from '../Icon'
 
-const steps = [
-  {
-    icon: 'box',
-    title: 'Product Information',
-    desc: 'Tell us about your product so we can get you ready to accept payments. Takes about 2 minutes.',
-  },
-  {
-    icon: 'user',
-    title: 'Identity Verification',
-    desc: "Verify it's really you with a quick photo of your ID and a selfie. Secure and takes under a minute.",
-  },
-  {
-    icon: 'bank',
-    title: 'Bank Verification',
-    desc: "Add the bank account where you'd like to receive payouts. Make sure the account name matches your verified identity or business.",
-  },
-]
-
-function StepRow({ icon, title, desc, last }) {
+function StatusPills() {
   return (
-    <div className="relative">
-      {!last && <div className="absolute left-[25px] top-[64px] bottom-[-16px] w-px bg-white/10" />}
-      <div className="flex items-center gap-4 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/[0.12] to-transparent p-4">
-        <div className="w-[52px] h-[52px] shrink-0 rounded-full bg-gradient-to-br from-accent-bright to-accent flex items-center justify-center text-white shadow-[0_0_20px_rgba(34,197,94,0.25)]">
-          <Icon name={icon} size={24} strokeWidth={1.6} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-display font-medium text-white text-[0.95rem]">{title}</h3>
-          <p className="text-[0.85rem] text-white/55 leading-relaxed mt-0.5">{desc}</p>
-        </div>
-        <span className="hidden sm:inline-flex items-center px-3 h-7 rounded-md border border-accent-bright/50 text-accent-bright text-[0.75rem] font-medium">
-          Verified
-        </span>
-        <button
-          type="button"
-          className="hidden sm:inline-flex items-center px-4 h-9 rounded-lg bg-white/[0.05] border border-merchant-border text-[0.8rem] text-white/70 hover:text-white hover:bg-white/[0.08]"
+    <div className="flex flex-wrap gap-3">
+      <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-[0.78rem] tracking-[0.12em]">
+        <Icon name="x" size={16} /> LIVE PAYMENTS INACTIVE
+      </span>
+      <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 font-mono text-[0.78rem] tracking-[0.12em]">
+        <Icon name="info" size={16} /> ACTION REQUIRED : IDENTITY VERIFICATION PENDING
+      </span>
+    </div>
+  )
+}
+
+function TypeCard({ value, selected, onSelect, title, bullets }) {
+  const active = selected === value
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      className={`flex-1 text-left rounded-xl p-5 border transition-colors ${
+        active
+          ? 'border-accent-bright bg-accent/[0.06]'
+          : 'border-merchant-border bg-merchant-panel hover:border-white/20'
+      }`}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <span
+          className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+            active ? 'border-accent-bright' : 'border-white/30'
+          }`}
         >
-          View form
-        </button>
+          {active && <span className="w-2.5 h-2.5 rounded-full bg-accent-bright" />}
+        </span>
+        <span className="font-display font-medium text-white text-[0.95rem]">{title}</span>
+      </div>
+      <ul className="space-y-1.5 pl-8">
+        {bullets.map((b) => (
+          <li key={b} className="text-[0.85rem] text-white/60 leading-relaxed relative">
+            <span className="absolute -left-3 top-2 w-1 h-1 rounded-full bg-white/40" />
+            {b}
+          </li>
+        ))}
+      </ul>
+    </button>
+  )
+}
+
+function TypePicker({ value, onChange }) {
+  return (
+    <div className="bg-merchant-panel border border-merchant-border rounded-xl p-6">
+      <h3 className="text-white text-[0.95rem] font-medium mb-5">
+        Are you an individual or registered business?
+      </h3>
+      <div className="flex flex-col md:flex-row gap-4">
+        <TypeCard
+          value="individual"
+          selected={value}
+          onSelect={onChange}
+          title="Individual"
+          bullets={[
+            "You're a creator or sole proprietor",
+            'Payments and payouts are tied to you personally',
+            "You don't have a company registration or business tax ID",
+          ]}
+        />
+        <TypeCard
+          value="registered"
+          selected={value}
+          onSelect={onChange}
+          title="Registered entity"
+          bullets={[
+            'Your business is registered (Pvt Ltd, LLP, LLC, etc.)',
+            'You have a GST, EIN, or other business tax ID',
+            'You invoice customers under your company name',
+          ]}
+        />
       </div>
     </div>
   )
 }
 
-export default function Verification() {
+function DetailRow({ icon, title, desc, last }) {
   return (
-    <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
-      <div className="inline-flex items-center gap-2.5 px-5 h-11 rounded-lg bg-accent/15 border border-accent/40 text-accent-bright font-mono text-[0.85rem] tracking-[0.15em] mb-8">
-        <Icon name="seal" size={19} />
-        LIVE PAYMENTS ACTIVE
+    <div className="relative flex items-start gap-4 p-4 rounded-xl border border-merchant-border bg-black/20">
+      {!last && (
+        <span className="absolute left-[38px] top-[68px] bottom-[-16px] w-px bg-white/10" />
+      )}
+      <div className="w-11 h-11 shrink-0 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/80">
+        <Icon name={icon} size={20} />
       </div>
-
-      <div className="bg-merchant-panel border border-merchant-border rounded-xl p-6">
-        <h2 className="font-display text-[1.05rem] font-medium text-white mb-6">
-          Product &amp; Payout Details
-        </h2>
-        <div className="space-y-4">
-          {steps.map((s, i) => (
-            <StepRow key={s.title} {...s} last={i === steps.length - 1} />
-          ))}
+      <div className="flex-1 min-w-0 pt-0.5">
+        <div className="flex items-center gap-1.5 text-white font-medium text-[0.9rem]">
+          {title}
+          <Icon name="info" size={13} className="text-white/40" />
         </div>
+        <p className="text-[0.85rem] text-white/55 leading-relaxed mt-1">{desc}</p>
+      </div>
+      <button
+        type="button"
+        className="shrink-0 h-9 px-4 rounded-lg bg-white/[0.06] border border-white/10 text-white/70 text-[0.8rem] hover:bg-white/10 hover:text-white"
+      >
+        Submit
+      </button>
+    </div>
+  )
+}
 
-        <div className="flex items-center justify-between mt-4 px-4 py-3 rounded-xl border border-merchant-border">
-          <div className="flex items-center gap-3 text-[0.9rem] text-white/85">
-            <Icon name="bank" size={18} className="text-white/50" />
-            Peter Makafui Tsatsu
+export default function Verification() {
+  const { active, refresh, loading } = useBusinesses()
+  const [mode, setMode] = useState('view') // 'view' | 'edit'
+  const [choice, setChoice] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setChoice(active?.business_type ?? null)
+  }, [active?.id, active?.business_type])
+
+  const state = !active?.business_type ? 'basics' : mode === 'edit' ? 'editType' : 'overview'
+
+  async function saveType() {
+    if (!choice || !active) return
+    setSaving(true)
+    const { error } = await supabase
+      .from('businesses')
+      .update({ business_type: choice })
+      .eq('id', active.id)
+    setSaving(false)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    await refresh()
+    setMode('view')
+  }
+
+  if (loading && !active) {
+    return <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8" />
+  }
+
+  return (
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-8">
+      {state === 'basics' && (
+        <>
+          <div className="flex items-center gap-3 px-5 h-14 rounded-xl border border-accent/40 bg-accent/[0.08]">
+            <Icon name="shield" size={20} className="text-accent-bright" />
+            <span className="text-[0.9rem] text-white/85">
+              Complete verification to activate live payments and payouts. Most reviews finish
+              within 72 hours.
+            </span>
           </div>
-          <button type="button" className="text-[0.85rem] text-white underline underline-offset-4 hover:text-accent-bright">
-            Manage accounts
-          </button>
-        </div>
-      </div>
+
+          <div>
+            <h2 className="font-display text-white text-[1.15rem] font-semibold">
+              Let's start with the basics
+            </h2>
+            <p className="text-[0.9rem] text-white/60 mt-2">
+              Tell us how you operate so we can tailor verification for you. Choose the option that
+              best matches your setup today.
+            </p>
+          </div>
+
+          <TypePicker value={choice} onChange={setChoice} />
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              disabled={!choice || saving}
+              onClick={saveType}
+              className="h-10 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving…' : 'Continue'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {state === 'editType' && (
+        <>
+          <StatusPills />
+          <div>
+            <h2 className="font-display text-white text-[1.15rem] font-semibold">
+              Update your business type
+            </h2>
+            <p className="text-[0.9rem] text-white/60 mt-2">
+              Choose the option that best describes how you operate today. If you update your
+              selection, we'll adjust the forms below to match.
+            </p>
+          </div>
+
+          <TypePicker value={choice} onChange={setChoice} />
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setChoice(active?.business_type ?? null)
+                setMode('view')
+              }}
+              className="h-10 px-5 rounded-lg text-white/70 text-[0.85rem] hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!choice || saving || choice === active?.business_type}
+              onClick={saveType}
+              className="h-10 px-6 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving…' : 'Continue'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {state === 'overview' && (
+        <>
+          <StatusPills />
+
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-merchant-border bg-merchant-panel p-5">
+            <div>
+              <div className="text-white text-[0.95rem]">
+                You are a{' '}
+                <span className="text-accent-bright font-medium">
+                  {active.business_type === 'registered' ? 'Registered entity' : 'Individual'}
+                </span>
+              </div>
+              <p className="text-[0.85rem] text-white/55 mt-1">
+                You can update this here if your setup has changed.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMode('edit')}
+              className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10"
+              aria-label="Edit business type"
+            >
+              <Icon name="pencil" size={15} />
+            </button>
+          </div>
+
+          <div>
+            <h3 className="font-display text-white text-[1rem] font-medium mb-4">
+              Product &amp; Payout Details
+            </h3>
+            <div className="space-y-3">
+              <DetailRow
+                icon="box"
+                title="Product Information"
+                desc="Tell us about your product so we can get you ready to accept payments. Takes about 2 minutes."
+              />
+              <DetailRow
+                icon="user"
+                title="Identity Verification"
+                desc="Verify it's really you with a quick photo of your ID and a selfie. Secure and takes under a minute."
+              />
+              {active.business_type === 'registered' && (
+                <DetailRow
+                  icon="store"
+                  title="Business Verification"
+                  desc="Share your company details so we can confirm your business. You'll need your registration documents handy."
+                />
+              )}
+              <DetailRow
+                icon="bank"
+                title="Bank Verification"
+                desc="Add the bank account where you'd like to receive payouts. Make sure the account name matches your verified identity or business."
+                last
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
