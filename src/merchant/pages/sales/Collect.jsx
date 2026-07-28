@@ -149,7 +149,7 @@ export default function Collect() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="0248980332"
+                placeholder="e.g. 0240000000"
                 className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3.5 py-2.5 text-white placeholder-white/30 outline-none focus:border-emerald-500/60"
                 required
               />
