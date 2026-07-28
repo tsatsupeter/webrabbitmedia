@@ -156,6 +156,8 @@ export default function GetStarted() {
             </Link>
           </div>
         </div>
+      )}
+
       <ActionRequiredBanner />
 
       {!approved && <ActivateBanner />}
