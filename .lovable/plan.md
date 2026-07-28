@@ -1,13 +1,28 @@
-## Add the Web Rabbit Media logo to transactional emails
+## Goal
+Enable Google + GitHub OAuth on `/auth` with the current, correct Google "G" logo, and make sure sign-in redirects users through the existing new-user → business onboarding flow.
 
-The email template in `supabase/functions/_shared/email/template.ts` currently renders the brand as text ("Web Rabbit Media" wordmark inside the accent-green circle). The real logo already ships at `public/webrabbitmedia-logo-green.jpeg` and is served on the production site.
+## Findings
+- `src/pages/Auth.jsx` already calls `supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${origin}/merchant` } })` for both `google` and `github` — provider wiring is correct; only the Google glyph is outdated (single red path).
+- `handle_new_user` trigger already creates a `profiles` row from `raw_user_meta_data.full_name`/`name` + `avatar_url`, which Google and GitHub both provide — no DB changes needed.
+- `ProtectedRoute` handles the "no business yet" case and routes to `/auth/create-business`, so OAuth users land in the right place after redirect.
 
-### Change
-- In `template.ts`, set `BRAND.logo` to the absolute URL `https://webrabbitmedia.com/webrabbitmedia-logo-green.jpeg` (email clients require absolute URLs).
-- Replace the current text-only header block with an `<img>` tag using that URL, sized ~40×40 (retina-ready via `width`/`height` attrs + `max-width` inline style), `alt="Web Rabbit Media"`, kept inside the same accent-green rounded container so the branding still matches the auth/dashboard shell.
-- Keep the wordmark text next to the logo for clients that block images (with `display:block` fallback via `alt`).
-- Redeploy `send-email` and fire one real test send to `tsatsupeter@gmail.com` (payment_received sample) to confirm the logo renders in Gmail.
+## Changes
 
-### Out of scope
-- No changes to trigger logic, preferences, or any other event copy.
-- Not uploading the logo to the CDN — it already lives at a stable public URL on the marketing site.
+### 1. Refresh the Google mark (`src/pages/Auth.jsx`)
+Replace the `GoogleMark` component with the official 4-color "G" SVG (blue #4285F4, green #34A853, yellow #FBBC05, red #EA4335) at 18px. No other markup changes.
+
+### 2. OAuth redirect hardening (`src/pages/Auth.jsx`)
+Keep `redirectTo: ${origin}/merchant`. Confirm `useAuth`'s `onAuthStateChange` picks up the session; nothing else to change.
+
+### 3. User-facing verification steps (no code)
+Tell the user to confirm in Supabase Dashboard → Authentication → URL Configuration:
+- Site URL: `https://webrabbitmedia.com`
+- Additional Redirect URLs include: `https://webrabbitmedia.com/**`, the Lovable preview origin `**`, and `http://localhost:8080/**` for local dev.
+
+And in each provider console:
+- Google Cloud OAuth client → Authorized redirect URI includes `https://eydjkasswyygiycitnml.supabase.co/auth/v1/callback`.
+- GitHub OAuth App → Authorization callback URL = same Supabase callback URL above.
+
+## Out of scope
+- No changes to backend, RLS, edge functions, email templates, or the merchant dashboard.
+- No new providers beyond Google + GitHub.
