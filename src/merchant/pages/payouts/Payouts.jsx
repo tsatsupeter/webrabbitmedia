@@ -36,6 +36,8 @@ export default function Payouts() {
   const [monthly, setMonthly] = useState([])
   const [banks, setBanks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const primaryBank = banks.find((b) => b.is_primary) || banks[0] || null
   const backupBanks = banks.filter((b) => b.id !== primaryBank?.id)
