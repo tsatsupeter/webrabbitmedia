@@ -65,11 +65,12 @@ export default function ApiKeys() {
       .from('api_keys')
       .select('*')
       .eq('business_id', active.id)
+      .eq('mode', mode)
       .is('revoked_at', null)
       .order('created_at', { ascending: false })
     setRows(data ?? [])
     setLoading(false)
-  }, [active])
+  }, [active, mode])
 
   useEffect(() => {
     load()
