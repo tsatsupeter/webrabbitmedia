@@ -5,7 +5,7 @@ import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
 import NotificationsPopover from './components/NotificationsPopover'
 
-export default function Topbar({ title = 'Get Started', onMenuClick }) {
+export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick }) {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const { user } = useAuth()
@@ -14,11 +14,6 @@ export default function Topbar({ title = 'Get Started', onMenuClick }) {
   const [searchValue, setSearchValue] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef(null)
-
-  const [compactSidebar, setCompactSidebar] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.localStorage.getItem('wr.compactSidebar') === 'true'
-  })
 
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
