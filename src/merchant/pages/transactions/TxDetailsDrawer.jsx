@@ -16,7 +16,8 @@ function Row({ label, children }) {
   )
 }
 
-export default function TxDetailsDrawer({ tx, onClose }) {
+export default function TxDetailsDrawer({ tx, onClose, onReconciled }) {
+  const reconciledRef = useRef(null)
   useEffect(() => {
     if (!tx) return
     const onEsc = (e) => e.key === 'Escape' && onClose()
@@ -24,9 +25,26 @@ export default function TxDetailsDrawer({ tx, onClose }) {
     return () => window.removeEventListener('keydown', onEsc)
   }, [tx, onClose])
 
+  useEffect(() => {
+    if (!tx || tx.status !== 'pending') return
+    const ageMs = Date.now() - new Date(tx.created_at).getTime()
+    if (ageMs < 2 * 60 * 1000) return
+    if (reconciledRef.current === tx.provider_transaction_id) return
+    reconciledRef.current = tx.provider_transaction_id
+    ;(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('merchant-reconcile-transaction', {
+          body: { transaction_id: tx.provider_transaction_id },
+        })
+        if (!error && data?.changed && onReconciled) onReconciled()
+      } catch { /* silent */ }
+    })()
+  }, [tx, onReconciled])
+
   if (!tx) return null
 
   const copy = (v) => { navigator.clipboard.writeText(v || ''); toast.success('Copied') }
+
 
   return (
     <>
