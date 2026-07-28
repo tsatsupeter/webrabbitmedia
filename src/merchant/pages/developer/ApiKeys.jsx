@@ -103,7 +103,7 @@ export default function ApiKeys() {
       })
       if (error) throw error
       setCreateOpen(false)
-      setRevealKey({ name: name.trim(), key: fullKey })
+      setRevealKey({ name: name.trim(), key: fullKey, scope: enableWrite ? 'read + write' : 'read' })
       toast.success('Api key created successfully.')
       load()
     } catch (e) {
@@ -263,6 +263,11 @@ export default function ApiKeys() {
             </span>
             <span className="text-[0.85rem] text-white/80">Enable write access</span>
           </label>
+          <p className="text-[0.75rem] text-white/45 mt-2 leading-relaxed pl-[30px]">
+            {enableWrite
+              ? 'Read + Write — can retrieve data and create collections and payouts.'
+              : 'Read only — can retrieve transactions and account info. Collections and payouts will return 403.'}
+          </p>
 
           <div className="flex justify-end gap-2 mt-6">
             <button
@@ -290,9 +295,10 @@ export default function ApiKeys() {
           <div className="w-11 h-11 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4">
             <Icon name="file" size={20} className="text-white" />
           </div>
-          <h3 className="font-display text-[1.05rem] font-semibold text-white mb-4">
+          <h3 className="font-display text-[1.05rem] font-semibold text-white mb-1">
             API Name: {revealKey?.name}
           </h3>
+          <p className="text-[0.78rem] text-white/50 mb-4">Scope: {revealKey?.scope}</p>
           <div className="relative rounded-lg border border-white/10 bg-white/[0.03] p-4 pr-11 text-[0.85rem] text-white/85 break-all font-mono">
             {revealKey?.key}
             <button

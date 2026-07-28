@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
   try {
     const auth = await authenticateKey(req)
+    requireScope(auth, 'write')
     const meta = {
       'x-wr-mode': auth.key.mode,
       'x-wr-business-id': auth.business.id,
