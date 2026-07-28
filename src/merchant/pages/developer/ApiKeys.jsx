@@ -48,6 +48,7 @@ function AccessPill({ access }) {
 export default function ApiKeys() {
   const { user } = useAuth()
   const { active } = useBusinesses()
+  const { mode } = useMerchantMode()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
