@@ -875,7 +875,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      enqueue_email: {
+        Args: {
+          _business_id: string
+          _data: Json
+          _event: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      get_email_hook_secret: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
