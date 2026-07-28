@@ -143,19 +143,19 @@ export default function Verification() {
     if (!active?.id) return
     let cancelled = false
     ;(async () => {
-      const [{ data: prod }, { data: ident }, { data: biz }] = await Promise.all([
+      const [{ data: prod }, { data: ident }, { data: biz }, { data: bank }] = await Promise.all([
         supabase.from('product_information').select('status').eq('business_id', active.id).maybeSingle(),
         supabase.from('identity_verification').select('status').eq('business_id', active.id).maybeSingle(),
         supabase.from('business_verification').select('status').eq('business_id', active.id).maybeSingle(),
+        supabase.from('bank_verification').select('status').eq('business_id', active.id).maybeSingle(),
       ])
       if (cancelled) return
       const done = []
       if (prod?.status === 'submitted') done.push('product')
       if (ident?.status === 'submitted') done.push('identity')
       if (biz?.status === 'submitted') done.push('business')
-      // merge any locally-tracked steps that don't have a DB source yet (bank)
-      const local = getCompletedSteps(active.id).filter((s) => s === 'bank')
-      setCompletedStepsState([...done, ...local])
+      if (bank?.status === 'submitted') done.push('bank')
+      setCompletedStepsState(done)
     })()
     return () => { cancelled = true }
   }, [active?.id])
@@ -204,9 +204,10 @@ export default function Verification() {
       navigate('/merchant/verification/business')
       return
     }
-    if (!active?.id) return
-    const next = markStepComplete(active.id, key)
-    setCompletedStepsState(next)
+    if (key === 'bank') {
+      navigate('/merchant/verification/bank')
+      return
+    }
   }
 
 

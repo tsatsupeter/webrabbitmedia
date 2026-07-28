@@ -50,6 +50,7 @@ function App() {
           <Route path="verification/product-information" element={<ProductInformation />} />
           <Route path="verification/identity" element={<IdentityVerification />} />
           <Route path="verification/business" element={<BusinessVerification />} />
+          <Route path="verification/bank" element={<BankVerification />} />
           <Route path="home" element={<MerchantHome />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="sentra" element={<Sentra />} />
