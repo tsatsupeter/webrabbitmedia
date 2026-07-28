@@ -134,12 +134,24 @@ export default function ApiKeys() {
   return (
     <div className="w-full px-4 md:px-8 py-6">
       <div className="flex items-center justify-between mb-6">
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg bg-merchant-panel border border-merchant-border text-[0.8rem] text-white/80 hover:text-white hover:border-white/20"
-        >
-          <Icon name="gear" size={14} /> Edit Columns
-        </button>
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[0.72rem] font-medium border ${
+              mode === 'live'
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-orange-500/15 text-orange-400 border-orange-500/30'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${mode === 'live' ? 'bg-emerald-400' : 'bg-orange-400'}`} />
+            {mode === 'live' ? 'Live keys' : 'Test keys'}
+          </span>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg bg-merchant-panel border border-merchant-border text-[0.8rem] text-white/80 hover:text-white hover:border-white/20"
+          >
+            <Icon name="gear" size={14} /> Edit Columns
+          </button>
+        </div>
         <button
           type="button"
           onClick={openCreate}
