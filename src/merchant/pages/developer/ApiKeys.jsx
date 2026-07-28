@@ -105,15 +105,21 @@ export default function ApiKeys() {
     }
   }
 
-  const revoke = async (id) => {
-    if (!confirm('Delete this API key? This cannot be undone.')) return
+  const revoke = async () => {
+    if (!pendingDelete) return
+    setSubmitting(true)
     const { error } = await supabase
       .from('api_keys')
       .update({ revoked_at: new Date().toISOString() })
-      .eq('id', id)
-    if (error) return toast.error(error.message)
-    toast.success('API key deleted.')
-    load()
+      .eq('id', pendingDelete.id)
+    if (error) {
+      toast.error(error.message)
+    } else {
+      toast.success('API key deleted.')
+      load()
+    }
+    setSubmitting(false)
+    setPendingDelete(null)
   }
 
   const copy = (v) => {
