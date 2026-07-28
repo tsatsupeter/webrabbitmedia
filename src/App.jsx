@@ -17,7 +17,7 @@ import BusinessVerification from './merchant/pages/BusinessVerification'
 import BankVerification from './merchant/pages/BankVerification'
 import MerchantHome from './merchant/pages/MerchantHome'
 import Analytics from './merchant/pages/Analytics'
-import Sentra from './merchant/pages/Sentra'
+import Docs from './pages/Docs'
 import ApiKeys from './merchant/pages/developer/ApiKeys'
 import Payments from './merchant/pages/transactions/Payments'
 import Payouts from './merchant/pages/payouts/Payouts'
@@ -41,6 +41,8 @@ function App() {
         </Route>
         {/* Auth stands alone: no marketing navbar/footer */}
         <Route path="/auth" element={<Auth />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/docs/:section" element={<Docs />} />
         <Route
           path="/auth/create-business"
           element={
@@ -59,7 +61,7 @@ function App() {
           <Route path="verification/bank" element={<BankVerification />} />
           <Route path="home" element={<MerchantHome />} />
           <Route path="analytics" element={<Analytics />} />
-          <Route path="sentra" element={<Sentra />} />
+          
           <Route path="developer/api-keys" element={<ApiKeys />} />
           <Route path="transactions/payments" element={<Payments />} />
           <Route path="transactions/refunds" element={<Refunds />} />
