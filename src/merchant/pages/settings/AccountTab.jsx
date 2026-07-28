@@ -239,43 +239,6 @@ function Field({ label, children }) {
   )
 }
 
-function ChangePasswordModal({ open, onClose }) {
-  const [pw, setPw] = useState('')
-  const [pw2, setPw2] = useState('')
-  const [busy, setBusy] = useState(false)
-  if (!open) return null
-  const submit = async (e) => {
-    e.preventDefault()
-    if (pw.length < 8) return toast.error('Password must be at least 8 characters')
-    if (pw !== pw2) return toast.error('Passwords do not match')
-    setBusy(true)
-    const { error } = await supabase.auth.updateUser({ password: pw })
-    setBusy(false)
-    if (error) return toast.error(error.message)
-    toast.success('Password updated')
-    setPw(''); setPw2('')
-    onClose()
-  }
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full max-w-md rounded-xl bg-merchant-panel border border-merchant-border p-6 space-y-4">
-        <h3 className="font-display text-[1.05rem] text-white">Change password</h3>
-        <div className="space-y-2">
-          <label className="text-[0.78rem] text-white/60">New password</label>
-          <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.85rem] outline-none focus:border-white/25" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-[0.78rem] text-white/60">Confirm new password</label>
-          <input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.85rem] outline-none focus:border-white/25" />
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="h-9 px-4 rounded-lg text-white/70 hover:text-white text-[0.82rem]">Cancel</button>
-          <button type="submit" disabled={busy} className="h-9 px-4 rounded-lg bg-white text-black text-[0.82rem] font-medium disabled:opacity-60">{busy ? 'Saving…' : 'Update password'}</button>
-        </div>
-      </form>
-    </div>
-  )
-}
 
 function MfaModal({ open, onClose, onDone }) {
   const [factorId, setFactorId] = useState(null)
