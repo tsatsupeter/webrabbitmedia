@@ -1,36 +1,30 @@
 
-# Balances → Account Statement
+## 1. Fix sidebar highlight bug
 
-Rebuild `src/merchant/pages/payouts/Balances.jsx` to match the reference (Account Statement layout), scoped to the merchant's real data. Since the platform currently transacts only in GHS, the currency breakdown will render a single GHS row (structured so more currencies drop in later automatically).
+In `src/merchant/Sidebar.jsx`, the child `NavLink` (used inside `ExpandableItem`) has no `end` prop, so `/merchant/payouts/balances` matches both "Payouts" (`/merchant/payouts`) and "Balances". Add `end` to the child `NavLink` so only the exact route highlights. (Parent items already use `end`.)
 
-## Layout
+## 2. Make Balances page fully functional
 
-1. **Header** — "Account Statement" title (replaces "Balances").
-2. **Total Balance card** — wallet icon, "Total Balance" label, big amount in GHS, and a **View Breakdown / Hide Breakdown** toggle button (green outline style, consistent with existing merchant theme).
-   - Total = sum of `net_amount` from `transactions` where `status='success'` and `mode = current merchant mode`, minus sum of completed/pending payouts' `net_amount`.
-3. **Breakdown panel** (collapsible) — table with Currency | Value rows. One row per currency present in transactions (GHS shown with 🇬🇭 flag + "Ghanaian Cedi").
-4. **Toolbar** — Build Report, Edit Columns, Currency, Filters, Select Date Range buttons (visual only for now, wired to no-ops with tooltips "Coming soon" — matches reference without inventing backend work).
-5. **Statement table** — columns: Transaction Type | Transaction Amount | Transaction ID | Previous Wallet Balance | Updated Wallet Balance | Date.
-   - Rows generated from a merged, chronologically-ordered ledger of:
-     - **Payment** rows → `+gross_amount` (green)
-     - **Payment Fees** rows → `-fee_amount` (red)
-     - **Payout** rows → `-net_amount` (red, type "Payout")
-   - `Transaction ID` uses `provider_transaction_id` (or payout id truncated).
-   - Running balance computed client-side to fill Previous/Updated Wallet Balance columns.
-   - Sticky header, same dark styling as Payments table.
+Wire the toolbar buttons on `src/merchant/pages/payouts/Balances.jsx` — currently placeholders — to real behavior:
 
-## Behavior
+- **Build Report** → export the currently-filtered ledger rows to CSV (`account-statement-<mode>-<date>.csv`) using the same pattern as History's `buildReport`.
+- **Filters** → popover with checkbox filters for Transaction Type (Payment / Payment Fees / Payout). Applied client-side; badge shows active count.
+- **Select Date Range** → popover with From / To date inputs; filters ledger by `when`. Badge shows selected range.
+- **Currency** → dropdown listing currencies present in the ledger + "All". When a single currency is selected, the Total Balance card and running balances scope to that currency.
+- **Edit Columns** → popover with checkboxes to show/hide each of the six columns (Transaction Type, Amount, ID, Previous Balance, Updated Balance, Date). Persisted to `localStorage` per business.
+- **Total Balance card** stays reactive: sums the currently-selected currency's net (transactions.net − payouts.net). Breakdown table already lists all currencies (unchanged).
+- **Empty state** copy tweaked when filters produce no rows ("No results match your filters").
+- Loading skeleton row instead of plain "Loading…".
 
-- Fetches on mount and on merchant-mode change (Test/Live), filtered by `business_id` and `mode`.
-- Empty state: reuse existing empty-card pattern when no transactions exist.
-- No schema changes, no new edge functions.
+No schema changes, no new edge functions.
 
 ## Files
 
-- **Modify** `src/merchant/pages/payouts/Balances.jsx` — full rewrite to the layout above.
-- No route/nav changes (already registered).
+- **Modify** `src/merchant/Sidebar.jsx` — add `end` to child `NavLink`.
+- **Modify** `src/merchant/pages/payouts/Balances.jsx` — implement filters, date range, currency, edit columns, CSV export.
 
 ## Technical notes
 
-- Reuse `useMerchantMode`, `useActiveBusiness`, `supabase` client, and existing table/badge styles from `Payments.jsx` for visual consistency.
-- Currency formatting via existing `Intl.NumberFormat('en-GH', { style:'currency', currency:'GHS' })` helper pattern already used elsewhere.
+- Filter state lives in component state; column visibility persists via `localStorage` key `balances:cols:<businessId>`.
+- Reuse existing `Icon` names (`filter`, `calendar`, `columns`, `download`) and dark popover styling from other merchant pages.
+- Running balance is recomputed after date/currency/type filtering so Previous/Updated columns stay consistent with the visible rows.
