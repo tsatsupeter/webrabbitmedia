@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Icon from '../Icon'
+import { useMerchantMode } from '../../hooks/useMerchantMode'
 
 function IconTile({ tint, icon }) {
   const tints = {
@@ -112,12 +113,20 @@ function ActivateBanner() {
 }
 
 export default function GetStarted() {
+  const { mode } = useMerchantMode()
+  const isLive = mode === 'live'
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-10">
-      {/* Test mode pill */}
+      {/* Mode pill */}
       <div className="flex justify-center">
-        <div className="px-4 py-2 rounded-lg bg-merchant-panel border border-merchant-border text-[0.8rem] text-white/75 flex items-center gap-2">
-          <span>You are in Test Mode.</span>
+        <div
+          className={`px-4 py-2 rounded-lg border text-[0.8rem] flex items-center gap-2 ${
+            isLive
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : 'bg-red-500/10 border-red-500/30 text-red-300'
+          }`}
+        >
+          <span>You are in {isLive ? 'Live' : 'Test'} Mode.</span>
           <a href="#" className="text-white font-medium hover:underline">Learn More</a>
         </div>
       </div>
