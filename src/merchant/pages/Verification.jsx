@@ -143,16 +143,18 @@ export default function Verification() {
     if (!active?.id) return
     let cancelled = false
     ;(async () => {
-      const [{ data: prod }, { data: ident }] = await Promise.all([
+      const [{ data: prod }, { data: ident }, { data: biz }] = await Promise.all([
         supabase.from('product_information').select('status').eq('business_id', active.id).maybeSingle(),
         supabase.from('identity_verification').select('status').eq('business_id', active.id).maybeSingle(),
+        supabase.from('business_verification').select('status').eq('business_id', active.id).maybeSingle(),
       ])
       if (cancelled) return
       const done = []
       if (prod?.status === 'submitted') done.push('product')
       if (ident?.status === 'submitted') done.push('identity')
-      // merge any locally-tracked steps that don't have a DB source yet (business, bank)
-      const local = getCompletedSteps(active.id).filter((s) => s === 'business' || s === 'bank')
+      if (biz?.status === 'submitted') done.push('business')
+      // merge any locally-tracked steps that don't have a DB source yet (bank)
+      const local = getCompletedSteps(active.id).filter((s) => s === 'bank')
       setCompletedStepsState([...done, ...local])
     })()
     return () => { cancelled = true }
@@ -196,6 +198,10 @@ export default function Verification() {
     }
     if (key === 'identity') {
       navigate('/merchant/verification/identity')
+      return
+    }
+    if (key === 'business') {
+      navigate('/merchant/verification/business')
       return
     }
     if (!active?.id) return

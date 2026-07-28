@@ -14,6 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_verification: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          address_proof_path: string | null
+          business_id: string
+          city: string | null
+          country: string | null
+          created_at: string
+          entity_type: string | null
+          id: string
+          incorporation_date: string | null
+          incorporation_doc_path: string | null
+          legal_name: string | null
+          owner_dob: string | null
+          owner_name: string | null
+          owner_ownership_percent: number | null
+          owner_role: string | null
+          postal_code: string | null
+          registration_number: string | null
+          state: string | null
+          status: string
+          submitted_at: string | null
+          support_email: string | null
+          support_phone: string | null
+          tax_doc_path: string | null
+          tax_id: string | null
+          trading_name: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          address_proof_path?: string | null
+          business_id: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          entity_type?: string | null
+          id?: string
+          incorporation_date?: string | null
+          incorporation_doc_path?: string | null
+          legal_name?: string | null
+          owner_dob?: string | null
+          owner_name?: string | null
+          owner_ownership_percent?: number | null
+          owner_role?: string | null
+          postal_code?: string | null
+          registration_number?: string | null
+          state?: string | null
+          status?: string
+          submitted_at?: string | null
+          support_email?: string | null
+          support_phone?: string | null
+          tax_doc_path?: string | null
+          tax_id?: string | null
+          trading_name?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          address_proof_path?: string | null
+          business_id?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          entity_type?: string | null
+          id?: string
+          incorporation_date?: string | null
+          incorporation_doc_path?: string | null
+          legal_name?: string | null
+          owner_dob?: string | null
+          owner_name?: string | null
+          owner_ownership_percent?: number | null
+          owner_role?: string | null
+          postal_code?: string | null
+          registration_number?: string | null
+          state?: string | null
+          status?: string
+          submitted_at?: string | null
+          support_email?: string | null
+          support_phone?: string | null
+          tax_doc_path?: string | null
+          tax_id?: string | null
+          trading_name?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_verification_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           business_type: string | null

@@ -1,40 +1,36 @@
-## Identity Verification — plan
+## Business Verification — plan
 
-Build a real Identity Verification submit flow, styled to match Product Information, with file uploads to Supabase Storage.
+Add a real Business Verification form for registered entities, styled to match Product Information and Identity Verification.
 
 ### Database
-New table `public.identity_verification`:
-- `business_id`, `user_id`
-- `full_name`, `date_of_birth` (date)
-- `country`, `address_line1`, `address_line2`, `city`, `state`, `postal_code`
-- `id_type` (`passport` | `national_id` | `drivers_license`), `id_number`
-- `id_document_front_path`, `id_document_back_path`, `selfie_path` (storage paths)
-- `status` (`draft` | `submitted`), `submitted_at`, timestamps
-- RLS: owner-only (mirrors `product_information`), plus GRANTs.
+New table `public.business_verification` (one row per business):
+- Core: `legal_name`, `trading_name`, `entity_type`, `incorporation_date`, `registration_number`, `tax_id`
+- Address: `country`, `address_line1`, `address_line2`, `city`, `state`, `postal_code`
+- Contact: `website`, `support_email`, `support_phone`
+- Beneficial owner: `owner_name`, `owner_role`, `owner_dob`, `owner_ownership_percent`
+- Documents (storage paths): `incorporation_doc_path`, `tax_doc_path`, `address_proof_path`
+- `status` (`draft` | `submitted`), `submitted_at`, timestamps, `UNIQUE(business_id)`
+- RLS + GRANTs owner-only (mirrors identity_verification).
 
 ### Storage
-Private bucket `identity-docs`. RLS on `storage.objects`:
-- Users can insert/select/update/delete only objects under `identity-docs/{auth.uid()}/…`.
+Reuse existing private `identity-docs` bucket. Files stored under `{auth.uid()}/{business_id}/business/{field}-{ts}.{ext}` — existing per-user RLS on `storage.objects` already permits this.
 
 ### Route & page
-- New route `/merchant/verification/identity` in `App.jsx`.
-- New page `src/merchant/pages/IdentityVerification.jsx`:
-  - Header/back link like Product Information.
-  - Sections (matching card style):
-    1. Personal details — Full name, DOB.
-    2. Address — Country, address lines, city, state/region, postal code.
-    3. Government ID — ID type select, ID number, upload front, upload back.
-    4. Selfie — upload.
-  - Confirm checkbox + footer with **Save as Draft** and **Submit & Proceed**.
-  - Load existing draft on mount; upsert on save.
-  - Uploads go to `identity-docs/{user_id}/{business_id}/{field}-{filename}`; store returned path in the row.
-  - Toasts: "Draft saved" / "Identity information submitted".
+- New route `/merchant/verification/business` in `App.jsx`.
+- New page `src/merchant/pages/BusinessVerification.jsx`:
+  - Header/back link matching the pattern.
+  - Sections: Company details → Registered address → Contact → Beneficial owner → Documents (3 uploads).
+  - Reuses local `Label` / `TextInput` / `Select` / `Checkbox` / `FileUpload` (same visual language).
+  - Load existing draft on mount, upsert on Save Draft / Submit & Proceed.
+  - Toasts: "Draft saved" / "Business information submitted".
 
 ### Wiring
-- `Verification.jsx`: Identity Verification row's Submit navigates to `/merchant/verification/identity`; marks step complete on submit via existing `verificationProgress` helper, so Business/Bank rows unlock in order.
-- Reuse existing Input/Select/Checkbox components for design consistency.
+- `Verification.jsx`:
+  - `completeStep('business')` navigates to `/merchant/verification/business`.
+  - The DB-derived completion effect also reads `business_verification.status` so submission marks the row Completed (Bank remains local for now).
+- Sequential gating unchanged: Business is only enabled after Identity is submitted; Bank stays locked until Business is submitted (for registered entities).
 
 ### Technical notes
-- Signed URLs (short expiry) when re-displaying previously uploaded docs.
-- Client-side zod validation (lengths, DOB in past, ID number pattern) before submit.
-- No new deps.
+- Client-side validation (required fields, DOB in past, ownership % 0–100, email format).
+- Reuse the same FileUpload component pattern from Identity Verification.
+- No new dependencies.
