@@ -29,7 +29,7 @@ export default function Idempotency() {
   -H "Authorization: Bearer wr_test_..." \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: 8f4b7c1e-invoice-a104" \\
-  -d '{"amount": 10.50, "subscriber_number": "0248980332", "network": "MTN"}'
+  -d '{"amount": 10.50, "subscriber_number": "0240000000", "network": "MTN"}'
 
 # Retry the exact same request:
 # -> HTTP/2 201

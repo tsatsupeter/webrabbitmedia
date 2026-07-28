@@ -30,8 +30,8 @@ export default function PayoutMomo() {
       />
       <p className="text-sm text-white/60 mt-4">
         <code>amount</code> is decimal <strong>GHS</strong> — we handle pesewa conversion for the upstream
-        provider. <code>account_number</code> accepts local (<code>0248980332</code>) or international
-        (<code>233248980332</code>) format.
+        provider. <code>account_number</code> accepts local (<code>0240000000</code>) or international
+        (<code>233240000000</code>) format.
       </p>
       <p className="text-sm text-white/60 mt-2">
         Always send an <code>Idempotency-Key</code> for payouts. If your request times out you can safely
@@ -50,7 +50,7 @@ export default function PayoutMomo() {
   -H "Idempotency-Key: payout-2026-07-28-001" \\
   -d '{
     "amount": 250.00,
-    "account_number": "0248980332",
+    "account_number": "0240000000",
     "network": "MTN",
     "desc": "Weekly settlement"
   }'`,
