@@ -23,8 +23,8 @@ export default function EmptyState({
   )
 }
 
-export function Skeleton({ className = '' }) {
-  return <div className={`animate-pulse bg-white/[0.06] rounded-md ${className}`} />
+export function Skeleton({ className = '', style }) {
+  return <div style={style} className={`animate-pulse bg-white/[0.06] rounded-md ${className}`} />
 }
 
 export function StatSkeleton() {
@@ -38,4 +38,39 @@ export function StatSkeleton() {
 
 export function ChartSkeleton({ height = 200 }) {
   return <Skeleton style={{ height }} className="w-full" />
+}
+
+export function InlineSpinner({ size = 16, className = '' }) {
+  return (
+    <span
+      className={`inline-block animate-spin rounded-full border-2 border-white/20 border-t-accent-bright ${className}`}
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    />
+  )
+}
+
+export function PageLoader({ label = 'Loading…', className = '' }) {
+  return (
+    <div className={`w-full flex-1 min-h-[50vh] flex flex-col items-center justify-center gap-3 ${className}`}>
+      <InlineSpinner size={28} />
+      {label && <div className="text-[0.82rem] text-white/50">{label}</div>}
+    </div>
+  )
+}
+
+export function TableSkeleton({ rows = 5, cols = 5, className = '' }) {
+  return (
+    <tbody className={className}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <tr key={i} className="border-t border-white/5">
+          {Array.from({ length: cols }).map((__, j) => (
+            <td key={j} className="px-4 py-3.5">
+              <div className="h-3 rounded bg-white/[0.05] animate-pulse" style={{ width: `${40 + ((i + j) * 13) % 50}%` }} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  )
 }

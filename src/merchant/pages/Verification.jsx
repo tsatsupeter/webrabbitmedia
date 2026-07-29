@@ -4,6 +4,8 @@ import { supabase } from '../../integrations/supabase/client'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { toast } from 'sonner'
 import Icon from '../Icon'
+import { PageLoader } from '../components/EmptyState'
+
 
 function StatusPills() {
   return (
@@ -232,9 +234,9 @@ export default function Verification() {
   }
 
   if (loading && !active) {
-    return <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8" />
-
+    return <PageLoader label="Loading verification…" />
   }
+
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-8">

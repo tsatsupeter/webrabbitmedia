@@ -112,11 +112,16 @@ export default function History() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center text-white/50 text-sm">
-                    Loading payouts…
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-white/5">
+                    {Array.from({ length: 7 }).map((__, j) => (
+                      <td key={j} className="px-4 py-3.5">
+                        <div className="h-3 rounded bg-white/[0.05] animate-pulse" style={{ width: `${45 + ((i + j) * 13) % 45}%` }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+
               ) : payouts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-16 text-center">

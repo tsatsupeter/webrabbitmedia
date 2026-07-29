@@ -5,6 +5,8 @@ import { useBusinesses } from '../../../hooks/useBusinesses'
 import { useMerchantMode } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import WithdrawModal from '../../components/WithdrawModal'
+import { PageLoader } from '../../components/EmptyState'
+
 
 const MIN_WITHDRAW = 2000
 
@@ -92,10 +94,15 @@ export default function Payouts() {
   const availPct = totalBar > 0 ? (totals.available / totalBar) * 100 : 0
   const cyc = cycleWindow()
 
+  if (loading && banks.length === 0 && totals.available === 0) {
+    return <PageLoader label="Loading payouts…" />
+  }
+
   return (
     <div className="w-full px-4 md:px-8 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-white">Payouts</h1>
+
       </div>
 
       {/* Activation pill */}

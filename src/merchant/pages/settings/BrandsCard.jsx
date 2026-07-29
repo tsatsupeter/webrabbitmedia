@@ -150,9 +150,35 @@ export default function BrandsCard() {
         </div>
 
         {loading ? (
-          <div className="p-5 text-[0.85rem] text-white/50">Loading brands…</div>
+          <div className="p-5 space-y-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white/[0.05] animate-pulse" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-32 rounded bg-white/[0.05] animate-pulse" />
+                  <div className="h-2.5 w-20 rounded bg-white/[0.04] animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : brands.length === 0 ? (
-          <div className="p-5 text-[0.85rem] text-white/50">No brands yet.</div>
+          <div className="p-8 text-center">
+            <div className="mx-auto w-11 h-11 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center mb-3">
+              <Icon name="box" size={18} className="text-white/50" />
+            </div>
+            <div className="text-white/85 text-[0.9rem] font-medium">No brands yet</div>
+            <p className="text-white/50 text-[0.78rem] mt-1 max-w-xs mx-auto">
+              Add a brand to organize products, receipts and descriptors.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDrawer({ open: true, brand: null })}
+              className="mt-4 inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white text-black text-[0.82rem] font-medium hover:bg-white/90"
+            >
+              <Icon name="plus" size={13} /> Add brand
+            </button>
+          </div>
+
         ) : (
           <div>
             {primary && (

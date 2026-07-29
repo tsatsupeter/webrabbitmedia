@@ -4,6 +4,10 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Icon from './Icon'
 import ModeSwitchOverlay from './components/ModeSwitchOverlay'
+import { PageLoader } from './components/EmptyState'
+import { useAuth } from '../hooks/useAuth'
+import { useBusinesses } from '../hooks/useBusinesses'
+
 
 const titleByPath = {
   '/merchant': 'Get Started',
@@ -23,6 +27,8 @@ const titleByPath = {
 }
 
 export default function MerchantLayout() {
+  const { loading: authLoading, user } = useAuth()
+  const { loading: bizLoading } = useBusinesses()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [compactSidebar, setCompactSidebar] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -32,6 +38,8 @@ export default function MerchantLayout() {
   const title = titleByPath[pathname] ?? 'Dashboard'
   // Sentra is a full-bleed chat canvas: no topbar, like the reference.
   const bareCanvas = pathname === '/merchant/sentra'
+  const hydrating = authLoading || (user && bizLoading)
+
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex">
@@ -75,8 +83,9 @@ export default function MerchantLayout() {
           </button>
         )}
         <main className="flex-1 overflow-y-auto flex flex-col">
-          <Outlet />
+          {hydrating ? <PageLoader label="Loading your dashboard…" /> : <Outlet />}
         </main>
+
       </div>
     </div>
   )
