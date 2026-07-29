@@ -114,7 +114,7 @@ export default function BusinessSwitcher({ compact = false }) {
             type="button"
             onClick={() => {
               setOpen(false)
-              navigate('/auth/create-business')
+              setChooser(true)
             }}
             className="w-full flex items-center gap-3 px-3 py-3 border-t border-merchant-border hover:bg-white/[0.04] text-left"
           >
@@ -125,6 +125,25 @@ export default function BusinessSwitcher({ compact = false }) {
           </button>
         </div>
       )}
+
+      <AddBusinessOrBrandDrawer
+        open={chooser}
+        onClose={() => setChooser(false)}
+        onPickBrand={() => { setChooser(false); setBrandOpen(true) }}
+        onPickBusiness={() => { setChooser(false); setBizOpen(true) }}
+      />
+      <NewBrandDrawer
+        open={brandOpen}
+        onClose={() => setBrandOpen(false)}
+        businessId={activeId}
+        onSaved={refresh}
+      />
+      <NewBusinessDrawer
+        open={bizOpen}
+        onClose={() => setBizOpen(false)}
+        onCreated={refresh}
+      />
     </div>
+
   )
 }
