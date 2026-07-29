@@ -108,6 +108,7 @@ export default function BrandsCard() {
     const { error } = await supabase.from('brands').update({ is_primary: true }).eq('id', id)
     if (error) return toast.error(error.message)
     toast.success('Primary brand updated')
+    notifyBrandsChanged()
     load()
   }
 
@@ -116,6 +117,7 @@ export default function BrandsCard() {
     const { error } = await supabase.from('brands').delete().eq('id', brand.id)
     if (error) return toast.error(error.message)
     toast.success('Brand deleted')
+    notifyBrandsChanged()
     load()
   }
 
