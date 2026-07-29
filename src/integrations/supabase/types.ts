@@ -127,6 +127,53 @@ export type Database = {
         }
         Relationships: []
       }
+      brands: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          logo_path: string | null
+          name: string
+          statement_descriptor: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          logo_path?: string | null
+          name: string
+          statement_descriptor?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          logo_path?: string | null
+          name?: string
+          statement_descriptor?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_verification: {
         Row: {
           address_line1: string | null
