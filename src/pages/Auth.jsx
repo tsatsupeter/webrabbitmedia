@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+
 import { toast } from 'sonner'
 import Icon from '../merchant/Icon'
 import { supabase } from '../integrations/supabase/client'
