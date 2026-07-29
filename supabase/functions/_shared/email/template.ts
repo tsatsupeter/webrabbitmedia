@@ -8,6 +8,8 @@ export type EmailEvent =
   | 'payout_failed'
   | 'business_approved'
   | 'verification_submitted'
+  | 'team_invite'
+
 
 export type EmailData = Record<string, unknown>
 
@@ -191,9 +193,32 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
           { label: 'Submitted', value: fmtDate(d.submitted_at as string) },
         ],
         cta: { label: 'View progress', href: `${BRAND.dashboard}/verification` },
+    }
+    case 'team_invite': {
+      const inviter = String(d.inviter_name || d.inviter_email || 'A teammate')
+      const roleRaw = String(d.role || 'viewer').toLowerCase()
+      const roleLabel = roleRaw === 'admin' ? 'Editor' : 'Viewer'
+      const acceptUrl = String(d.accept_url || `${BRAND.site}/team/accept`)
+      const expires = fmtDate(d.expires_at as string)
+      return {
+        subject: `You're invited to join ${businessName} on ${BRAND.name}`,
+        preheader: `${inviter} invited you to collaborate on ${businessName}.`,
+        headline: `Join ${businessName} on ${BRAND.name}`,
+        intro: `${inviter} invited you to collaborate on ${businessName} as a ${roleLabel}. Accept the invitation to access the merchant dashboard.`,
+        pill: { label: 'Invitation', tone: 'success' },
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'Role', value: roleLabel },
+          { label: 'Invited by', value: inviter },
+          { label: 'Expires', value: expires },
+        ],
+        cta: { label: 'Accept invitation', href: acceptUrl },
+        outro: `If you didn't expect this invite, you can safely ignore this email — it will expire on ${expires}.`,
       }
     }
   }
+}
+
 }
 
 function pillHtml(p: Pill): string {
@@ -305,6 +330,7 @@ export function renderEmail(event: EmailEvent, data: EmailData, ctx: {
     text: renderText(content, { name: ctx.recipientName }),
     from: BRAND.from,
     replyTo: BRAND.replyTo,
-    category: event === 'business_approved' ? 'security_emails' : 'tx_emails',
+    category: event === 'business_approved' || event === 'team_invite' ? 'security_emails' : 'tx_emails',
   }
 }
+
