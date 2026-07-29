@@ -139,8 +139,19 @@ export default function TeamTab() {
           </span>
         </div>
         {loading ? (
-          <div className="p-5 text-[0.85rem] text-white/50">Loading…</div>
+          <div className="p-5 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white/[0.05] animate-pulse" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-40 rounded bg-white/[0.05] animate-pulse" />
+                  <div className="h-2.5 w-24 rounded bg-white/[0.04] animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
+
           <div>
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-merchant-border last:border-0">
               <div className="w-9 h-9 rounded-full bg-accent/20 text-accent-bright flex items-center justify-center text-[0.8rem] font-medium">
