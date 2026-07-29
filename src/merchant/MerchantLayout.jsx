@@ -27,6 +27,8 @@ const titleByPath = {
 }
 
 export default function MerchantLayout() {
+  const { loading: authLoading, user } = useAuth()
+  const { loading: bizLoading } = useBusinesses()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [compactSidebar, setCompactSidebar] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -36,6 +38,8 @@ export default function MerchantLayout() {
   const title = titleByPath[pathname] ?? 'Dashboard'
   // Sentra is a full-bleed chat canvas: no topbar, like the reference.
   const bareCanvas = pathname === '/merchant/sentra'
+  const hydrating = authLoading || (user && bizLoading)
+
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex">
