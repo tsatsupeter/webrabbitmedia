@@ -219,7 +219,7 @@ export default function BrandsCard() {
         onClose={() => setDrawer({ open: false, brand: null })}
         businessId={active?.id}
         brand={drawer.brand}
-        onSaved={load}
+        onSaved={() => { notifyBrandsChanged(); load() }}
       />
     </>
   )
