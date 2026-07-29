@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { useBusinesses } from '../hooks/useBusinesses'
+import AddBusinessOrBrandDrawer from './components/AddBusinessOrBrandDrawer'
+import NewBrandDrawer from './components/NewBrandDrawer'
+import NewBusinessDrawer from './components/NewBusinessDrawer'
+
 
 function Avatar({ name, logoUrl, className = '' }) {
   const letter = (name || '?').charAt(0).toUpperCase()
@@ -24,10 +27,13 @@ function Avatar({ name, logoUrl, className = '' }) {
 }
 
 export default function BusinessSwitcher({ compact = false }) {
-  const navigate = useNavigate()
-  const { businesses, active, activeId, setActive } = useBusinesses()
+  const { businesses, active, activeId, setActive, refresh } = useBusinesses()
   const [open, setOpen] = useState(false)
+  const [chooser, setChooser] = useState(false)
+  const [brandOpen, setBrandOpen] = useState(false)
+  const [bizOpen, setBizOpen] = useState(false)
   const wrapRef = useRef(null)
+
 
   useEffect(() => {
     function onDoc(e) {
@@ -108,7 +114,7 @@ export default function BusinessSwitcher({ compact = false }) {
             type="button"
             onClick={() => {
               setOpen(false)
-              navigate('/auth/create-business')
+              setChooser(true)
             }}
             className="w-full flex items-center gap-3 px-3 py-3 border-t border-merchant-border hover:bg-white/[0.04] text-left"
           >
@@ -119,6 +125,25 @@ export default function BusinessSwitcher({ compact = false }) {
           </button>
         </div>
       )}
+
+      <AddBusinessOrBrandDrawer
+        open={chooser}
+        onClose={() => setChooser(false)}
+        onPickBrand={() => { setChooser(false); setBrandOpen(true) }}
+        onPickBusiness={() => { setChooser(false); setBizOpen(true) }}
+      />
+      <NewBrandDrawer
+        open={brandOpen}
+        onClose={() => setBrandOpen(false)}
+        businessId={activeId}
+        onSaved={refresh}
+      />
+      <NewBusinessDrawer
+        open={bizOpen}
+        onClose={() => setBizOpen(false)}
+        onCreated={refresh}
+      />
     </div>
+
   )
 }

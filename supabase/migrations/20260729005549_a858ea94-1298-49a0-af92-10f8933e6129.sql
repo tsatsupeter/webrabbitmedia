@@ -1,0 +1,1 @@
+ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS support_email text, ADD COLUMN IF NOT EXISTS description text;
