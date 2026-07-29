@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
-import { useBusinesses } from '../../../hooks/useBusinesses'
+import { useBusinesses, notifyBrandsChanged } from '../../../hooks/useBusinesses'
 import { Card } from './Section'
 import Icon from '../../Icon'
 import BrandDrawer from './BrandDrawer'
