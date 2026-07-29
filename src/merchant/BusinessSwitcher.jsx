@@ -27,10 +27,13 @@ function Avatar({ name, logoUrl, className = '' }) {
 }
 
 export default function BusinessSwitcher({ compact = false }) {
-  const navigate = useNavigate()
-  const { businesses, active, activeId, setActive } = useBusinesses()
+  const { businesses, active, activeId, setActive, refresh } = useBusinesses()
   const [open, setOpen] = useState(false)
+  const [chooser, setChooser] = useState(false)
+  const [brandOpen, setBrandOpen] = useState(false)
+  const [bizOpen, setBizOpen] = useState(false)
   const wrapRef = useRef(null)
+
 
   useEffect(() => {
     function onDoc(e) {
