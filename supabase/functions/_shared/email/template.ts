@@ -8,6 +8,8 @@ export type EmailEvent =
   | 'payout_failed'
   | 'business_approved'
   | 'verification_submitted'
+  | 'team_invite'
+
 
 export type EmailData = Record<string, unknown>
 
