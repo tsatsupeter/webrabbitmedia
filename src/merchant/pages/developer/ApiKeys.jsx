@@ -301,10 +301,12 @@ export default function ApiKeys() {
               type="button"
               disabled={!name.trim() || submitting}
               onClick={create}
-              className="h-10 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-50"
+              className="h-10 px-5 rounded-lg bg-white text-black text-[0.85rem] font-medium hover:bg-white/90 disabled:opacity-50 inline-flex items-center gap-2"
             >
+              {submitting && <InlineSpinner size={13} className="border-black/20 border-t-black" />}
               {submitting ? 'Creating…' : 'Create'}
             </button>
+
           </div>
         </div>
       </Modal>
