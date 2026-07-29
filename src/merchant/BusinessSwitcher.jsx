@@ -3,10 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { useBusinesses } from '../hooks/useBusinesses'
 
-function Avatar({ name, className = '' }) {
+function Avatar({ name, logoUrl, className = '' }) {
   const letter = (name || '?').charAt(0).toUpperCase()
   const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-cyan-500', 'bg-accent']
   const idx = (name || '').charCodeAt(0) % colors.length
+  if (logoUrl) {
+    return (
+      <div className={`shrink-0 w-8 h-8 rounded-full overflow-hidden ring-1 ring-white/10 bg-white/[0.06] ${className}`}>
+        <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+      </div>
+    )
+  }
   return (
     <div
       className={`shrink-0 w-8 h-8 rounded-full ${colors[idx]} flex items-center justify-center text-white text-[0.8rem] font-semibold ${className}`}
