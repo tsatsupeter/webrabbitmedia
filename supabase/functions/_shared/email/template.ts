@@ -330,6 +330,7 @@ export function renderEmail(event: EmailEvent, data: EmailData, ctx: {
     text: renderText(content, { name: ctx.recipientName }),
     from: BRAND.from,
     replyTo: BRAND.replyTo,
-    category: event === 'business_approved' ? 'security_emails' : 'tx_emails',
+    category: event === 'business_approved' || event === 'team_invite' ? 'security_emails' : 'tx_emails',
   }
 }
+
