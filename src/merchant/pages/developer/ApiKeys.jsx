@@ -180,17 +180,35 @@ export default function ApiKeys() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-white/40 text-sm">
-                  Loading…
-                </td>
-              </tr>
+              Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i} className="border-t border-white/[0.05]">
+                  {Array.from({ length: 5 }).map((__, j) => (
+                    <td key={j} className="px-5 py-4">
+                      <div className="h-3 rounded bg-white/[0.05] animate-pulse" style={{ width: `${45 + ((i + j) * 11) % 45}%` }} />
+                    </td>
+                  ))}
+                </tr>
+              ))
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-16 text-center text-white/40 text-sm">
-                  No API keys yet. Create one to get started.
+                <td colSpan={5} className="px-5 py-6">
+                  <EmptyState
+                    icon="key"
+                    title={`No ${mode === 'live' ? 'live' : 'test'} API keys yet`}
+                    description="Create your first key to authenticate requests from your app or website."
+                    action={
+                      <button
+                        type="button"
+                        onClick={openCreate}
+                        className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white text-black text-[0.82rem] font-medium hover:bg-white/90"
+                      >
+                        <Icon name="plus" size={14} /> Add API key
+                      </button>
+                    }
+                  />
                 </td>
               </tr>
+
             ) : (
               rows.map((r) => (
                 <tr key={r.id} className="border-t border-white/[0.05] hover:bg-white/[0.02]">
