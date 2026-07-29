@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     }
     let parsed: unknown = resendBody
     try { parsed = JSON.parse(resendBody) } catch { /* keep string */ }
-    return json({ sent: true, event, to: profile.email, resend: parsed })
+    return json({ sent: true, event, to: recipientEmail, resend: parsed })
   } catch (e) {
     console.error('send-email error', e)
     return json({ error: e instanceof Error ? e.message : 'internal_error' }, 500)
