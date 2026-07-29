@@ -27,8 +27,10 @@ import Balances from './merchant/pages/payouts/Balances'
 import History from './merchant/pages/payouts/History'
 import Collect from './merchant/pages/sales/Collect'
 import Settings from './merchant/pages/Settings'
+import AcceptInvite from './pages/AcceptInvite'
 
 import ProtectedRoute from './components/ProtectedRoute'
+
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
         <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/docs/:section" element={<Docs />} />
+        <Route path="/team/accept" element={<AcceptInvite />} />
+
         <Route
           path="/auth/create-business"
           element={
