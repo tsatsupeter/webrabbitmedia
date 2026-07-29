@@ -34,36 +34,48 @@ Deno.serve(async (req) => {
     const userId = body?.user_id as string | undefined
     const businessId = body?.business_id as string | undefined
     const data = (body?.data ?? {}) as Record<string, unknown>
+    const toEmailOverride = (body?.to_email as string | undefined) || (data?.to_email as string | undefined)
+    const toNameOverride = (body?.to_name as string | undefined) || (data?.to_name as string | undefined)
 
     const validEvents: EmailEvent[] = [
       'payment_received', 'payment_failed',
       'payout_completed', 'payout_failed',
       'business_approved', 'verification_submitted',
+      'team_invite',
     ]
     if (!event || !validEvents.includes(event)) return json({ error: 'invalid_event' }, 400)
-    if (!userId) return json({ error: 'user_id_required' }, 400)
-
+    if (!userId && !toEmailOverride) return json({ error: 'user_id_or_to_email_required' }, 400)
 
     const [{ data: profile }, { data: prefs }, { data: business }] = await Promise.all([
-      db.from('profiles').select('email, full_name').eq('id', userId).maybeSingle(),
-      db.from('notification_preferences').select('tx_emails, security_emails').eq('user_id', userId).maybeSingle(),
+      userId
+        ? db.from('profiles').select('email, full_name').eq('id', userId).maybeSingle()
+        : Promise.resolve({ data: null as { email: string | null; full_name: string | null } | null }),
+      userId
+        ? db.from('notification_preferences').select('tx_emails, security_emails').eq('user_id', userId).maybeSingle()
+        : Promise.resolve({ data: null }),
       businessId
         ? db.from('businesses').select('name').eq('id', businessId).maybeSingle()
         : Promise.resolve({ data: null }),
     ])
 
-    if (!profile?.email) return json({ skipped: 'no_email' })
+    const recipientEmail = toEmailOverride || profile?.email
+    const recipientName = toNameOverride || profile?.full_name || undefined
+    if (!recipientEmail) return json({ skipped: 'no_email' })
 
     const rendered = renderEmail(event, data, {
-      recipientName: profile.full_name ?? undefined,
+      recipientName,
       businessName: business?.name ?? undefined,
     })
 
     // Default toggles to true when the user hasn't saved preferences yet.
-    const txOn = prefs?.tx_emails ?? true
-    const secOn = prefs?.security_emails ?? true
-    const allowed = rendered.category === 'security_emails' ? secOn : txOn
-    if (!allowed) return json({ skipped: 'preference_off', category: rendered.category })
+    // Skip preference gating when there's no user profile (external invitee).
+    if (profile) {
+      const txOn = prefs?.tx_emails ?? true
+      const secOn = prefs?.security_emails ?? true
+      const allowed = rendered.category === 'security_emails' ? secOn : txOn
+      if (!allowed) return json({ skipped: 'preference_off', category: rendered.category })
+    }
+
 
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
