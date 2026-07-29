@@ -3,10 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { useBusinesses } from '../hooks/useBusinesses'
 
-function Avatar({ name, className = '' }) {
+function Avatar({ name, logoUrl, className = '' }) {
   const letter = (name || '?').charAt(0).toUpperCase()
   const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-cyan-500', 'bg-accent']
   const idx = (name || '').charCodeAt(0) % colors.length
+  if (logoUrl) {
+    return (
+      <div className={`shrink-0 w-8 h-8 rounded-full overflow-hidden ring-1 ring-white/10 bg-white/[0.06] ${className}`}>
+        <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+      </div>
+    )
+  }
   return (
     <div
       className={`shrink-0 w-8 h-8 rounded-full ${colors[idx]} flex items-center justify-center text-white text-[0.8rem] font-semibold ${className}`}
@@ -30,7 +37,8 @@ export default function BusinessSwitcher({ compact = false }) {
     return () => document.removeEventListener('mousedown', onDoc)
   }, [open])
 
-  const title = active?.name || 'Web Rabbit'
+  const title = active?.brand?.name || active?.name || 'Web Rabbit'
+  const activeLogo = active?.brand?.logoUrl || null
 
   return (
     <div ref={wrapRef} className="relative">
@@ -45,7 +53,7 @@ export default function BusinessSwitcher({ compact = false }) {
         aria-label={title}
       >
         {active ? (
-          <Avatar name={active.name} />
+          <Avatar name={title} logoUrl={activeLogo} />
         ) : (
           <img
             src="/webrabbitmedia-logo-green.jpeg"
@@ -77,21 +85,24 @@ export default function BusinessSwitcher({ compact = false }) {
             {businesses.length === 0 && (
               <div className="px-4 py-3 text-[0.8rem] text-white/40">No businesses yet</div>
             )}
-            {businesses.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => {
-                  setActive(b.id)
-                  setOpen(false)
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/[0.04] text-left"
-              >
-                <Avatar name={b.name} />
-                <span className="flex-1 text-[0.85rem] text-white/80 truncate">{b.name}</span>
-                {b.id === activeId && <Icon name="check" size={14} className="text-accent-bright" />}
-              </button>
-            ))}
+            {businesses.map((b) => {
+              const label = b.brand?.name || b.name
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    setActive(b.id)
+                    setOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/[0.04] text-left"
+                >
+                  <Avatar name={label} logoUrl={b.brand?.logoUrl} />
+                  <span className="flex-1 text-[0.85rem] text-white/80 truncate">{label}</span>
+                  {b.id === activeId && <Icon name="check" size={14} className="text-accent-bright" />}
+                </button>
+              )
+            })}
           </div>
           <button
             type="button"

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
-import { useBusinesses } from '../../../hooks/useBusinesses'
+import { useBusinesses, notifyBrandsChanged } from '../../../hooks/useBusinesses'
 import { Card } from './Section'
 import Icon from '../../Icon'
 import BrandDrawer from './BrandDrawer'
@@ -108,6 +108,7 @@ export default function BrandsCard() {
     const { error } = await supabase.from('brands').update({ is_primary: true }).eq('id', id)
     if (error) return toast.error(error.message)
     toast.success('Primary brand updated')
+    notifyBrandsChanged()
     load()
   }
 
@@ -116,6 +117,7 @@ export default function BrandsCard() {
     const { error } = await supabase.from('brands').delete().eq('id', brand.id)
     if (error) return toast.error(error.message)
     toast.success('Brand deleted')
+    notifyBrandsChanged()
     load()
   }
 
@@ -217,7 +219,7 @@ export default function BrandsCard() {
         onClose={() => setDrawer({ open: false, brand: null })}
         businessId={active?.id}
         brand={drawer.brand}
-        onSaved={load}
+        onSaved={() => { notifyBrandsChanged(); load() }}
       />
     </>
   )
