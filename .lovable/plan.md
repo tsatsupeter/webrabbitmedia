@@ -1,37 +1,46 @@
+
 ## Goal
-Make the "Log in with OTP" flow deliver a working 6-digit code.
 
-## Findings
-- `src/pages/Auth.jsx` already implements the full OTP UI + logic:
-  - `sendOtp()` → `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: mode === 'signup' } })`
-  - `verifyOtp()` → `supabase.auth.verifyOtp({ email, token, type: 'email' })`
-- The frontend is correct; the reason it doesn't "work" today is the **Supabase Magic Link email template** ships with only the magic-link URL and no `{{ .Token }}` placeholder, so users receive a link but not the 6-digit code the UI asks for.
-- There is no `auth-email-hook` deployed, so auth emails are sent by Supabase's built-in mailer using the templates in the Supabase dashboard.
+Give you a ready-to-paste Supabase **Magic Link** email template that matches the same branded style (logo, colors, typography, layout) as the transactional emails we already send via Resend, and that renders the 6-digit OTP code prominently so the OTP login flow works end to end.
 
-## Changes
+## What you'll get
 
-### 1. Frontend polish (`src/pages/Auth.jsx`)
-Small robustness fixes only — no redesign:
-- After `sendOtp` succeeds, focus the OTP input.
-- Add a "Resend code" button on the OTP step with a 30s cooldown (calls `sendOtp` again).
-- Show a clearer error if `verifyOtp` fails (invalid/expired) and reset the input.
-- Trim the OTP input to digits (already done) and auto-submit when 6 digits are entered.
+A single HTML template to paste into **Supabase → Authentication → Email Templates → Magic Link**, styled to match `supabase/functions/_shared/email/template.ts`:
 
-No changes to backend, DB, or edge functions.
+- Web Rabbit Media logo in the header (hosted URL, since Supabase templates can't import local assets)
+- Same background, card, border-radius, and font stack as the transactional emails
+- Large, letter-spaced 6-digit code block using `{{ .Token }}`
+- Fallback "Sign in" button using `{{ .ConfirmationURL }}`
+- Short expiry/security note in the footer
+- Plain-text friendly structure (safe for Gmail/Outlook)
 
-### 2. User action required (manual — I'll link it)
-In Supabase Dashboard → Authentication → Email Templates → **Magic Link**, replace the template body with one that includes both the OTP token and (optional) magic link. Minimum required snippet:
+## Sections in the template
 
-```html
-<h2>Your login code</h2>
-<p>Enter this code to sign in:</p>
-<p style="font-size:24px;font-weight:700;letter-spacing:4px">{{ .Token }}</p>
-<p>Or click the link: <a href="{{ .ConfirmationURL }}">Sign in</a></p>
-<p>This code expires in 1 hour.</p>
+```text
+[ Header ]     Logo + "Web Rabbit Media"
+[ Body ]       "Your login code"
+               [ 123456 ]  ← large, monospace, letter-spaced
+               "This code expires in 10 minutes."
+               [ Sign in button ] (fallback link)
+[ Footer ]     Security note + support line
 ```
 
-Without `{{ .Token }}` in the template, the 6-digit code field cannot work — this is the actual blocker. I'll provide a direct link to the template editor.
+## Steps
 
-## Out of scope
-- Not scaffolding a custom `auth-email-hook` (would replace the current Supabase-mailer flow and require additional DNS/domain setup; can be done later if you want fully branded auth emails matching the transactional template).
-- No changes to Google/GitHub OAuth, password login, or the merchant dashboard.
+1. Confirm the exact logo URL to embed (see question below) so the template is copy-paste ready.
+2. I'll produce the full HTML for the **Magic Link** template, mirroring the tokens used in `_shared/email/template.ts` (colors, spacing, font).
+3. Optionally, I can also provide matching templates for the other Supabase auth emails (Confirm signup, Reset password, Change email, Invite) so the entire auth email surface is visually consistent with the transactional ones.
+
+## Technical notes
+
+- Supabase auth email templates are static HTML with Go template variables (`{{ .Token }}`, `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .SiteURL }}`). They are rendered by GoTrue, not by our Resend edge function, so styles must be inlined.
+- Images must be absolute HTTPS URLs (Supabase can't attach local files). I'll reference the same logo URL used by the transactional template.
+- No code changes are required in the app for the Magic Link template itself — only pasting into the Supabase dashboard.
+
+## Question before I write it
+
+Which logo URL should the template use? Options:
+- The same URL currently referenced in `supabase/functions/_shared/email/template.ts` (preferred, guarantees consistency).
+- A different hosted URL you want to standardize on.
+
+If you just say "same as transactional", I'll read that file and reuse the exact URL.
