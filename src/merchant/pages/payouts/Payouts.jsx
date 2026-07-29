@@ -5,6 +5,8 @@ import { useBusinesses } from '../../../hooks/useBusinesses'
 import { useMerchantMode } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import WithdrawModal from '../../components/WithdrawModal'
+import { PageLoader } from '../../components/EmptyState'
+
 
 const MIN_WITHDRAW = 2000
 
