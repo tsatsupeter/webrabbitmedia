@@ -26,6 +26,9 @@ function GithubMark({ size = 18 }) {
 
 export default function Auth() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const redirectParam = params.get('redirect') || '/merchant'
+  const safeRedirect = redirectParam.startsWith('/') ? redirectParam : '/merchant'
   const { session } = useAuth()
   const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [step, setStep] = useState('email') // 'email' | 'password' | 'otp'
@@ -49,10 +52,11 @@ export default function Auth() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    if (session) navigate('/merchant', { replace: true })
-  }, [session, navigate])
+    if (session) navigate(safeRedirect, { replace: true })
+  }, [session, navigate, safeRedirect])
 
-  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/merchant` : undefined
+  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}${safeRedirect}` : undefined
+
 
   async function handleOAuth(provider) {
     setBusy(true)
