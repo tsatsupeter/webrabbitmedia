@@ -85,8 +85,9 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: rendered.from,
-        to: [profile.email],
+        to: [recipientEmail],
         reply_to: rendered.replyTo,
+
         subject: rendered.subject,
         html: rendered.html,
         text: rendered.text,
