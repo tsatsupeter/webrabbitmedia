@@ -1,46 +1,47 @@
-
 ## Goal
+Make the "Invite team member" flow on `/merchant/settings?tab=team` fully functional end-to-end: send a real branded invite email, let the recipient accept it via a secure link, and reflect membership in the app.
 
-Give you a ready-to-paste Supabase **Magic Link** email template that matches the same branded style (logo, colors, typography, layout) as the transactional emails we already send via Resend, and that renders the 6-digit OTP code prominently so the OTP login flow works end to end.
+## Redesign the Invite modal (match reference)
+Replace the inline invite form in `TeamTab.jsx` with a centered `Modal` matching the uploaded screenshots:
+- Header: icon + "Invite team members" + subtitle "Invite colleagues to your business on Web Rabbit Media"
+- Row: email input + role dropdown (Editor / Viewer) inside a single pill; Editor = `admin` under the hood, Viewer = `viewer`
+- "+ Add More" to queue multiple invites in one submit
+- Footer: "Close" + "Send Invite" primary button
+- Loading and per-row validation states, disabled Send until at least one valid email
 
-## What you'll get
+## Backend — new `team-invites` edge function
+Single function with actions: `create`, `revoke`, `resend`, `accept`.
+- `create`: verifies caller is owner of the business, inserts rows into `team_invites`, then calls the existing `send-email` function for each recipient using a new `team_invite` event.
+- `resend`: re-sends invite email, extends `expires_at`.
+- `revoke`: deletes pending invite (owner only).
+- `accept`: public (uses token from URL). Requires the caller to be authenticated; matches token, checks not expired / not accepted, inserts into `team_members` (`user_id = auth.uid()`, role from invite), marks invite `accepted_at = now()`. Rejects if invite email doesn't match the signed-in user's email.
 
-A single HTML template to paste into **Supabase → Authentication → Email Templates → Magic Link**, styled to match `supabase/functions/_shared/email/template.ts`:
+## Email template
+Extend `supabase/functions/_shared/email/template.ts` with a `team_invite` event that renders:
+- Subject: "You've been invited to join {business} on Web Rabbit Media"
+- Body: inviter name, business name, role, CTA "Accept invitation" → `https://webrabbitmedia.com/team/accept?token=…`, expiry note, 14-day validity.
+Whitelist the event in `send-email/index.ts`.
 
-- Web Rabbit Media logo in the header (hosted URL, since Supabase templates can't import local assets)
-- Same background, card, border-radius, and font stack as the transactional emails
-- Large, letter-spaced 6-digit code block using `{{ .Token }}`
-- Fallback "Sign in" button using `{{ .ConfirmationURL }}`
-- Short expiry/security note in the footer
-- Plain-text friendly structure (safe for Gmail/Outlook)
+## Accept page
+New route `/team/accept` (`src/pages/AcceptInvite.jsx`):
+- If not signed in, redirect to `/auth?redirect=/team/accept?token=…`.
+- On mount, call `team-invites` with `action: 'accept'` and token.
+- Show states: loading, success (button "Go to dashboard"), already accepted, expired, email mismatch, invalid token.
 
-## Sections in the template
+## Frontend TeamTab wiring
+- Load members with a joined view of email/full_name via a small RPC or by fetching profiles in a second query keyed on `user_id`.
+- List pending invites with Resend + Revoke actions calling the new function.
+- After successful invite: toast "Invitation sent to {email}", refresh list, close modal.
 
-```text
-[ Header ]     Logo + "Web Rabbit Media"
-[ Body ]       "Your login code"
-               [ 123456 ]  ← large, monospace, letter-spaced
-               "This code expires in 10 minutes."
-               [ Sign in button ] (fallback link)
-[ Footer ]     Security note + support line
-```
+## Files touched
+- `src/merchant/pages/settings/TeamTab.jsx` (rebuilt modal + list + actions)
+- `src/App.jsx` (add `/team/accept` route, public)
+- `src/pages/AcceptInvite.jsx` (new)
+- `supabase/functions/team-invites/index.ts` (new)
+- `supabase/functions/_shared/email/template.ts` (add `team_invite`)
+- `supabase/functions/send-email/index.ts` (whitelist event, allow `data.email` override so invites go to the invitee, not the inviter)
+- `supabase/config.toml` (register new function, `verify_jwt = true` for team-invites, no JWT for accept path handled inside)
 
-## Steps
-
-1. Confirm the exact logo URL to embed (see question below) so the template is copy-paste ready.
-2. I'll produce the full HTML for the **Magic Link** template, mirroring the tokens used in `_shared/email/template.ts` (colors, spacing, font).
-3. Optionally, I can also provide matching templates for the other Supabase auth emails (Confirm signup, Reset password, Change email, Invite) so the entire auth email surface is visually consistent with the transactional ones.
-
-## Technical notes
-
-- Supabase auth email templates are static HTML with Go template variables (`{{ .Token }}`, `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .SiteURL }}`). They are rendered by GoTrue, not by our Resend edge function, so styles must be inlined.
-- Images must be absolute HTTPS URLs (Supabase can't attach local files). I'll reference the same logo URL used by the transactional template.
-- No code changes are required in the app for the Magic Link template itself — only pasting into the Supabase dashboard.
-
-## Question before I write it
-
-Which logo URL should the template use? Options:
-- The same URL currently referenced in `supabase/functions/_shared/email/template.ts` (preferred, guarantees consistency).
-- A different hosted URL you want to standardize on.
-
-If you just say "same as transactional", I'll read that file and reuse the exact URL.
+## Notes
+- No schema change needed — `team_invites` and `team_members` already exist with correct RLS.
+- The `send-email` function currently requires `user_id` and looks up the recipient from `profiles`. For invites the recipient may not have an account yet, so `send-email` will be updated to accept an optional `to_email` + `to_name` override and skip the profile lookup when provided (still gated by the shared secret).
