@@ -1,47 +1,57 @@
-## Goal
-Make the "Invite team member" flow on `/merchant/settings?tab=team` fully functional end-to-end: send a real branded invite email, let the recipient accept it via a secure link, and reflect membership in the app.
+## Add Brands panel to Business settings
 
-## Redesign the Invite modal (match reference)
-Replace the inline invite form in `TeamTab.jsx` with a centered `Modal` matching the uploaded screenshots:
-- Header: icon + "Invite team members" + subtitle "Invite colleagues to your business on Web Rabbit Media"
-- Row: email input + role dropdown (Editor / Viewer) inside a single pill; Editor = `admin` under the hood, Viewer = `viewer`
-- "+ Add More" to queue multiple invites in one submit
-- Footer: "Close" + "Send Invite" primary button
-- Loading and per-row validation states, disabled Send until at least one valid email
+Add a "Brands Under [Business Name]" card alongside the existing Business Details card on the Business tab, matching the Dodo reference (primary brand row with logo, name, and overflow menu, plus a "+" to add more).
 
-## Backend — new `team-invites` edge function
-Single function with actions: `create`, `revoke`, `resend`, `accept`.
-- `create`: verifies caller is owner of the business, inserts rows into `team_invites`, then calls the existing `send-email` function for each recipient using a new `team_invite` event.
-- `resend`: re-sends invite email, extends `expires_at`.
-- `revoke`: deletes pending invite (owner only).
-- `accept`: public (uses token from URL). Requires the caller to be authenticated; matches token, checks not expired / not accepted, inserts into `team_members` (`user_id = auth.uid()`, role from invite), marks invite `accepted_at = now()`. Rejects if invite email doesn't match the signed-in user's email.
+### Layout
 
-## Email template
-Extend `supabase/functions/_shared/email/template.ts` with a `team_invite` event that renders:
-- Subject: "You've been invited to join {business} on Web Rabbit Media"
-- Body: inviter name, business name, role, CTA "Accept invitation" → `https://webrabbitmedia.com/team/accept?token=…`, expiry note, 14-day validity.
-Whitelist the event in `send-email/index.ts`.
+Turn the Business tab into a two-column grid on desktop:
 
-## Accept page
-New route `/team/accept` (`src/pages/AcceptInvite.jsx`):
-- If not signed in, redirect to `/auth?redirect=/team/accept?token=…`.
-- On mount, call `team-invites` with `action: 'accept'` and token.
-- Show states: loading, success (button "Go to dashboard"), already accepted, expired, email mismatch, invalid token.
+```text
++--------------------------------+  +---------------------------+
+| Business Details (existing)    |  | Brands Under {name}   [+] |
+| ...                            |  | Brands help you organise… |
+|                                |  |---------------------------|
+|                                |  | PRIMARY BRAND             |
+|                                |  | [logo] SportsApi Pro  ...|
+|                                |  | [logo] Second brand   ...|
++--------------------------------+  +---------------------------+
+```
 
-## Frontend TeamTab wiring
-- Load members with a joined view of email/full_name via a small RPC or by fetching profiles in a second query keyed on `user_id`.
-- List pending invites with Resend + Revoke actions calling the new function.
-- After successful invite: toast "Invitation sent to {email}", refresh list, close modal.
+On mobile the Brands card stacks below Business Details.
 
-## Files touched
-- `src/merchant/pages/settings/TeamTab.jsx` (rebuilt modal + list + actions)
-- `src/App.jsx` (add `/team/accept` route, public)
-- `src/pages/AcceptInvite.jsx` (new)
-- `supabase/functions/team-invites/index.ts` (new)
-- `supabase/functions/_shared/email/template.ts` (add `team_invite`)
-- `supabase/functions/send-email/index.ts` (whitelist event, allow `data.email` override so invites go to the invitee, not the inviter)
-- `supabase/config.toml` (register new function, `verify_jwt = true` for team-invites, no JWT for accept path handled inside)
+### Data model — new `public.brands` table
 
-## Notes
-- No schema change needed — `team_invites` and `team_members` already exist with correct RLS.
-- The `send-email` function currently requires `user_id` and looks up the recipient from `profiles`. For invites the recipient may not have an account yet, so `send-email` will be updated to accept an optional `to_email` + `to_name` override and skip the profile lookup when provided (still gated by the shared secret).
+Fields (in addition to id/created_at/updated_at):
+- business_id, user_id
+- name (required)
+- logo_path (Supabase storage path in `avatars` bucket, reused)
+- statement_descriptor (short text shown on card statements)
+- url
+- is_primary (bool)
+
+Rules:
+- Owner-only RLS (auth.uid() = user_id).
+- Trigger keeps exactly one primary per business; first brand inserted becomes primary automatically.
+- On business creation, an initial brand row is seeded from the business `name` (via `handle_new_business` trigger) so existing/new businesses always show a Primary Brand.
+- Standard GRANTs to authenticated + service_role.
+
+Backfill: for every existing business, insert one primary brand using the business name if none exists.
+
+### UI pieces
+
+- `BrandsCard.jsx` (new, under `src/merchant/pages/settings/`): fetches brands for active business, shows description + "+" button, lists brands grouped with a "PRIMARY BRAND" subheader for the primary and a plain list for the rest. Each row: circular logo (or initial fallback), brand name, three-dot menu (Edit, Set as primary, Delete — Delete disabled on the primary if it's the only one).
+- `BrandDrawer.jsx` (new): slide-in drawer used for Add and Edit with fields Name, URL, Statement descriptor, Logo upload (private `avatars` bucket, signed URL for display). Save writes to `brands`.
+- `BusinessTab.jsx`: wrap the two cards in a `grid md:grid-cols-[1fr_360px] gap-6` layout and mount `<BrandsCard />`.
+
+### Consistency
+
+- Reuse existing `Card`, `SectionHeader`, `Modal`/drawer patterns and dark-theme tokens.
+- Logo upload reuses the existing `avatars` bucket + signed-URL pattern already used by the profile drawer.
+- Toasts via `sonner` for success/error, same style as Team invites.
+
+### Out of scope (for now)
+
+- No changes to checkout / statement descriptors elsewhere in the app; this panel just stores the brand info.
+- Brand-scoped transactions/products are not introduced.
+
+If you'd like brands to actually drive statement descriptors on Payswitch calls or appear on customer receipts later, that's a follow-up.

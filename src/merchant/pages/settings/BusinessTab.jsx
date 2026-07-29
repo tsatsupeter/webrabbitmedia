@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useBusinesses } from '../../../hooks/useBusinesses'
 import { Card, SectionHeader } from './Section'
 import Icon from '../../Icon'
+import BrandsCard from './BrandsCard'
 
 function Row({ label, value }) {
   return (
@@ -30,24 +31,29 @@ export default function BusinessTab() {
         }
       />
 
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[0.9rem] font-medium text-white">{active.name}</h3>
-          <span className={`text-[0.7rem] px-2 py-0.5 rounded border ${
-            approved
-              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-              : 'bg-orange-500/15 text-orange-300 border-orange-500/30'
-          }`}>
-            {approved ? 'Verified' : (active.status || 'pending').replace(/^./, (c) => c.toUpperCase())}
-          </span>
-        </div>
-        <Row label="Business type" value={active.business_type} />
-        <Row label="Website" value={active.website_url} />
-        <Row label="Product category" value={active.product_category} />
-        <Row label="Location" value={active.location} />
-        <Row label="Referral source" value={active.referral_source} />
-        <Row label="Monetization" value={active.monetization_note} />
-      </Card>
+      <div className="grid gap-6 md:grid-cols-[1fr_360px] items-start">
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[0.9rem] font-medium text-white">{active.name}</h3>
+            <span className={`text-[0.7rem] px-2 py-0.5 rounded border ${
+              approved
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                : 'bg-orange-500/15 text-orange-300 border-orange-500/30'
+            }`}>
+              {approved ? 'Verified' : (active.status || 'pending').replace(/^./, (c) => c.toUpperCase())}
+            </span>
+          </div>
+          <Row label="Business type" value={active.business_type} />
+          <Row label="Website" value={active.website_url} />
+          <Row label="Product category" value={active.product_category} />
+          <Row label="Location" value={active.location} />
+          <Row label="Referral source" value={active.referral_source} />
+          <Row label="Monetization" value={active.monetization_note} />
+        </Card>
+
+        <BrandsCard />
+      </div>
     </div>
   )
 }
+
