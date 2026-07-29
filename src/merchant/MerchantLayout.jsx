@@ -83,8 +83,9 @@ export default function MerchantLayout() {
           </button>
         )}
         <main className="flex-1 overflow-y-auto flex flex-col">
-          <Outlet />
+          {hydrating ? <PageLoader label="Loading your dashboard…" /> : <Outlet />}
         </main>
+
       </div>
     </div>
   )
