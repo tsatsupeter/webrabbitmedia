@@ -5,21 +5,21 @@ export default function Webhooks() {
   return (
     <>
       <p>
-        Signed webhook delivery is on the roadmap. Today, the recommended way to observe the outcome of a
-        Mobile Money charge (which begins as <code>pending</code> while the customer authorises on their
-        phone) is to poll the retrieve endpoint.
+        Mobile Money and Hosted Checkout payments are asynchronous: a charge starts as <code>pending</code>{' '}
+        while the customer authorises it. Our platform receives the provider callback and settles your
+        ledger automatically — you observe the outcome by polling the retrieve endpoint.
       </p>
 
-      <Callout type="info" title="Coming soon">
-        HMAC-signed <code>POST</code> webhooks for <code>collection.approved</code>,{' '}
-        <code>collection.failed</code>, <code>payout.approved</code>, and <code>payout.failed</code> events
-        — configurable per business, with automatic retries and a signing secret you can rotate.
+      <Callout type="info" title="Merchant webhooks coming soon">
+        HMAC-signed <code>POST</code> webhooks for <code>collection.approved</code> and{' '}
+        <code>collection.failed</code> events — configurable per business, with automatic retries and a
+        signing secret you can rotate.
       </Callout>
 
       <h2 id="polling">Polling pattern (today)</h2>
       <p>
-        After the initial <code>POST /v1/collect/momo</code> returns <code>202</code> (or the request times
-        out), poll <code>GET /v1/transactions/{'{transaction_id}'}</code> every 3 seconds up to 20 times
+        After <code>POST /v1/collect/momo</code> returns <code>202</code> (or after a checkout session is
+        created), poll <code>GET /v1/transactions/{'{transaction_id}'}</code> every 3 seconds up to 20 times
         (~60 seconds — the standard MoMo prompt window).
       </p>
 
