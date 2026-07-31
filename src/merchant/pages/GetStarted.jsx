@@ -170,7 +170,7 @@ export default function GetStarted() {
             tint="green"
             icon="wallet"
             title="Collect a payment"
-            desc="Charge a customer on MTN, Vodafone, AirtelTigo or G-Money right from the dashboard."
+            desc="Charge a customer on MTN, Telecel or AirtelTigo right from the dashboard."
             to="/merchant/sales/collect"
             cta="Open collect"
           />

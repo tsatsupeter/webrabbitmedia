@@ -20,8 +20,8 @@ const RANGES = [
 const STATUS_OPTIONS = ['approved', 'pending', 'failed', 'reversed']
 const METHOD_OPTIONS = [
   { key: 'MTN', label: 'MTN MoMo' },
-  { key: 'VOD', label: 'Vodafone Cash' },
-  { key: 'ATL', label: 'AirtelTigo' },
+  { key: 'TELECEL', label: 'Telecel Cash' },
+  { key: 'AT', label: 'AirtelTigo' },
   { key: 'CARD', label: 'Card' },
 ]
 
@@ -52,7 +52,10 @@ function MethodChip({ channel, rSwitch }) {
   const key = (rSwitch || channel || '').toUpperCase()
   const meta = {
     MTN: { label: 'MTN MoMo', color: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
-    VOD: { label: 'Vodafone Cash', color: 'bg-red-500/15 text-red-400 border-red-500/30' },
+    TELECEL: { label: 'Telecel Cash', color: 'bg-red-500/15 text-red-400 border-red-500/30' },
+    VDF: { label: 'Telecel Cash', color: 'bg-red-500/15 text-red-400 border-red-500/30' },
+    VOD: { label: 'Telecel Cash', color: 'bg-red-500/15 text-red-400 border-red-500/30' },
+    AT: { label: 'AirtelTigo', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
     ATL: { label: 'AirtelTigo', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
     VISA: { label: 'Visa', color: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' },
     MASTERCARD: { label: 'Mastercard', color: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
