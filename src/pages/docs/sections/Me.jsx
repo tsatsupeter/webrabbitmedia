@@ -25,7 +25,7 @@ export default function Me() {
         code={`{
   "mode": "live",
   "business_id": "b1c8e9…",
-  "business_name": "LetGoalBet",
+  "business_name": "Acme Ghana Ltd",
   "business_status": "approved",
   "live_ready": true,
   "api_key_id": "9f2c…",

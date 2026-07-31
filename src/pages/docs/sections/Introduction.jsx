@@ -21,16 +21,31 @@ export default function Introduction() {
       <p><code>{API_BASE}/{API_VERSION}</code></p>
       <Callout type="info" title="One base URL — mode is inferred from the key">
         There is no separate sandbox host. The mode of the request (<strong>test</strong> or{' '}
-        <strong>live</strong>) is determined by the key prefix: <code>wr_test_...</code> hits sandbox rails,
-        <code> wr_live_...</code> hits production rails. Test and live data are fully isolated.
+        <strong>live</strong>) is determined by the key prefix: <code>wr_test_...</code> runs against the
+        built-in simulator, <code>wr_live_...</code> hits production rails. Test and live data are fully
+        isolated.
       </Callout>
+
+      <h2 id="health">Health check</h2>
+      <p>
+        <code>GET {API_BASE}/{API_VERSION}/health</code> is unauthenticated and returns{' '}
+        <code>{'{ "ok": true, "service": "webrabbit-api", "request_id": "…" }'}</code> with HTTP{' '}
+        <code>200</code>. Use it for uptime monitoring — it is still subject to the unauthenticated per-IP
+        rate limit.
+      </p>
 
       <h2 id="modes">Test mode & Live mode</h2>
       <p>
-        Every business has two independent environments. <strong>Test mode</strong> uses sandbox credentials —
-        no real money moves. <strong>Live mode</strong> unlocks after your business is approved and processes
-        real payments.
+        Every business has two independent environments. <strong>Live mode</strong> unlocks after your
+        business is approved and processes real payments.
       </p>
+      <Callout type="warn" title="Test mode is simulated, not a sandbox">
+        Our provider offers no sandbox, so <code>wr_test_</code> keys never reach the mobile money network.
+        A test charge is accepted as <code>pending</code>, then settles as <code>approved</code> after about
+        eight seconds — unless the amount ends in <code>.99</code>, which settles as <code>failed</code> so
+        you can exercise both paths. See{' '}
+        <Link to="/docs/test-data" className="text-primary hover:underline">Test data</Link>.
+      </Callout>
       <Callout type="warn" title="Live mode requires approval">
         You can create live API keys, but charges will fail until your business status is <code>approved</code>.
         Complete verification from the <Link to="/merchant/verification">Verification</Link> page.
