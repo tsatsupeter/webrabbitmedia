@@ -7,47 +7,35 @@ export default function TestData() {
     <>
       <p>
         Use these values with a <code>wr_test_</code> key against{' '}
-        <code>https://api.webrabbitmedia.com</code>. Test-mode requests never move real money and are
-        completely isolated from live-mode data.
+        <code>https://api.webrabbitmedia.com</code>. Test-mode requests never move real money, never reach
+        the payment provider, and are completely isolated from live-mode data.
       </p>
 
-      <Callout type="warn" title="Test mode only">
-        These numbers and cards will be rejected in live mode. Live requests must use real customer
-        credentials.
+      <Callout type="warn" title="Test mode is simulated end to end">
+        Our provider does not offer a sandbox, so test mode runs on a built-in simulator. Any valid-looking
+        phone number works — the outcome is driven by the <strong>amount</strong>, not the number.
       </Callout>
 
-      <h2 id="momo">Test Mobile Money numbers</h2>
+      <h2 id="momo">Test outcomes</h2>
       <p className="text-sm text-white/60 mb-3">
         Accepted phone formats: local <code>0240000000</code> or international <code>233240000000</code>.
+        Networks: <code>MTN</code>, <code>TELECEL</code>, <code>AT</code>.
       </p>
       <ParamTable
         rows={[
-          { name: '0240000000', type: 'MTN · approved', desc: 'Happy-path approval within ~5 seconds.' },
-          { name: '0550000000', type: 'MTN · pending', desc: 'Stays pending — use to test polling and reconciliation.' },
-          { name: '0509999999', type: 'VDF · failed (101)', desc: 'Simulates insufficient funds.' },
-          { name: '0270000000', type: 'ATL · failed (103)', desc: 'Simulates wrong PIN / timeout.' },
+          { name: 'amount: 10.00', type: 'pending → approved', desc: 'Any amount not ending in .99 settles as approved after ~8 seconds.' },
+          { name: 'amount: 10.99', type: 'pending → failed', desc: 'Any amount ending in .99 settles as failed — use to test the failure path.' },
+          { name: 'Immediately after charging', type: 'pending', desc: 'The first ~8 seconds always report pending, so you can exercise your polling loop.' },
         ]}
       />
 
-      <h2 id="cards">Test cards</h2>
-      <ParamTable
-        rows={[
-          { name: '4242 4242 4242 4242', type: 'Visa · approved', desc: 'Any future expiry, any 3-digit CVV.' },
-          { name: '5555 5555 5555 4444', type: 'Mastercard · approved', desc: 'Any future expiry, any 3-digit CVV.' },
-          { name: '4000 0000 0000 0002', type: 'Visa · declined', desc: 'Simulates issuer decline (code 100).' },
-          { name: '4012 0010 3714 1112', type: 'Visa · 3-D Secure', desc: 'Returns 202 + authorization_url so you can test the ACS redirect flow.' },
-        ]}
-      />
-
-      <h2 id="bank">Test bank account</h2>
-      <p className="text-sm text-white/60 mb-3">
-        For <code>/v1/payout/bank</code> preview + full payout in test mode.
+      <h2 id="cards">Hosted Checkout in test mode</h2>
+      <p className="text-sm text-white/60">
+        <code>POST /v1/checkout/session</code> returns a simulated <code>checkout_url</code> in test mode. It
+        is not a real payment page — drive the outcome by polling{' '}
+        <code>GET /v1/transactions/{'{id}'}</code>, which follows the same amount-based rules above. Live
+        card testing must be done with a <code>wr_live_</code> key and a real card.
       </p>
-      <ParamTable
-        rows={[
-          { name: '1082000131684304', type: 'ADB · Kweku Adjei', desc: 'Guaranteed name-enquiry match in test mode. Use bank_code "ADB".' },
-        ]}
-      />
 
       <h2 id="example">Example test charge</h2>
       <CodeBlock
