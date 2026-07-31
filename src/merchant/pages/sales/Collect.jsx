@@ -61,12 +61,17 @@ export default function Collect() {
       if (error) throw error
       if (data?.error) throw new Error(data.error)
       if (data?.status === 'approved') {
-        toast.success(`Charged ${money(amt)} — prompt sent to ${phone}`)
+        toast.success(`Charged ${money(amt)} from ${phone}`)
       } else if (data?.status === 'pending') {
-        toast.message('Awaiting customer approval on their phone')
+        toast.message(
+          data?.simulated
+            ? 'Test charge created — it settles automatically in a few seconds'
+            : `Prompt sent to ${phone}${data?.otp_code ? ` — customer can also dial ${data.otp_code}` : ''}`,
+        )
       } else {
         toast.error(data?.reason || 'Charge failed')
       }
+
       setAmount('')
       setCustomerName('')
       setPhone('')
