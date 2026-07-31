@@ -1,8 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { bankNameEnquiry, bankAuthorize } from '../_shared/bankPayout.ts'
-import { isValidBankCode } from '../_shared/banks.ts'
-import { newTxnId } from '../_shared/payswitch.ts'
 
 const MIN_PAYOUT = 2000
 
