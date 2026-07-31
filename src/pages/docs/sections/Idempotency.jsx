@@ -7,7 +7,7 @@ export default function Idempotency() {
     <>
       <p>
         Network failures happen. Retrying a request without safeguards can double-charge a customer or send a
-        payout twice. The <code>Idempotency-Key</code> header lets you retry safely.
+        charge twice. The <code>Idempotency-Key</code> header lets you retry safely.
       </p>
 
       <h2 id="how-it-works">How it works</h2>
@@ -17,7 +17,7 @@ export default function Idempotency() {
         Retries with the same key return the original response with an <code>Idempotent-Replayed: true</code> header.
       </p>
       <Callout type="info" title="Supported endpoints">
-        <code>POST /v1/collect/momo</code> and <code>POST /v1/payout/momo</code>. Card collections and read
+        <code>POST /v1/collect/momo</code>. Hosted checkout sessions and read
         endpoints don't need it (reads are already idempotent).
       </Callout>
 
