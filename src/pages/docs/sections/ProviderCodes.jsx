@@ -5,46 +5,45 @@ export default function ProviderCodes() {
   return (
     <>
       <p>
-        Every collection and payout response includes a <code>code</code> field forwarded from the upstream
-        provider (Payswitch / theTeller). We normalise it into a <code>status</code>
-        (<code>approved</code> · <code>pending</code> · <code>failed</code>) but the raw code is useful for
-        support tickets and analytics.
+        Every collection response includes a <code>code</code> field forwarded from the upstream provider
+        (NaloPay), plus a normalised <code>status</code> (<code>approved</code> · <code>pending</code> ·{' '}
+        <code>failed</code>). The raw code is useful for support tickets and analytics.
       </p>
       <Callout type="info" title="Always a string">
-        <code>code</code> is returned as a JSON string on every endpoint (<code>"000"</code>, <code>"111"</code>,
-        <code>"999"</code>). Codes are zero-padded — never parse them as numbers.
+        <code>code</code> is returned as a JSON string on every endpoint, e.g.{' '}
+        <code>"PAY-CRTD-0055"</code>. Never parse it as a number.
       </Callout>
 
-      <h2 id="approved">Approved</h2>
+      <h2 id="approved">Lifecycle statuses</h2>
+      <p className="text-sm text-white/60 mb-3">
+        The provider reports a transaction state on the callback and on the status endpoint. We map it as
+        follows:
+      </p>
       <ParamTable
         rows={[
-          { name: '000', type: 'approved', desc: 'Transaction successful.' },
-          { name: '111', type: 'pending', desc: 'Payment request sent — awaiting customer authorisation on their handset.' },
+          { name: 'PENDING', type: 'pending', desc: 'Charge created — the customer still has to authorise on their handset or complete checkout.' },
+          { name: 'COMPLETED', type: 'approved', desc: 'Payment settled. The 15% platform fee is applied and your net balance is credited.' },
+          { name: 'FAILED', type: 'failed', desc: 'Declined, wrong PIN, insufficient funds, or terminated by the customer.' },
+          { name: 'CANCELLED', type: 'failed', desc: 'Customer cancelled the prompt or abandoned the checkout page.' },
+          { name: 'EXPIRED', type: 'failed', desc: 'The prompt or checkout session timed out before payment.' },
         ]}
       />
 
-      <h2 id="declined">Declined by customer / issuer</h2>
+      <h2 id="declined">Provider codes</h2>
       <ParamTable
         rows={[
-          { name: '100', type: 'failed', desc: 'Transaction declined, not permitted, or generally failed at the issuer.' },
-          { name: '101', type: 'failed', desc: 'Insufficient funds in wallet.' },
-          { name: '102', type: 'failed', desc: 'Number not registered for Mobile Money.' },
-          { name: '103', type: 'failed', desc: 'Wrong PIN or transaction timed out.' },
-          { name: '104', type: 'failed', desc: 'Transaction declined or terminated by the customer.' },
-          { name: '105', type: 'failed', desc: 'Invalid amount or general failure. Retry with a new transaction id.' },
-          { name: '107', type: 'retryable', desc: 'USSD channel busy — transient. Prompt the customer to retry shortly.' },
-          { name: '114', type: 'failed', desc: 'Invalid voucher code (MTN approval voucher flow).' },
+          { name: 'TOKEN-CRTD-0050', type: 'internal', desc: 'Provider auth token issued. Handled for you — never surfaced on a transaction.' },
+          { name: 'PAY-CRTD-0055', type: 'pending', desc: 'Collection created successfully; awaiting customer authorisation.' },
+          { name: 'CHECKOUT-CRTD-0071', type: 'pending', desc: 'Hosted checkout session created; customer redirected to the payment page.' },
         ]}
       />
 
-      <h2 id="auth">Auth / configuration</h2>
+      <h2 id="auth">Platform codes</h2>
       <ParamTable
         rows={[
-          { name: '200', type: 'pending', desc: '3-D Secure (VBV) required on a card charge — the response includes authorization_url; redirect the customer there and verify server-side afterwards. See Collect · Card.' },
-          { name: '600', type: 'failed', desc: 'Access denied by the upstream provider.' },
-          { name: '909', type: 'failed', desc: 'Duplicate provider transaction id — should not happen; retry with an Idempotency-Key.' },
-          { name: '979', type: 'failed', desc: 'Access denied — invalid upstream credential. Contact support.' },
-          { name: '999', type: 'failed', desc: 'Access denied — merchant id not set. Contact support. (Not a "not found" signal — unknown ids return HTTP 404, see below.)' },
+          { name: 'upstream_error', type: 'failed', desc: 'We could not reach the provider (HTTP 502). Safe to retry with the same Idempotency-Key.' },
+          { name: 'insufficient_scope', type: 'error', desc: 'HTTP 403 — the API key is read-only. Create a key with write access.' },
+          { name: 'provider_unsupported', type: 'error', desc: 'HTTP 501 — payout endpoints are retired; payouts are settled manually from the dashboard.' },
         ]}
       />
 
