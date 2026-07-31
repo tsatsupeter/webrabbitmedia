@@ -7,11 +7,10 @@ import Icon from '../../Icon'
 
 const NETWORKS = [
   { value: 'MTN', label: 'MTN' },
-  { value: 'VDF', label: 'Vodafone' },
-  { value: 'ATL', label: 'AirtelTigo' },
-  { value: 'TGO', label: 'Tigo' },
-  { value: 'GMY', label: 'G-Money' },
+  { value: 'TELECEL', label: 'Telecel (Vodafone)' },
+  { value: 'AT', label: 'AirtelTigo' },
 ]
+
 
 const FEE_BPS = 1500 // 15%
 
