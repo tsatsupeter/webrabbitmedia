@@ -18,6 +18,11 @@ export default function RateLimits() {
           { name: 'Unauthenticated (per IP)', type: '20 req / 10 s', desc: 'Protects the 401 path from brute-force key guessing.' },
         ]}
       />
+      <p className="text-sm text-white/60 mt-2">
+        The unauthenticated per-IP limit also applies to <code>GET /v1/health</code>. If the native binding
+        is unavailable, the edge falls back to a KV sliding-window limiter with the same 60 req / 10 s
+        budget; the <code>429</code> body is identical, only <code>retry-after</code> may vary.
+      </p>
       <Callout type="note" title="Need higher limits?">
         Contact <a href="mailto:support@webrabbitmedia.com" className="text-primary hover:underline">support@webrabbitmedia.com</a> with your business id and expected peak RPS.
       </Callout>

@@ -29,6 +29,7 @@ export const groups = [
         headings: [
           { id: 'overview', text: 'Overview', depth: 2 },
           { id: 'base-url', text: 'Base URL', depth: 2 },
+          { id: 'health', text: 'Health check', depth: 2 },
           { id: 'modes', text: 'Test mode & Live mode', depth: 2 },
         ],
       },

@@ -23,6 +23,11 @@ export default function HostedCheckout() {
         The legacy path <code>/{API_VERSION}/collect/card</code> is an alias for this endpoint. Raw card
         (PAN) charges are no longer accepted.
       </p>
+      <Callout type="warn" title="Payout endpoints are retired">
+        <code>POST /{API_VERSION}/payout/momo</code> and <code>POST /{API_VERSION}/payout/bank</code> now
+        return <code>501 provider_unsupported</code>. Payouts are initiated manually from{' '}
+        <a href="/merchant/payouts" className="text-primary hover:underline">Payouts</a> in the dashboard.
+      </Callout>
 
       <h2 id="request">Request</h2>
       <ParamTable
