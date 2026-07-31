@@ -1,8 +1,8 @@
 // Merchant-side reconciliation: authenticates via the caller's Supabase session,
-// checks business ownership, then re-polls Payswitch to unstick pending rows.
+// checks business ownership, then re-polls NaloPay to unstick pending rows.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
-import { baseUrl, creds } from '../_shared/payswitch.ts'
+import { mapStatus, merchantId, naloPost, simulateStatus } from '../_shared/nalo.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
     const db = admin()
     const { data: existing } = await db.from('transactions')
-      .select('id, business_id, user_id, mode, gross_amount, status, created_at')
+      .select('id, business_id, user_id, mode, gross_amount, status, created_at, provider_reference')
       .eq('provider_transaction_id', transaction_id)
       .maybeSingle()
     if (!existing) throw new HttpError(404, 'transaction_not_found')
@@ -40,37 +40,46 @@ Deno.serve(async (req) => {
       .select('commission_bps').eq('business_id', existing.business_id).maybeSingle()
     const commission_bps = settings?.commission_bps ?? 1500
 
-    const { merchantId } = creds(existing.mode as 'test' | 'live')
-    const res = await fetch(`${baseUrl(existing.mode as 'test' | 'live')}/v1.1/users/transactions/${transaction_id}/status`, {
-      headers: { 'Content-Type': 'application/json', 'Merchant-Id': merchantId, 'Cache-Control': 'no-cache' },
-    })
-    const json = await res.json().catch(() => ({} as any))
+    const gross = Number(existing.gross_amount)
+    let json: any = null
+    let newStatus: 'pending' | 'approved' | 'failed'
 
-    const code = json?.code != null ? String(json.code) : null
-    const approved = code === '000' || json?.status === 'approved'
-    const ageMs = Date.now() - new Date(existing.created_at).getTime()
-    const notFoundUpstream = code === '999' && ageMs > 2 * 60 * 1000
-    const failed = !approved && ((json?.status && json?.status !== 'pending') || notFoundUpstream)
-    const newStatus = approved ? 'approved' : (failed ? 'failed' : 'pending')
+    if (existing.mode === 'test') {
+      newStatus = simulateStatus(existing.created_at, gross)
+      json = { simulated: true, data: { status: newStatus.toUpperCase(), amount: gross } }
+    } else {
+      const res = await naloPost('/clientapi/collection-status/', {
+        merchant_id: merchantId(),
+        order_id: existing.provider_reference,
+      }, { token: false })
+      json = res.json
+      newStatus = mapStatus(json?.data?.status)
+    }
 
     let changed = false
     if (existing.status !== newStatus) {
-      const fee = approved
-        ? Math.round(Number(existing.gross_amount) * (commission_bps / 10000) * 100) / 100
+      const fee = newStatus === 'approved'
+        ? Math.round(gross * (commission_bps / 10000) * 100) / 100
         : 0
-      const net = Math.round((Number(existing.gross_amount) - fee) * 100) / 100
+      const net = Math.round((gross - fee) * 100) / 100
       await db.from('transactions').update({
         status: newStatus,
         fee_amount: fee,
         net_amount: net,
-        provider_code: code,
-        provider_reason: json?.reason ?? (notFoundUpstream ? 'Transaction not found upstream' : null),
+        provider_code: json?.code != null ? String(json.code) : null,
+        provider_reason: json?.message ?? null,
         raw_response: json,
       }).eq('id', existing.id)
       changed = true
     }
 
-    return jsonResponse({ transaction_id, resolved_status: newStatus, changed, code, reason: json?.reason ?? null })
+    return jsonResponse({
+      transaction_id,
+      resolved_status: newStatus,
+      changed,
+      code: json?.code != null ? String(json.code) : null,
+      reason: json?.message ?? null,
+    })
   } catch (e) {
     return handleError(e)
   }
