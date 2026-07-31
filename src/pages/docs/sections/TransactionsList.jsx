@@ -22,7 +22,7 @@ export default function TransactionsList() {
           { name: 'cursor', type: 'string · ISO 8601', desc: 'created_at value from the previous response\'s next_cursor.' },
           { name: 'status', type: 'enum', desc: 'Filter by status: approved · pending · failed.' },
           { name: 'channel', type: 'enum', desc: 'momo · card.' },
-          { name: 'type', type: 'enum', desc: 'collection · payout.' },
+          { name: 'type', type: 'enum', desc: 'collection.' },
           { name: 'from', type: 'string · ISO 8601', desc: 'Inclusive lower bound on created_at.' },
           { name: 'to', type: 'string · ISO 8601', desc: 'Inclusive upper bound on created_at.' },
         ]}

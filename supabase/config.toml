@@ -3,16 +3,16 @@ project_id = "eydjkasswyygiycitnml"
 [functions.collect-momo]
 verify_jwt = false
 
-[functions.collect-card]
-verify_jwt = false
-
-[functions.payout-momo]
+[functions.checkout-session]
 verify_jwt = false
 
 [functions.transaction-status]
 verify_jwt = false
 
 [functions.list-transactions]
+verify_jwt = false
+
+[functions.nalo-callback]
 verify_jwt = false
 
 [functions.send-email]

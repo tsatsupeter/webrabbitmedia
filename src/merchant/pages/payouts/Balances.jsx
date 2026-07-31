@@ -29,7 +29,7 @@ const ALL_TYPES = ['Payment', 'Payment Fees', 'Payout']
 
 const CHANNEL_META = {
   'MTN Mobile Money': { flag: '🇬🇭', sub: 'MTN · Ghana', color: 'text-yellow-400' },
-  'Vodafone Mobile Money': { flag: '🇬🇭', sub: 'Vodafone · Ghana', color: 'text-red-400' },
+  'Telecel Mobile Money': { flag: '🇬🇭', sub: 'Telecel · Ghana', color: 'text-red-400' },
   'AirtelTigo Mobile Money': { flag: '🇬🇭', sub: 'AirtelTigo · Ghana', color: 'text-blue-400' },
   'Mobile Money': { flag: '🇬🇭', sub: 'Ghana', color: 'text-white/70' },
   Card: { flag: '💳', sub: 'Visa / Mastercard', color: 'text-white/70' },
@@ -41,7 +41,7 @@ function channelLabel(t) {
   if (ch === 'momo') {
     const s = (t.r_switch || '').toUpperCase()
     if (s === 'MTN') return 'MTN Mobile Money'
-    if (s === 'VDF' || s === 'VOD') return 'Vodafone Mobile Money'
+    if (s === 'VDF' || s === 'VOD' || s === 'TELECEL') return 'Telecel Mobile Money'
     if (s === 'ATL' || s === 'TGO' || s === 'AT') return 'AirtelTigo Mobile Money'
     return 'Mobile Money'
   }

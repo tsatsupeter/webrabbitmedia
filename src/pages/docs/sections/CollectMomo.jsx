@@ -9,7 +9,7 @@ export default function CollectMomo() {
     <>
       <p>
         Charge a customer over Mobile Money. The customer receives a prompt on their phone to authorise the
-        payment.
+        payment, so the charge always starts as <code>pending</code> and settles asynchronously.
       </p>
       <Callout type="warn" title="Requires write access">
         The API key must have <code>write</code> access. Read-only keys receive{' '}
@@ -20,9 +20,9 @@ export default function CollectMomo() {
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/momo`} />
       <Callout type="info" title="Supported networks">
         Pass the <code>network</code> field using one of these codes:{' '}
-        <code>MTN</code> · <code>VDF</code> (Vodafone) · <code>ATL</code> (AirtelTigo) ·{' '}
-        <code>TGO</code> (Tigo — legacy, still accepted) · <code>ZPY</code> (Zeepay) ·{' '}
-        <code>GMY</code> (G-Money).
+        <code>MTN</code> · <code>TELECEL</code> (formerly Vodafone) · <code>AT</code> (AirtelTigo).
+        Legacy codes <code>VDF</code>, <code>ATL</code> and <code>TGO</code> are still accepted and mapped
+        automatically.
       </Callout>
       <p className="text-sm text-white/60 mt-2">
         <code>subscriber_number</code> accepts either the local format <code>0240000000</code> or the
@@ -35,8 +35,9 @@ export default function CollectMomo() {
         rows={[
           { name: 'amount', type: 'number', required: true, desc: 'Amount in GHS. Accepts number or numeric string, e.g. 10.50.' },
           { name: 'subscriber_number', type: 'string', required: true, desc: 'Customer phone number, 10–12 digits, e.g. "0240000000".' },
-          { name: 'network', type: 'enum', required: true, desc: 'One of MTN, VDF, ATL, TGO, ZPY, GMY.' },
+          { name: 'network', type: 'enum', required: true, desc: 'One of MTN, TELECEL, AT.' },
           { name: 'desc', type: 'string', desc: 'Description shown in your dashboard. Max 100 chars.' },
+          { name: 'customer_name', type: 'string', desc: 'Name attached to the mobile money account.' },
           { name: 'customer_email', type: 'string', desc: 'Optional email captured with the transaction.' },
         ]}
       />
@@ -90,38 +91,44 @@ const tx = await res.json()`,
       <h2 id="response">Response</h2>
       <CodeBlock
         lang="json"
-        filename="Response · 201 Approved"
+        filename="Response · 202 Pending"
         code={`{
   "transaction_id": "521888807466",
-  "status": "approved",
-  "code": "000",
-  "reason": "Transaction Successful",
+  "order_id": "FPewDB25nodznJawcNykhx",
+  "status": "pending",
+  "code": "PAY-CRTD-0055",
+  "reason": null,
+  "otp_code": "None*252#",
   "gross_amount": 10.5,
-  "fee_amount": 1.58,
-  "net_amount": 8.92,
+  "fee_amount": 0,
+  "net_amount": 10.5,
   "currency": "GHS"
 }`}
       />
       <ParamTable
         rows={[
           { name: 'transaction_id', type: 'string', desc: '12-digit Web Rabbit transaction id. Use this to poll status.' },
-          { name: 'status', type: 'enum', desc: 'approved · pending · failed.' },
-          { name: 'code', type: 'string', desc: 'Upstream Payswitch code. "000" is success.' },
-          { name: 'reason', type: 'string', desc: 'Human-readable reason from the upstream provider.' },
+          { name: 'order_id', type: 'string', desc: 'Provider order id for the collection.' },
+          { name: 'status', type: 'enum', desc: 'pending · approved · failed. MoMo charges start pending.' },
+          { name: 'code', type: 'string', desc: 'Upstream provider code, e.g. "PAY-CRTD-0055".' },
+          { name: 'otp_code', type: 'string', desc: 'USSD string the customer can dial if no prompt arrives.' },
           { name: 'gross_amount', type: 'number', desc: 'Amount charged, before fee.' },
-          { name: 'fee_amount', type: 'number', desc: 'Platform fee deducted (15% of gross on approved charges).' },
-          { name: 'net_amount', type: 'number', desc: 'Amount credited to your balance.' },
+          { name: 'fee_amount', type: 'number', desc: 'Platform fee (15%), applied once the charge is approved.' },
+          { name: 'net_amount', type: 'number', desc: 'Amount credited to your balance after settlement.' },
           { name: 'currency', type: 'string', desc: 'Always "GHS" today.' },
         ]}
       />
       <Callout type="note" title="HTTP status">
-        <code>201</code> for approved, <code>202</code> for pending (customer still to authorise on their phone),
-        <code>200</code> for a resolved failure. All responses include an <code>x-request-id</code> header
-        — save it if you need support. See{' '}
-        <a href="/docs/provider-codes" className="text-primary hover:underline">provider codes</a> for the
-        full <code>code</code> field reference, and{' '}
-        <a href="/docs/webhooks" className="text-primary hover:underline">webhooks</a> for the recommended
-        polling pattern while a charge is pending.
+        <code>202</code> for pending (the usual case — the customer still has to authorise on their phone),
+        <code>201</code> if the provider settles immediately, <code>200</code> for a resolved failure. All
+        responses include an <code>x-request-id</code> header — save it if you need support. The final
+        outcome is confirmed by{' '}
+        <a href="/docs/webhooks" className="text-primary hover:underline">polling the retrieve endpoint</a>.
+      </Callout>
+      <Callout type="info" title="Test mode is simulated">
+        The provider has no sandbox, so <code>wr_test_</code> keys never reach the network. A test charge
+        stays pending for ~8 seconds, then settles as approved — unless the amount ends in{' '}
+        <code>.99</code>, which settles as failed so you can test both paths.
       </Callout>
     </>
   )

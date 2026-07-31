@@ -18,7 +18,7 @@ export default function TransactionsRetrieve() {
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="GET" path={`/${API_VERSION}/transactions/{transaction_id}`} />
       <Callout type="info" title="ID format">
-        <code>transaction_id</code> is the 12-digit id returned from <code>/v1/collect/*</code> or <code>/v1/payout/*</code>.
+        <code>transaction_id</code> is the 12-digit id returned from <code>/v1/collect/momo</code> or <code>/v1/checkout/session</code>.
       </Callout>
 
       <h2 id="response">Response</h2>

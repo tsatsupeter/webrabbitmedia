@@ -1,11 +1,12 @@
-// Merchant dashboard MoMo collection. Authenticates via the caller's Supabase
-// session (JWT), validates ownership of the business, then charges Payswitch
-// using the correct test/live credentials based on the requested mode.
+// Merchant dashboard MoMo collection via NaloPay. Authenticates via the caller's
+// Supabase session (JWT), validates ownership of the business, then creates a
+// NaloPay collection (or runs the built-in simulator in test mode).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
-import { creds, fmtAmount, newTxnId, payswitchPost } from '../_shared/payswitch.ts'
-
-const NETWORKS = new Set(['MTN', 'VDF', 'ATL', 'TGO', 'GMY'])
+import {
+  callbackUrl, mapStatus, merchantId, naloPost, newReference, normalizeNetwork,
+  simulateOrderId, transHash,
+} from '../_shared/nalo.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -30,14 +31,14 @@ Deno.serve(async (req) => {
     const mode = body.mode === 'live' ? 'live' : 'test'
     const amount = Number(body.amount)
     const subscriber_number = String(body.subscriber_number || '').trim()
-    const network = String(body.network || '').toUpperCase()
+    const network = normalizeNetwork(String(body.network || ''))
     const customer_name = String(body.customer_name || '').slice(0, 100)
     const desc = String(body.desc || `Payment from ${customer_name || subscriber_number}`).slice(0, 100)
 
     if (!business_id) throw new HttpError(400, 'business_id required')
     if (!(amount > 0)) throw new HttpError(400, 'amount must be > 0')
     if (!/^\d{10,12}$/.test(subscriber_number)) throw new HttpError(400, 'phone number invalid')
-    if (!NETWORKS.has(network)) throw new HttpError(400, 'network invalid')
+    if (!network) throw new HttpError(400, 'network invalid (MTN|AT|TELECEL)')
 
     const db = admin()
     const { data: business } = await db
@@ -58,18 +59,17 @@ Deno.serve(async (req) => {
       .maybeSingle()
     const commission_bps = settings?.commission_bps ?? 1500
 
-    const provider_transaction_id = newTxnId()
-    const { merchantId } = creds(mode)
+    const reference = newReference()
 
     await db.from('transactions').insert({
       business_id: business.id,
       user_id: business.user_id,
       api_key_id: null,
       mode,
-      provider: 'payswitch',
+      provider: 'nalo',
       type: 'collection',
       channel: 'momo',
-      provider_transaction_id,
+      provider_transaction_id: reference,
       subscriber_number,
       r_switch: network,
       description: desc,
@@ -82,26 +82,41 @@ Deno.serve(async (req) => {
 
     let json: any = null
     let upstreamErr: Error | null = null
-    try {
-      const res = await payswitchPost(mode, '/v1.1/transaction/process', {
-        amount: fmtAmount(amount),
-        processing_code: '000200',
-        transaction_id: provider_transaction_id,
-        desc,
-        merchant_id: merchantId,
-        subscriber_number,
-        'r-switch': network,
-      })
-      json = res.json
-    } catch (e) {
-      upstreamErr = e instanceof Error ? e : new Error(String(e))
+    let orderId: string | null = null
+    let otpCode: string | null = null
+
+    if (mode === 'test') {
+      orderId = simulateOrderId(reference)
+      otpCode = 'None*252#'
+      json = { simulated: true, data: { order_id: orderId, status: 'PENDING', amount, otp_code: otpCode } }
+    } else {
+      try {
+        const res = await naloPost('/clientapi/collection/', {
+          merchant_id: merchantId(),
+          service_name: 'MOMO_TRANSACTION',
+          trans_hash: await transHash({ account_number: subscriber_number, amount, reference }),
+          account_number: subscriber_number,
+          account_name: customer_name || subscriber_number,
+          description: desc,
+          reference,
+          network,
+          amount,
+          callback: callbackUrl(),
+          extra_data: { reference },
+        })
+        json = res.json
+        if (!res.ok && !json?.success) {
+          upstreamErr = new Error(json?.message || json?.code || `NaloPay error ${res.status}`)
+        }
+        orderId = json?.data?.order_id ?? null
+        otpCode = json?.data?.otp_code ?? null
+      } catch (e) {
+        upstreamErr = e instanceof Error ? e : new Error(String(e))
+      }
     }
 
-    const approved = !upstreamErr && (json?.code === '000' || json?.status === 'approved')
-    const status = upstreamErr
-      ? 'failed'
-      : (approved ? 'approved' : (json?.status === 'pending' ? 'pending' : 'failed'))
-    const fee = approved ? Math.round(amount * (commission_bps / 10000) * 100) / 100 : 0
+    const status = upstreamErr ? 'failed' : mapStatus(json?.data?.status ?? 'PENDING')
+    const fee = status === 'approved' ? Math.round(amount * (commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
 
     await db.from('transactions')
@@ -109,18 +124,22 @@ Deno.serve(async (req) => {
         status,
         fee_amount: fee,
         net_amount: net,
+        provider_reference: orderId,
         provider_code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
-        provider_reason: upstreamErr ? upstreamErr.message : (json?.reason ?? null),
-        raw_response: upstreamErr ? { error: upstreamErr.message } : json,
+        provider_reason: upstreamErr ? upstreamErr.message : (json?.message ?? null),
+        raw_response: upstreamErr ? { error: upstreamErr.message, response: json } : json,
       })
-      .eq('provider_transaction_id', provider_transaction_id)
+      .eq('provider_transaction_id', reference)
       .eq('business_id', business.id)
 
     return jsonResponse({
-      transaction_id: provider_transaction_id,
+      transaction_id: reference,
+      order_id: orderId,
       status: upstreamErr ? 'failed' : status,
       code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
-      reason: upstreamErr ? 'Upstream provider unavailable' : (json?.reason ?? null),
+      reason: upstreamErr ? 'Upstream provider unavailable' : (json?.message ?? null),
+      otp_code: otpCode,
+      simulated: mode === 'test',
       gross_amount: amount,
       fee_amount: fee,
       net_amount: net,

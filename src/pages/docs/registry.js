@@ -7,14 +7,11 @@ import RequestIds from './sections/RequestIds'
 import Errors from './sections/Errors'
 import Fees from './sections/Fees'
 import CollectMomo from './sections/CollectMomo'
-import CollectCard from './sections/CollectCard'
-import PayoutMomo from './sections/PayoutMomo'
-import PayoutBank from './sections/PayoutBank'
+import HostedCheckout from './sections/HostedCheckout'
 import TransactionsList from './sections/TransactionsList'
 import TransactionsRetrieve from './sections/TransactionsRetrieve'
 import ProviderCodes from './sections/ProviderCodes'
 import TestData from './sections/TestData'
-import Banks from './sections/Banks'
 import Webhooks from './sections/Webhooks'
 import Me from './sections/Me'
 
@@ -118,7 +115,7 @@ export const groups = [
       {
         slug: 'collect-momo',
         title: 'Mobile Money',
-        summary: 'Charge a customer over MTN, Vodafone, AirtelTigo, or G-Money.',
+        summary: 'Charge a customer over MTN, Telecel, or AirtelTigo.',
         Component: CollectMomo,
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
@@ -127,42 +124,13 @@ export const groups = [
         ],
       },
       {
-        slug: 'collect-card',
-        title: 'Card',
-        summary: 'Charge a Visa or Mastercard.',
-        Component: CollectCard,
+        slug: 'hosted-checkout',
+        title: 'Hosted Checkout',
+        summary: 'Create a hosted payment page that accepts card and Mobile Money.',
+        Component: HostedCheckout,
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
           { id: 'request', text: 'Request', depth: 2 },
-          { id: 'response', text: 'Response', depth: 2 },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'Payouts',
-    items: [
-      {
-        slug: 'payout-momo',
-        title: 'Mobile Money payout',
-        summary: 'Send funds from your balance to any Ghanaian MoMo wallet.',
-        Component: PayoutMomo,
-        headings: [
-          { id: 'endpoint', text: 'Endpoint', depth: 2 },
-          { id: 'request', text: 'Request', depth: 2 },
-          { id: 'response', text: 'Response', depth: 2 },
-        ],
-      },
-      {
-        slug: 'payout-bank',
-        title: 'Bank payout',
-        summary: 'Two-step name enquiry + authorise transfer to any Ghanaian bank account.',
-        Component: PayoutBank,
-        headings: [
-          { id: 'endpoint', text: 'Endpoint', depth: 2 },
-          { id: 'request', text: 'Request', depth: 2 },
-          { id: 'preview', text: 'Preview (name enquiry only)', depth: 2 },
-          { id: 'charge', text: 'Full payout', depth: 2 },
           { id: 'response', text: 'Response', depth: 2 },
         ],
       },
@@ -212,39 +180,30 @@ export const groups = [
       {
         slug: 'provider-codes',
         title: 'Provider codes',
-        summary: 'Full reference for the upstream code field returned on every transaction.',
+        summary: 'Lifecycle statuses and the upstream code field returned on every transaction.',
         Component: ProviderCodes,
         headings: [
-          { id: 'approved', text: 'Approved', depth: 2 },
-          { id: 'declined', text: 'Declined by customer / issuer', depth: 2 },
-          { id: 'auth', text: 'Auth / configuration', depth: 2 },
+          { id: 'approved', text: 'Lifecycle statuses', depth: 2 },
+          { id: 'declined', text: 'Provider codes', depth: 2 },
+          { id: 'auth', text: 'Platform codes', depth: 2 },
           { id: 'not-found', text: 'Not found', depth: 2 },
         ],
       },
       {
         slug: 'test-data',
         title: 'Test data',
-        summary: 'Test Mobile Money numbers and card PANs that work in test mode.',
+        summary: 'How the built-in test-mode simulator behaves.',
         Component: TestData,
         headings: [
-          { id: 'momo', text: 'Test Mobile Money numbers', depth: 2 },
-          { id: 'cards', text: 'Test cards', depth: 2 },
+          { id: 'momo', text: 'Test outcomes', depth: 2 },
+          { id: 'cards', text: 'Hosted Checkout in test mode', depth: 2 },
           { id: 'example', text: 'Example test charge', depth: 2 },
-        ],
-      },
-      {
-        slug: 'banks',
-        title: 'Banks',
-        summary: 'Every three-letter bank_code accepted by /v1/payout/bank.',
-        Component: Banks,
-        headings: [
-          { id: 'codes', text: 'Bank codes', depth: 2 },
         ],
       },
       {
         slug: 'webhooks',
         title: 'Webhooks',
-        summary: 'Signed webhook delivery is coming — use polling in the meantime.',
+        summary: 'How asynchronous payments settle, and the polling pattern to use today.',
         Component: Webhooks,
         headings: [
           { id: 'polling', text: 'Polling pattern (today)', depth: 2 },

@@ -15,7 +15,7 @@ export default function Authentication() {
         (<code>wr_test_...</code> or <code>wr_live_...</code>) and scoped by access
         (<strong>read</strong> or <strong>read + write</strong>, chosen at creation). Test keys work any time;
         live keys only work once your business is approved. Write scope is required for{' '}
-        <code>/v1/payout/*</code>.
+        <code>/v1/checkout/session</code>.
       </p>
       <Callout type="warn" title="Keep secrets server-side">
         Never embed a secret key in a mobile app, browser bundle, or public repo. Anyone with your key can
@@ -42,7 +42,7 @@ export default function Authentication() {
       </p>
       <ul>
         <li><strong>read</strong> (checkbox off) — can retrieve transactions and account info.</li>
-        <li><strong>read + write</strong> (checkbox on) — everything <code>read</code> can do, plus create collections and payouts.</li>
+        <li><strong>read + write</strong> (checkbox on) — everything <code>read</code> can do, plus create collections and checkout sessions.</li>
       </ul>
       <p>Scope required per endpoint:</p>
       <div className="overflow-x-auto my-4">
@@ -58,8 +58,7 @@ export default function Authentication() {
             <tr className="border-t border-white/10"><td className="px-4 py-2"><code>GET /v1/transactions</code></td><td className="px-4 py-2">read</td></tr>
             <tr className="border-t border-white/10"><td className="px-4 py-2"><code>GET /v1/transactions/{'{id}'}</code></td><td className="px-4 py-2">read</td></tr>
             <tr className="border-t border-white/10"><td className="px-4 py-2"><code>POST /v1/collect/momo</code></td><td className="px-4 py-2"><strong>write</strong></td></tr>
-            <tr className="border-t border-white/10"><td className="px-4 py-2"><code>POST /v1/collect/card</code></td><td className="px-4 py-2"><strong>write</strong></td></tr>
-            <tr className="border-t border-white/10"><td className="px-4 py-2"><code>POST /v1/payout/momo</code></td><td className="px-4 py-2"><strong>write</strong></td></tr>
+            <tr className="border-t border-white/10"><td className="px-4 py-2"><code>POST /v1/checkout/session</code></td><td className="px-4 py-2"><strong>write</strong></td></tr>
           </tbody>
         </table>
       </div>

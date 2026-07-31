@@ -1,5 +1,5 @@
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
-import { baseUrl, creds } from '../_shared/payswitch.ts'
+import { mapStatus, merchantId, naloPost, simulateStatus } from '../_shared/nalo.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -12,23 +12,21 @@ Deno.serve(async (req) => {
     const db = admin()
     // DB-first: unknown ids MUST return 404, not a synthetic "failed" verdict.
     const { data: existing } = await db.from('transactions')
-      .select('id, gross_amount, status, provider_code, provider_reason')
+      .select('id, gross_amount, status, provider_code, provider_reason, provider_reference, created_at')
       .eq('provider_transaction_id', id)
       .eq('business_id', auth.business.id)
       .eq('mode', auth.key.mode)
       .maybeSingle()
 
     if (!existing) {
-      return jsonResponse(
-        { error: 'transaction_not_found', transaction_id: id },
-        404,
-      )
+      return jsonResponse({ error: 'transaction_not_found', transaction_id: id }, 404)
     }
 
     // Already terminal → return our ledger row without re-polling upstream.
     if (existing.status === 'approved' || existing.status === 'failed') {
       return jsonResponse({
         transaction_id: id,
+        order_id: existing.provider_reference,
         code: existing.provider_code != null ? String(existing.provider_code) : null,
         reason: existing.provider_reason,
         status: existing.status,
@@ -36,41 +34,44 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Pending → reconcile with upstream.
-    const mode = auth.key.mode
-    const { merchantId } = creds(mode)
-    const res = await fetch(`${baseUrl(mode)}/v1.1/users/transactions/${id}/status`, {
-      headers: { 'Content-Type': 'application/json', 'Merchant-Id': merchantId, 'Cache-Control': 'no-cache' },
-    })
-    const json = await res.json().catch(() => ({} as any))
+    // Pending → reconcile with upstream (or the test-mode simulator).
+    const gross = Number(existing.gross_amount)
+    let json: any = null
+    let newStatus: 'pending' | 'approved' | 'failed'
 
-    const code = json?.code != null ? String(json.code) : null
-    const approved = code === '000' || json?.status === 'approved'
-    // If upstream has no record of an id we created > 2 minutes ago, it's truly lost — mark failed.
-    const { data: row } = await db.from('transactions').select('created_at').eq('id', existing.id).maybeSingle()
-    const ageMs = row?.created_at ? Date.now() - new Date(row.created_at).getTime() : 0
-    const notFoundUpstream = code === '999' && ageMs > 2 * 60 * 1000
-    const failed = !approved && ((json?.status && json?.status !== 'pending') || notFoundUpstream)
-    const newStatus = approved ? 'approved' : (failed ? 'failed' : 'pending')
+    if (auth.key.mode === 'test') {
+      newStatus = simulateStatus(existing.created_at, gross)
+      json = { simulated: true, data: { status: newStatus.toUpperCase(), amount: gross } }
+    } else {
+      const res = await naloPost('/clientapi/collection-status/', {
+        merchant_id: merchantId(),
+        order_id: existing.provider_reference,
+      }, { token: false })
+      json = res.json
+      newStatus = mapStatus(json?.data?.status)
+    }
 
     if (existing.status !== newStatus) {
-      const fee = approved
-        ? Math.round(Number(existing.gross_amount) * (auth.commission_bps / 10000) * 100) / 100
+      const fee = newStatus === 'approved'
+        ? Math.round(gross * (auth.commission_bps / 10000) * 100) / 100
         : 0
-      const net = Math.round((Number(existing.gross_amount) - fee) * 100) / 100
+      const net = Math.round((gross - fee) * 100) / 100
       await db.from('transactions').update({
-        status: newStatus, fee_amount: fee, net_amount: net,
-        provider_code: code,
-        provider_reason: json?.reason ?? (notFoundUpstream ? 'Transaction not found upstream' : null),
+        status: newStatus,
+        fee_amount: fee,
+        net_amount: net,
+        provider_code: json?.code != null ? String(json.code) : null,
+        provider_reason: json?.message ?? null,
         raw_response: json,
       }).eq('id', existing.id)
     }
 
     return jsonResponse({
       transaction_id: id,
-      code,
-      reason: json?.reason ?? null,
-      status: json?.status ?? newStatus,
+      order_id: existing.provider_reference,
+      code: json?.code != null ? String(json.code) : null,
+      reason: json?.message ?? null,
+      status: json?.data?.status ?? newStatus,
       resolved_status: newStatus,
     })
 
