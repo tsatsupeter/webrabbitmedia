@@ -79,9 +79,9 @@ export default {
           idempotency: r.idempotency,
         })
       }
-      // POST /v1/collect/card
-      if (req.method === 'POST' && path === '/v1/collect/card') {
-        const r = await forward(env, 'collect-card', req, {}, requestId)
+      // POST /v1/checkout/session — NaloPay Hosted Checkout (MoMo or card)
+      if (req.method === 'POST' && (path === '/v1/checkout/session' || path === '/v1/collect/card')) {
+        const r = await forward(env, 'checkout-session', req, {}, requestId)
         return finish(r.response, {
           rl_source: rl.source,
           upstream_status: r.upstreamStatus,
@@ -90,30 +90,12 @@ export default {
           api_key_id: r.meta.apiKeyId,
         })
       }
-      // POST /v1/payout/momo
-      if (req.method === 'POST' && path === '/v1/payout/momo') {
-        const r = await forward(env, 'payout-momo', req, {}, requestId)
-        return finish(r.response, {
-          rl_source: rl.source,
-          upstream_status: r.upstreamStatus,
-          mode: r.meta.mode,
-          business_id: r.meta.businessId,
-          api_key_id: r.meta.apiKeyId,
-          idempotency: r.idempotency,
-        })
+      // Payouts are settled manually — no provider disbursement API.
+      if (req.method === 'POST' && (path === '/v1/payout/momo' || path === '/v1/payout/bank')) {
+        const resp = errorJson('provider_unsupported: payouts are processed manually', 501, requestId)
+        return finish(resp, { rl_source: rl.source })
       }
-      // POST /v1/payout/bank
-      if (req.method === 'POST' && path === '/v1/payout/bank') {
-        const r = await forward(env, 'payout-bank', req, {}, requestId)
-        return finish(r.response, {
-          rl_source: rl.source,
-          upstream_status: r.upstreamStatus,
-          mode: r.meta.mode,
-          business_id: r.meta.businessId,
-          api_key_id: r.meta.apiKeyId,
-          idempotency: r.idempotency,
-        })
-      }
+
       // GET /v1/me
       if (req.method === 'GET' && path === '/v1/me') {
         const r = await forward(env, 'me', req, {}, requestId)
