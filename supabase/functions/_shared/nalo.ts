@@ -163,3 +163,18 @@ export function simulateStatus(createdAt: string | number | Date, amount: number
   if (age < SIMULATED_SETTLE_MS) return 'pending'
   return simulateOutcome(amount)
 }
+
+// Hosted checkout hash: merchant_id + order_id + total_price + reference.
+export async function checkoutHash(parts: { order_id: string; total_price: string; reference: string }) {
+  const secret = Deno.env.get('NALO_SECRET_KEY')
+  if (!secret) throw new Error('NALO_SECRET_KEY not configured')
+  const message = `${merchantId()}${parts.order_id}${parts.total_price}${parts.reference}`
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message)))
+}
