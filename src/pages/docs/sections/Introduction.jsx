@@ -20,10 +20,10 @@ export default function Introduction() {
       <p>All endpoints are served over HTTPS at:</p>
       <p><code>{API_BASE}/{API_VERSION}</code></p>
       <Callout type="info" title="One base URL — mode is inferred from the key">
-        There is no separate sandbox host. The mode of the request (<strong>test</strong> or{' '}
+        There is no separate host to call. The mode of the request (<strong>test</strong> or{' '}
         <strong>live</strong>) is determined by the key prefix: <code>wr_test_...</code> runs against the
-        built-in simulator, <code>wr_live_...</code> hits production rails. Test and live data are fully
-        isolated.
+        provider's sandbox environment, <code>wr_live_...</code> hits production rails. Test and live data
+        are fully isolated.
       </Callout>
 
       <h2 id="health">Health check</h2>
@@ -39,17 +39,17 @@ export default function Introduction() {
         Every business has two independent environments. <strong>Live mode</strong> unlocks after your
         business is approved and processes real payments.
       </p>
-      <Callout type="warn" title="Test mode is simulated, not a sandbox">
-        Our provider offers no sandbox, so <code>wr_test_</code> keys never reach the mobile money network.
-        A test charge is accepted as <code>pending</code>, then settles as <code>approved</code> after about
-        eight seconds — unless the amount ends in <code>.99</code>, which settles as <code>failed</code> so
-        you can exercise both paths. See{' '}
+      <Callout type="info" title="Test mode is a real sandbox">
+        <code>wr_test_</code> keys make real API calls to the provider's sandbox environment — name
+        verification runs first, the collection is accepted as <code>pending</code>, and the outcome is
+        delivered by the provider's settlement callback. No real money moves, and no outcome is faked. See{' '}
         <Link to="/docs/test-data" className="text-primary hover:underline">Test data</Link>.
       </Callout>
       <Callout type="warn" title="Live mode requires approval">
         You can create live API keys, but charges will fail until your business status is <code>approved</code>.
         Complete verification from the <Link to="/merchant/verification">Verification</Link> page.
       </Callout>
+
       <p>
         Only <strong>GHS</strong> is supported today. Amounts are decimal (e.g. <code>10.50</code>) — we
         handle any pesewa-string conversion required by upstream rails.

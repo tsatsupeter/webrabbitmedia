@@ -22,10 +22,11 @@ export default function Authentication() {
         create charges on your behalf.
       </Callout>
       <Callout type="info" title="One base URL — mode inferred from the key">
-        There is no separate sandbox host. <code>wr_test_...</code> keys run against the built-in simulator
-        and<code> wr_live_...</code> keys hit production rails — both against{' '}
+        There is no separate host to call. <code>wr_test_...</code> keys run against the provider's
+        sandbox environment and<code> wr_live_...</code> keys hit production rails — both against{' '}
         <code>https://api.webrabbitmedia.com</code>. Test and live data are fully isolated.
       </Callout>
+
 
       <h2 id="sending-the-key">Sending the key</h2>
       <CodeBlock
