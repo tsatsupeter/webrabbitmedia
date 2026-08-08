@@ -12,11 +12,7 @@ const REFERRALS = [
   'Twitter/X', 'LinkedIn', 'Reddit', 'Google Search', 'ChatGPT', 'YouTube',
   'Instagram', 'TikTok', 'Referred by someone', 'Others',
 ]
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands',
-  'India', 'Singapore', 'Japan', 'Brazil', 'Mexico', 'South Africa', 'Nigeria', 'Ghana', 'Kenya',
-  'United Arab Emirates', 'Other',
-]
+const COUNTRY_OPTIONS = locationSelectOptions()
 
 const inputCls =
   'mt-1.5 w-full h-11 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.9rem] outline-none focus:border-white/25'
