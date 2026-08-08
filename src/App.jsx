@@ -43,8 +43,20 @@ import SmsWallet from './sms/pages/Wallet'
 import SmsSettingsPage from './sms/pages/SmsSettings'
 import SmsDeveloper from './sms/pages/Developer'
 
+import AdminLayout from './admin/AdminLayout'
+import AdminOverview from './admin/pages/Overview'
+import AdminMerchants from './admin/pages/Merchants'
+import AdminMerchantDetail from './admin/pages/MerchantDetail'
+import AdminVerifications from './admin/pages/Verifications'
+import AdminTransactions from './admin/pages/Transactions'
+import AdminPayouts from './admin/pages/Payouts'
+import AdminMessaging from './admin/pages/Messaging'
+import AdminUsers from './admin/pages/Users'
+import AdminSettings from './admin/pages/Settings'
+import AdminAudit from './admin/pages/Audit'
 
 import ProtectedRoute from './components/ProtectedRoute'
+
 
 
 
