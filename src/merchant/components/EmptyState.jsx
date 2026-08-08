@@ -59,6 +59,23 @@ export function PageLoader({ label = 'Loading…', className = '' }) {
   )
 }
 
+export function FullScreenLoader({ label = '' }) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-merchant-bg animate-fade-in"
+      role="status"
+      aria-live="polite"
+    >
+      <span
+        className="inline-block w-10 h-10 rounded-full border-2 border-white/10 border-t-accent-bright animate-spin"
+        aria-hidden="true"
+      />
+      {label && <div className="mt-5 text-[0.85rem] text-white/45">{label}</div>}
+      <span className="sr-only">Loading</span>
+    </div>
+  )
+}
+
 export function TableSkeleton({ rows = 5, cols = 5, className = '' }) {
   return (
     <tbody className={className}>
