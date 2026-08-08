@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
-import { useMerchantMode } from '../../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import PayoutDetailsDrawer from '../../components/PayoutDetailsDrawer'
 
@@ -29,6 +29,7 @@ export default function History() {
   const { mode, modeReady } = useMerchantMode()
   const [payouts, setPayouts] = useState([])
   const [loading, setLoading] = useState(true)
+  useModeDataLoading(loading)
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {

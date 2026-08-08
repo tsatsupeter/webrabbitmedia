@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
-import { useMerchantMode } from '../../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import TxDetailsDrawer from './TxDetailsDrawer'
 
@@ -120,6 +120,7 @@ export default function Payments({ scope = 'all' }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  useModeDataLoading(loading)
   const [error, setError] = useState(null)
   const [range, setRange] = useState('30d')
   const [statuses, setStatuses] = useState(new Set())

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Icon from '../Icon'
 import { LineChart, ChartCard, DeltaLine, UpdatedLine } from '../Chart'
 import { useBusinesses } from '../../hooks/useBusinesses'
-import { useMerchantMode } from '../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../hooks/useMerchantMode'
 import { supabase } from '../../integrations/supabase/client'
 import {
   SUCCESS_STATUSES,
@@ -95,6 +95,7 @@ export default function MerchantHome() {
   const [rangeKey, setRangeKey] = useState('30')
   const [compareOn, setCompareOn] = useState('prev')
   const [loading, setLoading] = useState(true)
+  useModeDataLoading(loading)
   const [data, setData] = useState({ todayTxns: [], yTxns: [], txns: [], prevTxns: [], allTxns: [], allPayouts: [] })
 
   const { start, end, prevStart, prevEnd, days, todayStart, yesterdayStart } = useMemo(() => {

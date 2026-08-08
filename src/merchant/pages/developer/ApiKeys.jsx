@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
 import { useBusinesses } from '../../../hooks/useBusinesses'
-import { useMerchantMode } from '../../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import Modal from '../../components/Modal'
 import EmptyState, { InlineSpinner } from '../../components/EmptyState'
@@ -53,6 +53,7 @@ export default function ApiKeys() {
   const { mode, modeReady } = useMerchantMode()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  useModeDataLoading(loading)
   const [createOpen, setCreateOpen] = useState(false)
   const [revealKey, setRevealKey] = useState(null) // {name, key}
   const [pendingDelete, setPendingDelete] = useState(null) // {id, name}
