@@ -79,7 +79,7 @@ export default function DisclaimerModal({ open, onClose, onConfirm, busy }) {
             <span className="text-[0.85rem] text-white/70 leading-relaxed">
               I have read and understand the above restrictions, and I agree to Web Rabbit
               Payments{' '}
-              <a href="/terms" className="text-white underline">Merchant Acceptance Policy</a>,{' '}
+              <a href="/docs/merchant-acceptance" target="_blank" rel="noreferrer" className="text-white underline">Merchant Acceptance Policy</a>,{' '}
               <a href="/terms" className="text-white underline">Terms of Service</a>, and{' '}
               <a href="/privacy" className="text-white underline">Privacy Policy</a>.
             </span>

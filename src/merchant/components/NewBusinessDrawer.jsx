@@ -21,12 +21,12 @@ const inputCls =
 export default function NewBusinessDrawer({ open, onClose, onCreated }) {
   const { user } = useAuth()
   const { setActive } = useBusinesses()
-  const [form, setForm] = useState({ name: '', website: '', location: '', category: '', referral: '', note: '' })
+  const [form, setForm] = useState({ name: '', website: '', location: 'Ghana', category: '', referral: '', note: '' })
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!open) return
-    setForm({ name: '', website: '', location: '', category: '', referral: '', note: '' })
+    setForm({ name: '', website: '', location: 'Ghana', category: '', referral: '', note: '' })
     const onKey = (e) => e.key === 'Escape' && onClose?.()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
