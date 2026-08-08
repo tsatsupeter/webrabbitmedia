@@ -215,6 +215,14 @@ export default function ProductInformation() {
         setStage(data.stage ?? '')
         setPaymentPlatform(data.payment_platform ?? '')
         setConfirmed(data.status === 'submitted')
+      } else {
+        // No saved record yet — seed from what the merchant already told us
+        // when they created the business.
+        const site = stripUrlPrefix(active.website_url)
+        if (site) setWebsites([site])
+        const cat = mapBusinessCategory(active.product_category)
+        if (cat) setCategory(cat)
+        if (active.monetization_note) setDescription(active.monetization_note)
       }
       setLoading(false)
     })()
