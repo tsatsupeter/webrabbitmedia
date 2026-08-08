@@ -14,6 +14,9 @@ import ProviderCodes from './sections/ProviderCodes'
 import TestData from './sections/TestData'
 import Webhooks from './sections/Webhooks'
 import Me from './sections/Me'
+import AcceptedCountries from './sections/AcceptedCountries'
+import MerchantAcceptance from './sections/MerchantAcceptance'
+import MerchantCountries from './sections/MerchantCountries'
 
 // Single source of truth for sidebar, Cmd+K search, and prev/next pager.
 // `headings` is a flat list of {id, text, depth} for the on-this-page TOC / search.
