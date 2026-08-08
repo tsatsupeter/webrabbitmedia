@@ -41,6 +41,8 @@ import SmsVoice from './sms/pages/Voice'
 import SmsUssd from './sms/pages/Ussd'
 import SmsWallet from './sms/pages/Wallet'
 import SmsSettingsPage from './sms/pages/SmsSettings'
+import SmsDeveloper from './sms/pages/Developer'
+
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -106,7 +108,9 @@ function App() {
           <Route path="voice" element={<SmsVoice />} />
           <Route path="ussd" element={<SmsUssd />} />
           <Route path="wallet" element={<SmsWallet />} />
+          <Route path="developer" element={<SmsDeveloper />} />
           <Route path="settings" element={<SmsSettingsPage />} />
+
         </Route>
 
       </Routes>

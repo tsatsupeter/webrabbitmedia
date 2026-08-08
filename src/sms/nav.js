@@ -1,4 +1,4 @@
-// SMS / Messaging dashboard nav. Mirrors the merchant sidebar shape.
+// Messaging dashboard navigation. Fully self-contained — no links into Payments.
 export const smsNavGroups = [
   {
     label: null,
@@ -8,7 +8,7 @@ export const smsNavGroups = [
     ],
   },
   {
-    label: null,
+    label: 'Messaging',
     items: [
       {
         key: 'sms-bulk',
@@ -27,18 +27,10 @@ export const smsNavGroups = [
     ],
   },
   {
-    label: null,
+    label: 'Account',
     items: [
       { key: 'sms-wallet', label: 'Wallet', icon: 'wallet', to: '/sms/wallet' },
-      {
-        key: 'sms-developer',
-        label: 'Developer',
-        icon: 'code',
-        children: [
-          { key: 'sms-keys', label: 'API Keys', to: '/merchant/developer/api-keys' },
-          { key: 'sms-docs', label: 'Documentation', to: '/docs' },
-        ],
-      },
+      { key: 'sms-developer', label: 'Developer', icon: 'code', to: '/sms/developer' },
       { key: 'sms-settings', label: 'Settings', icon: 'gear', to: '/sms/settings' },
     ],
   },
@@ -55,5 +47,6 @@ export const smsTitleByPath = {
   '/sms/voice': 'Voice & IVR',
   '/sms/ussd': 'USSD',
   '/sms/wallet': 'Messaging Wallet',
+  '/sms/developer': 'Developer',
   '/sms/settings': 'Messaging Settings',
 }

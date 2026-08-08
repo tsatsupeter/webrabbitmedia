@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../integrations/supabase/client'
-import { useMerchantMode, useModeDataLoading } from '../../hooks/useMerchantMode'
-import { PageLoader, TableSkeleton } from '../../merchant/components/EmptyState'
+import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSmsWorkspace'
+import { PageLoader, TableSkeleton } from '../components/EmptyState'
 import { Page, PageHeader, Card, Table, Row, Cell, StatusPill, inputClass } from '../components/ui'
 import { money } from '../lib'
 

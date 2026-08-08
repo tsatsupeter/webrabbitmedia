@@ -4,7 +4,6 @@ import { navGroups } from './nav'
 import Icon from './Icon'
 import BusinessSwitcher from './BusinessSwitcher'
 import { useMerchantMode } from '../hooks/useMerchantMode'
-import ProductSwitcher from './components/ProductSwitcher'
 
 function Tooltip({ children, label }) {
   return (
@@ -162,7 +161,7 @@ function ExpandableItem({ item, onNavigate, compact }) {
   )
 }
 
-export default function Sidebar({ onNavigate, compact = false, groups = navGroups, product = 'payments' }) {
+export default function Sidebar({ onNavigate, compact = false, groups = navGroups }) {
   const { mode, setMode, canUseLive, modeReady, switching } = useMerchantMode()
 
   return (
@@ -170,7 +169,6 @@ export default function Sidebar({ onNavigate, compact = false, groups = navGroup
       className={`${compact ? 'w-[80px]' : 'w-[260px]'} shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border transition-all duration-200`}
     >
       <BusinessSwitcher compact={compact} />
-      <ProductSwitcher compact={compact} product={product} />
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
         {groups.map((group, i) => (
