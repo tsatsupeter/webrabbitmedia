@@ -1,4 +1,4 @@
-import Icon from '../merchant/Icon'
+import Icon from '../../merchant/Icon'
 
 export function Page({ children }) {
   return <div className="w-full px-4 md:px-6 py-6 space-y-6">{children}</div>
