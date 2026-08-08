@@ -1,11 +1,11 @@
-// MoMo collection via NaloPay. Asynchronous: we record a pending transaction,
-// ask Nalo to push the approval prompt to the customer, and settle the ledger
-// when the callback webhook (or a status poll) reports the final outcome.
+// MoMo collection via 360Pay (LibertePay). Name Verify runs first (mandatory
+// and synchronous), then the asynchronous collection call. The terminal
+// outcome arrives on the liberte-callback webhook.
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError, requireScope } from '../_shared/auth.ts'
 import {
-  callbackUrl, mapStatus, merchantId, naloPost, newReference, normalizeNetwork,
-  simulateOrderId, transHash,
-} from '../_shared/nalo.ts'
+  collect, institutionCode, localMsisdn, mapStatusCode, nameVerify, newReference,
+  normalizeMsisdn, normalizeNetwork, respCode, respMessage,
+} from '../_shared/liberte.ts'
 import { tryClaimIdempotency, completeIdempotency } from '../_shared/idempotency.ts'
 
 Deno.serve(async (req) => {
@@ -21,22 +21,22 @@ Deno.serve(async (req) => {
     }
     const body = await req.json().catch(() => ({}))
     const amount = Number(body.amount)
-    const subscriber_number = String(body.subscriber_number || '').trim()
+    const rawNumber = String(body.subscriber_number || '').trim()
+    const msisdn = normalizeMsisdn(rawNumber)
     const network = normalizeNetwork(String(body.network || ''))
     const desc = String(body.desc || 'Mobile Money Payment').slice(0, 100)
     const customer_email = String(body.customer_email || '')
-    const account_name = String(body.customer_name || body.account_name || customer_email || 'Customer').slice(0, 100)
 
     if (!(amount > 0)) throw new HttpError(400, 'amount must be > 0')
-    if (!/^\d{10,12}$/.test(subscriber_number)) throw new HttpError(400, 'subscriber_number invalid')
-    if (!network) throw new HttpError(400, 'network invalid (MTN|AT|TELECEL)')
+    if (!msisdn) throw new HttpError(400, 'subscriber_number invalid (use 0XXXXXXXXX or 233XXXXXXXXX)')
+    if (!network) throw new HttpError(400, 'network invalid (MTN|AT|TELECEL|GMONEY)')
 
     const idem = await tryClaimIdempotency({
       headerKey: req.headers.get('idempotency-key'),
       businessId: auth.business.id,
       apiKeyId: auth.key.id,
       endpoint: 'collect-momo',
-      body: { amount, subscriber_number, network, desc, customer_email },
+      body: { amount, subscriber_number: msisdn, network, desc, customer_email },
     })
     if (idem.mode === 'replay') {
       return jsonResponse(idem.body, idem.status, { ...meta, 'idempotent-replayed': 'true' })
@@ -46,6 +46,31 @@ Deno.serve(async (req) => {
     }
 
     const mode = auth.key.mode
+    const inst = institutionCode(network)
+
+    // 1. Name Verify — mandatory before a debit. No transaction is recorded if
+    //    the wallet cannot be resolved.
+    const verify = await nameVerify(mode, { account_number: msisdn, institution_code: inst })
+    if (!verify.ok) {
+      const failBody = {
+        error: 'account_not_found',
+        code: 'account_not_found',
+        reason: verify.reason,
+        subscriber_number: localMsisdn(msisdn),
+      }
+      if (idem.mode === 'new') {
+        await completeIdempotency({
+          businessId: auth.business.id,
+          endpoint: 'collect-momo',
+          key: idem.key,
+          status: 422,
+          body: failBody,
+        })
+      }
+      return jsonResponse(failBody, 422, meta)
+    }
+    const account_name = verify.account_name
+
     const reference = newReference()
     const db = admin()
 
@@ -54,14 +79,14 @@ Deno.serve(async (req) => {
       user_id: auth.business.user_id,
       api_key_id: auth.key.id,
       mode,
-      provider: 'nalo',
+      provider: 'liberte',
       type: 'collection',
       channel: 'momo',
       provider_transaction_id: reference,
-      subscriber_number,
+      subscriber_number: localMsisdn(msisdn),
       r_switch: network,
       description: desc,
-      customer_email,
+      customer_email: customer_email || account_name,
       gross_amount: amount,
       fee_amount: 0,
       net_amount: amount,
@@ -70,50 +95,42 @@ Deno.serve(async (req) => {
 
     let json: any = null
     let upstreamErr: Error | null = null
-    let orderId: string | null = null
-    let otpCode: string | null = null
 
-    if (mode === 'test') {
-      orderId = simulateOrderId(reference)
-      json = { simulated: true, data: { order_id: orderId, status: 'PENDING', amount, otp_code: 'None*252#' } }
-      otpCode = 'None*252#'
-    } else {
-      try {
-        const res = await naloPost('/clientapi/collection/', {
-          merchant_id: merchantId(),
-          service_name: 'MOMO_TRANSACTION',
-          trans_hash: await transHash({ account_number: subscriber_number, amount, reference }),
-          account_number: subscriber_number,
-          account_name,
-          description: desc,
-          reference,
-          network,
-          amount,
-          callback: callbackUrl(),
-        })
-        json = res.json
-        if (!res.ok && !json?.success) {
-          upstreamErr = new Error(json?.message || json?.code || `NaloPay error ${res.status}`)
-        }
-        orderId = json?.data?.order_id ?? null
-        otpCode = json?.data?.otp_code ?? null
-      } catch (e) {
-        upstreamErr = e instanceof Error ? e : new Error(String(e))
+    try {
+      const res = await collect(mode, {
+        account_name,
+        account_number: msisdn,
+        amount,
+        institution_code: inst,
+        transaction_id: reference,
+        reference: desc,
+        metadata: { business_id: auth.business.id, reference },
+      })
+      json = res.json
+      const code = respCode(json)
+      if (!res.ok && res.status !== 202) {
+        upstreamErr = new Error(respMessage(json) || `360Pay error ${res.status}`)
+      } else if (code === '01') {
+        // Provider rejected the debit outright.
+        upstreamErr = null
       }
+    } catch (e) {
+      upstreamErr = e instanceof Error ? e : new Error(String(e))
     }
 
-    const status = upstreamErr ? 'failed' : mapStatus(json?.data?.status ?? 'PENDING')
+    const status = upstreamErr ? 'failed' : mapStatusCode(respCode(json), json?.status)
     const fee = status === 'approved' ? Math.round(amount * (auth.commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
+    const providerTxn = json?.data?.transaction_id ?? null
 
     await db.from('transactions')
       .update({
         status,
         fee_amount: fee,
         net_amount: net,
-        provider_reference: orderId,
-        provider_code: upstreamErr ? 'upstream_error' : (json?.code != null ? String(json.code) : null),
-        provider_reason: upstreamErr ? upstreamErr.message : (json?.message ?? null),
+        provider_reference: providerTxn,
+        provider_code: upstreamErr ? 'upstream_error' : respCode(json),
+        provider_reason: upstreamErr ? upstreamErr.message : respMessage(json),
         raw_response: upstreamErr ? { error: upstreamErr.message, response: json } : json,
       })
       .eq('provider_transaction_id', reference)
@@ -122,7 +139,6 @@ Deno.serve(async (req) => {
     const responseBody = upstreamErr
       ? {
           transaction_id: reference,
-          order_id: null,
           status: 'failed',
           code: 'upstream_error',
           reason: 'Upstream provider unavailable',
@@ -133,11 +149,12 @@ Deno.serve(async (req) => {
         }
       : {
           transaction_id: reference,
-          order_id: orderId,
+          provider_transaction_id: providerTxn,
           status,
-          code: json?.code != null ? String(json.code) : null,
-          reason: json?.message ?? null,
-          otp_code: otpCode,
+          code: respCode(json),
+          reason: respMessage(json),
+          account_name,
+          subscriber_number: localMsisdn(msisdn),
           gross_amount: amount,
           fee_amount: fee,
           net_amount: net,
