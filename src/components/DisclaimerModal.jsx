@@ -39,14 +39,28 @@ export default function DisclaimerModal({ open, onClose, onConfirm, busy }) {
               <div className="text-[0.85rem] font-medium text-white mb-1.5">Unsupported use cases</div>
               <p className="text-[0.85rem] text-white/60 leading-relaxed">
                 Physical products/goods, services, gaming or anything in our{' '}
-                <a href="#" className="text-accent-bright underline">prohibited list</a>
+                <a
+                  href="/docs/merchant-acceptance#prohibited"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent-bright underline"
+                >
+                  prohibited list
+                </a>
               </p>
             </div>
             <div>
               <div className="text-[0.85rem] font-medium text-white mb-1.5">Unsupported geographies</div>
               <p className="text-[0.85rem] text-white/60 leading-relaxed">
-                We do not support merchants from our{' '}
-                <a href="#" className="text-accent-bright underline">restricted countries list</a>
+                We onboard merchants in Ghana only today. See our{' '}
+                <a
+                  href="/docs/merchant-countries"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent-bright underline"
+                >
+                  restricted countries list
+                </a>
               </p>
             </div>
           </div>
