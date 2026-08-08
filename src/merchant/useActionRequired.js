@@ -5,10 +5,14 @@ import { useBusinesses } from '../hooks/useBusinesses'
 // Returns { loading, required, items } where items are pending verification steps
 // ordered by priority. Empty when business is approved.
 export function useActionRequired() {
-  const { active } = useBusinesses()
+  const { active, loading: bizLoading } = useBusinesses()
   const [state, setState] = useState({ loading: true, required: false, items: [] })
 
   useEffect(() => {
+    if (bizLoading) {
+      setState({ loading: true, required: false, items: [] })
+      return
+    }
     if (!active) {
       setState({ loading: false, required: false, items: [] })
       return
@@ -18,6 +22,8 @@ export function useActionRequired() {
       return
     }
     let cancelled = false
+    setState((s) => (s.loading ? s : { ...s, loading: true }))
+
     ;(async () => {
       const bid = active.id
       const [{ data: pi }, { data: iv }, { data: bv }, { data: bank }] = await Promise.all([
