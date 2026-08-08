@@ -255,3 +255,6 @@ export function locationSelectOptions() {
     disabled: !isMerchantCountry(c.code),
   }))
 }
+
+// Plain name list for simple <Select options={...} /> usages.
+export const COUNTRY_NAMES = COUNTRIES.map((c) => c.name)
