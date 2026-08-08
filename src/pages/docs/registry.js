@@ -193,7 +193,7 @@ export const groups = [
       {
         slug: 'test-data',
         title: 'Test data',
-        summary: 'How the built-in test-mode simulator behaves.',
+        summary: 'Sandbox wallets and how test-mode charges behave.',
         Component: TestData,
         headings: [
           { id: 'momo', text: 'Test outcomes', depth: 2 },

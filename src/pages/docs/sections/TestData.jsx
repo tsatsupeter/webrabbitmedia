@@ -33,10 +33,11 @@ export default function TestData() {
 
       <h2 id="cards">Hosted Checkout in test mode</h2>
       <p className="text-sm text-white/60">
-        <code>POST /v1/checkout/session</code> returns a real UAT <code>checkout_url</code> on the
-        provider's sandbox checkout host. Open it in a browser to complete the simulated payment, then
+        <code>POST /v1/checkout/session</code> returns a real <code>checkout_url</code> on the provider's
+        sandbox checkout host. Open it in a browser to complete the payment against the sandbox, then
         confirm the outcome with <code>GET /v1/transactions/{'{id}'}</code>.
       </p>
+
 
       <h2 id="example">Example test charge</h2>
       <CodeBlock
