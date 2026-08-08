@@ -5,6 +5,7 @@ import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
 import Icon from '../merchant/Icon'
 import DisclaimerModal from '../components/DisclaimerModal'
+import { locationSelectOptions } from '../lib/countries'
 
 const CATEGORIES = [
   'SaaS/AI or Digital products',
