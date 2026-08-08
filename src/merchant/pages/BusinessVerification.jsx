@@ -143,9 +143,17 @@ export default function BusinessVerification() {
   const [incorpPath, setIncorpPath] = useState(null)
   const [taxPath, setTaxPath] = useState(null)
   const [addrProofPath, setAddrProofPath] = useState(null)
+  const [regFormPath, setRegFormPath] = useState(null)
+  const [ownerCardPath, setOwnerCardPath] = useState(null)
+  const [dir1CardPath, setDir1CardPath] = useState(null)
+  const [dir2CardPath, setDir2CardPath] = useState(null)
   const [incorpFile, setIncorpFile] = useState(null)
   const [taxFile, setTaxFile] = useState(null)
   const [addrProofFile, setAddrProofFile] = useState(null)
+  const [regFormFile, setRegFormFile] = useState(null)
+  const [ownerCardFile, setOwnerCardFile] = useState(null)
+  const [dir1CardFile, setDir1CardFile] = useState(null)
+  const [dir2CardFile, setDir2CardFile] = useState(null)
 
   useEffect(() => {
     if (!active?.id) return
@@ -319,10 +327,12 @@ export default function BusinessVerification() {
               <Label required>Registration / company number</Label>
               <TextInput value={regNumber} onChange={(e) => setRegNumber(e.target.value)} />
             </div>
-            <div>
-              <Label required>Tax ID (EIN / GST / VAT)</Label>
-              <TextInput value={taxId} onChange={(e) => setTaxId(e.target.value)} />
-            </div>
+            {!isSoleProp && (
+              <div>
+                <Label required>Tax ID (EIN / GST / VAT)</Label>
+                <TextInput value={taxId} onChange={(e) => setTaxId(e.target.value)} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -404,21 +414,48 @@ export default function BusinessVerification() {
         {/* Documents */}
         <div className="space-y-5">
           <h3 className="text-white text-[0.95rem] font-medium">Documents</h3>
+          <p className="text-[0.8rem] text-white/50 -mt-2">
+            {isSoleProp
+              ? 'Sole proprietorships: upload your certificate of registration, Form A, the Ghana Card of the business owner and a proof of address.'
+              : 'Companies: upload your certificate of incorporation, Form 3, the Ghana Cards of any two directors, your tax document and a proof of address.'}
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FileUpload label="Certificate of incorporation"
+            <FileUpload label={isSoleProp ? 'Certificate of registration' : 'Certificate of incorporation'}
               path={incorpPath} file={incorpFile}
               onFile={setIncorpFile}
               onClear={() => { setIncorpFile(null); setIncorpPath(null) }} />
-            <FileUpload label="Tax document (EIN / GST / VAT)"
-              path={taxPath} file={taxFile}
-              onFile={setTaxFile}
-              onClear={() => { setTaxFile(null); setTaxPath(null) }} />
+            <FileUpload label={isSoleProp ? 'Form A (Sole Proprietorship)' : 'Form 3 (Company)'}
+              path={regFormPath} file={regFormFile}
+              onFile={setRegFormFile}
+              onClear={() => { setRegFormFile(null); setRegFormPath(null) }} />
+            {isSoleProp ? (
+              <FileUpload label="Ghana Card of the business owner"
+                path={ownerCardPath} file={ownerCardFile}
+                onFile={setOwnerCardFile}
+                onClear={() => { setOwnerCardFile(null); setOwnerCardPath(null) }} />
+            ) : (
+              <>
+                <FileUpload label="Ghana Card — director 1"
+                  path={dir1CardPath} file={dir1CardFile}
+                  onFile={setDir1CardFile}
+                  onClear={() => { setDir1CardFile(null); setDir1CardPath(null) }} />
+                <FileUpload label="Ghana Card — director 2"
+                  path={dir2CardPath} file={dir2CardFile}
+                  onFile={setDir2CardFile}
+                  onClear={() => { setDir2CardFile(null); setDir2CardPath(null) }} />
+                <FileUpload label="Tax document (EIN / GST / VAT)"
+                  path={taxPath} file={taxFile}
+                  onFile={setTaxFile}
+                  onClear={() => { setTaxFile(null); setTaxPath(null) }} />
+              </>
+            )}
             <FileUpload label="Proof of address (utility bill / bank statement)"
               path={addrProofPath} file={addrProofFile}
               onFile={setAddrProofFile}
               onClear={() => { setAddrProofFile(null); setAddrProofPath(null) }} />
           </div>
         </div>
+
 
         {/* Confirm */}
         <div className="pt-4 border-t border-merchant-border">
