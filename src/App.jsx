@@ -125,6 +125,21 @@ function App() {
 
         </Route>
 
+        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<AdminOverview />} />
+          <Route path="merchants" element={<AdminMerchants />} />
+          <Route path="merchants/:id" element={<AdminMerchantDetail />} />
+          <Route path="verifications" element={<AdminVerifications />} />
+          <Route path="transactions" element={<AdminTransactions />} />
+          <Route path="payouts" element={<AdminPayouts />} />
+          <Route path="messaging" element={<AdminMessaging />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="audit" element={<AdminAudit />} />
+        </Route>
+
+
+
       </Routes>
     </BrowserRouter>
   )
