@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
 import { useAuth } from '../../hooks/useAuth'
 import { useBusinesses, notifyBrandsChanged } from '../../hooks/useBusinesses'
+import { locationSelectOptions } from '../../lib/countries'
 
 const CATEGORIES = [
   'SaaS/AI or Digital products', 'Edtech', 'Services', 'Financial services',
