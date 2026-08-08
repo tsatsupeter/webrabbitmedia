@@ -211,3 +211,85 @@ export async function checkoutInitiate(mode: Mode, params: {
   if (params.payment_slug) body.payment_slug = params.payment_slug
   return await libertePost(mode, '/v1/transactions/initiate', body)
 }
+
+// ---- status check -------------------------------------------------------------
+// POST /v1/payments/status-check — synchronous lookup by OUR transaction_id.
+// Works for collections and disbursements.
+export type StatusCheckResult = {
+  ok: boolean
+  status: LedgerStatus
+  code: string | null
+  message: string | null
+  data: any
+  httpStatus: number
+}
+
+export async function statusCheck(mode: Mode, transaction_id: string): Promise<StatusCheckResult> {
+  const res = await libertePost(mode, '/v1/payments/status-check', { transaction_id })
+  const d = res.json?.data ?? {}
+  const code = d.status_code != null ? String(d.status_code) : respCode(res.json)
+  return {
+    ok: res.ok,
+    status: mapStatusCode(code, d.status ?? res.json?.status),
+    code,
+    message: d.message ?? respMessage(res.json),
+    data: res.json,
+    httpStatus: res.status,
+  }
+}
+
+// ---- institutions --------------------------------------------------------------
+export type Institution = { code: string; currency: string; name: string; slug: string; type: string }
+
+// GET /v1/payments/institutions?type=MNO|BANK
+export async function getInstitutions(mode: Mode, type: 'MNO' | 'BANK'): Promise<Institution[] | null> {
+  try {
+    const res = await liberteGet(mode, `/v1/payments/institutions?type=${type}`)
+    const list = res.json?.data
+    return Array.isArray(list) ? list as Institution[] : null
+  } catch {
+    return null
+  }
+}
+
+// Resolves a network to its live institution code, falling back to the static
+// table so a provider outage can never block a collection.
+export async function resolveInstitutionCode(mode: Mode, network: Network): Promise<string> {
+  const slug = PAYMENT_SLUGS[network]
+  const list = await getInstitutions(mode, 'MNO')
+  const hit = list?.find((i) => String(i.slug || '').toLowerCase() === slug)
+  return hit?.code ? String(hit.code) : INSTITUTION_CODES[network]
+}
+
+// ---- disbursement ----------------------------------------------------------------
+export async function disbursementBalance(mode: Mode) {
+  const res = await liberteGet(mode, '/v1/payments/disbursement-balance')
+  const available = Number(res.json?.data?.available_balance ?? NaN)
+  return {
+    ok: res.ok && Number.isFinite(available),
+    available: Number.isFinite(available) ? available : null,
+    currency: res.json?.data?.currency ?? 'GHS',
+    raw: res.json,
+  }
+}
+
+export async function disburse(mode: Mode, params: {
+  account_name: string
+  account_number: string
+  amount: number
+  institution_code: string
+  transaction_id: string
+  reference?: string
+  meta_data?: Record<string, unknown>
+}) {
+  return await libertePost(mode, '/v1/payments/disbursement', {
+    account_name: params.account_name,
+    account_number: params.account_number,
+    amount: Number(params.amount.toFixed(2)),
+    institution_code: params.institution_code,
+    transaction_id: params.transaction_id,
+    currency: 'GHS',
+    reference: params.reference ?? params.transaction_id,
+    meta_data: { ...(params.meta_data ?? {}), callback_url: callbackUrl() },
+  })
+}
