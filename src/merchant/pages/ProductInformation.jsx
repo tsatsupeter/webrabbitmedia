@@ -229,7 +229,7 @@ export default function ProductInformation() {
     return () => {
       cancelled = true
     }
-  }, [active?.id])
+  }, [active?.id, active?.website_url, active?.product_category, active?.monetization_note])
 
   const requiredValid =
     websites.some((w) => w.trim()) &&
