@@ -28,8 +28,22 @@ import History from './merchant/pages/payouts/History'
 import Collect from './merchant/pages/sales/Collect'
 import Settings from './merchant/pages/Settings'
 import AcceptInvite from './pages/AcceptInvite'
+import SmsLayout from './sms/SmsLayout'
+import SmsOverview from './sms/pages/Overview'
+import SmsQuickSend from './sms/pages/QuickSend'
+import SmsCampaigns from './sms/pages/Campaigns'
+import SmsCampaignDetail from './sms/pages/CampaignDetail'
+import SmsMessageLog from './sms/pages/MessageLog'
+import SmsSenderIds from './sms/pages/SenderIds'
+import SmsContacts from './sms/pages/Contacts'
+import SmsOtp from './sms/pages/Otp'
+import SmsVoice from './sms/pages/Voice'
+import SmsUssd from './sms/pages/Ussd'
+import SmsWallet from './sms/pages/Wallet'
+import SmsSettingsPage from './sms/pages/SmsSettings'
 
 import ProtectedRoute from './components/ProtectedRoute'
+
 
 
 function App() {
@@ -79,6 +93,22 @@ function App() {
           <Route path="payouts/history" element={<History />} />
           <Route path="settings" element={<Settings />} />
         </Route>
+
+        <Route path="/sms" element={<ProtectedRoute requireBusiness><SmsLayout /></ProtectedRoute>}>
+          <Route index element={<SmsOverview />} />
+          <Route path="send" element={<SmsQuickSend />} />
+          <Route path="campaigns" element={<SmsCampaigns />} />
+          <Route path="campaigns/:id" element={<SmsCampaignDetail />} />
+          <Route path="messages" element={<SmsMessageLog />} />
+          <Route path="sender-ids" element={<SmsSenderIds />} />
+          <Route path="contacts" element={<SmsContacts />} />
+          <Route path="otp" element={<SmsOtp />} />
+          <Route path="voice" element={<SmsVoice />} />
+          <Route path="ussd" element={<SmsUssd />} />
+          <Route path="wallet" element={<SmsWallet />} />
+          <Route path="settings" element={<SmsSettingsPage />} />
+        </Route>
+
       </Routes>
     </BrowserRouter>
   )

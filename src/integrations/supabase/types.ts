@@ -743,6 +743,576 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_campaigns: {
+        Row: {
+          business_id: string
+          cost: number
+          created_at: string
+          currency: string
+          id: string
+          message: string
+          mode: string
+          name: string
+          recipients_count: number
+          scheduled_at: string | null
+          segments: number
+          sender_name: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          cost?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          message: string
+          mode: string
+          name: string
+          recipients_count?: number
+          scheduled_at?: string | null
+          segments?: number
+          sender_name: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          cost?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          message?: string
+          mode?: string
+          name?: string
+          recipients_count?: number
+          scheduled_at?: string | null
+          segments?: number
+          sender_name?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_campaigns_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_contact_groups: {
+        Row: {
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_contact_groups_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_contacts: {
+        Row: {
+          birthday: string | null
+          business_id: string
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          opted_out: boolean
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birthday?: string | null
+          business_id: string
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          opted_out?: boolean
+          phone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birthday?: string | null
+          business_id?: string
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          opted_out?: boolean
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_contacts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_group_members: {
+        Row: {
+          contact_id: string
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_group_members_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "sms_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "sms_contact_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_messages: {
+        Row: {
+          business_id: string
+          campaign_id: string | null
+          cost: number
+          created_at: string
+          error_reason: string | null
+          id: string
+          message: string
+          mode: string
+          segments: number
+          sender_name: string | null
+          sent_at: string | null
+          status: string
+          to_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          campaign_id?: string | null
+          cost?: number
+          created_at?: string
+          error_reason?: string | null
+          id?: string
+          message: string
+          mode: string
+          segments?: number
+          sender_name?: string | null
+          sent_at?: string | null
+          status?: string
+          to_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          campaign_id?: string | null
+          cost?: number
+          created_at?: string
+          error_reason?: string | null
+          id?: string
+          message?: string
+          mode?: string
+          segments?: number
+          sender_name?: string | null
+          sent_at?: string | null
+          status?: string
+          to_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_messages_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_messages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sms_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_otp_requests: {
+        Row: {
+          business_id: string
+          cost: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          mode: string
+          phone: string
+          status: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          business_id: string
+          cost?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          mode: string
+          phone: string
+          status?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          cost?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          mode?: string
+          phone?: string
+          status?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_otp_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_otp_settings: {
+        Row: {
+          business_id: string
+          code_length: number
+          created_at: string
+          expiry_minutes: number
+          id: string
+          sender_name: string | null
+          template: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          code_length?: number
+          created_at?: string
+          expiry_minutes?: number
+          id?: string
+          sender_name?: string | null
+          template?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          code_length?: number
+          created_at?: string
+          expiry_minutes?: number
+          id?: string
+          sender_name?: string | null
+          template?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_otp_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_rates: {
+        Row: {
+          channel: string
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          unit: string
+          unit_rate: number
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          unit: string
+          unit_rate: number
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          unit?: string
+          unit_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sms_sender_ids: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          name: string
+          rejection_reason: string | null
+          sample_message: string | null
+          status: string
+          updated_at: string
+          use_case: string | null
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          name: string
+          rejection_reason?: string | null
+          sample_message?: string | null
+          status?: string
+          updated_at?: string
+          use_case?: string | null
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          rejection_reason?: string | null
+          sample_message?: string | null
+          status?: string
+          updated_at?: string
+          use_case?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_sender_ids_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_settings: {
+        Row: {
+          business_id: string
+          callback_url: string | null
+          created_at: string
+          default_sender: string | null
+          delivery_reports: boolean
+          id: string
+          optout_keyword: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          callback_url?: string | null
+          created_at?: string
+          default_sender?: string | null
+          delivery_reports?: boolean
+          id?: string
+          optout_keyword?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          callback_url?: string | null
+          created_at?: string
+          default_sender?: string | null
+          delivery_reports?: boolean
+          id?: string
+          optout_keyword?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_wallet_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          business_id: string
+          channel: string | null
+          created_at: string
+          description: string | null
+          entry_type: string
+          id: string
+          mode: string
+          reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          business_id: string
+          channel?: string | null
+          created_at?: string
+          description?: string | null
+          entry_type: string
+          id?: string
+          mode: string
+          reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          business_id?: string
+          channel?: string | null
+          created_at?: string
+          description?: string | null
+          entry_type?: string
+          id?: string
+          mode?: string
+          reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_wallet_ledger_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_wallets: {
+        Row: {
+          balance: number
+          business_id: string
+          created_at: string
+          currency: string
+          id: string
+          mode: string
+          trial_granted: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          business_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          mode: string
+          trial_granted?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          business_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          mode?: string
+          trial_granted?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_wallets_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_invites: {
         Row: {
           accepted_at: string | null
@@ -923,6 +1493,293 @@ export type Database = {
           },
         ]
       }
+      ussd_codes: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ussd_codes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ussd_menu_nodes: {
+        Row: {
+          action: string
+          business_id: string
+          code_id: string
+          created_at: string
+          id: string
+          label: string
+          option_key: string | null
+          order_index: number
+          parent_id: string | null
+          prompt: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          business_id: string
+          code_id: string
+          created_at?: string
+          id?: string
+          label: string
+          option_key?: string | null
+          order_index?: number
+          parent_id?: string | null
+          prompt?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          business_id?: string
+          code_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          option_key?: string | null
+          order_index?: number
+          parent_id?: string | null
+          prompt?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ussd_menu_nodes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ussd_menu_nodes_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "ussd_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ussd_menu_nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "ussd_menu_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ussd_sessions: {
+        Row: {
+          business_id: string
+          code_id: string | null
+          cost: number
+          ended_at: string | null
+          id: string
+          mode: string
+          msisdn: string
+          session_ref: string | null
+          started_at: string
+          status: string
+          steps: number
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          code_id?: string | null
+          cost?: number
+          ended_at?: string | null
+          id?: string
+          mode: string
+          msisdn: string
+          session_ref?: string | null
+          started_at?: string
+          status?: string
+          steps?: number
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          code_id?: string | null
+          cost?: number
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          msisdn?: string
+          session_ref?: string | null
+          started_at?: string
+          status?: string
+          steps?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ussd_sessions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ussd_sessions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "ussd_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_calls: {
+        Row: {
+          business_id: string
+          campaign_id: string | null
+          cost: number
+          created_at: string
+          duration_seconds: number
+          id: string
+          mode: string
+          status: string
+          to_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          campaign_id?: string | null
+          cost?: number
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          mode: string
+          status?: string
+          to_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          campaign_id?: string | null
+          cost?: number
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          mode?: string
+          status?: string
+          to_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_calls_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_calls_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "voice_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_campaigns: {
+        Row: {
+          audio_path: string | null
+          business_id: string
+          caller_id: string | null
+          cost: number
+          created_at: string
+          id: string
+          mode: string
+          name: string
+          recipients_count: number
+          scheduled_at: string | null
+          script: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_path?: string | null
+          business_id: string
+          caller_id?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          mode: string
+          name: string
+          recipients_count?: number
+          scheduled_at?: string | null
+          script?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_path?: string | null
+          business_id?: string
+          caller_id?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          mode?: string
+          name?: string
+          recipients_count?: number
+          scheduled_at?: string | null
+          script?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_campaigns_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -938,6 +1795,38 @@ export type Database = {
         Returns: undefined
       }
       get_email_hook_secret: { Args: never; Returns: string }
+      sms_ensure_wallet: {
+        Args: { _business_id: string; _mode: string }
+        Returns: {
+          balance: number
+          business_id: string
+          created_at: string
+          currency: string
+          id: string
+          mode: string
+          trial_granted: boolean
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sms_wallets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      sms_wallet_entry: {
+        Args: {
+          _amount: number
+          _business_id: string
+          _channel?: string
+          _description?: string
+          _entry_type: string
+          _mode: string
+          _reference?: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
