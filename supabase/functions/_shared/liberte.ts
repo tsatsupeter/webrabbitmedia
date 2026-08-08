@@ -236,7 +236,7 @@ export async function statusCheck(mode: Mode, transaction_id: string): Promise<S
     ok: res.ok,
     status: notFound ? 'pending' : mapStatusCode(code, d.status ?? res.json?.status),
     code,
-    message: d.message ?? respMessage(res.json),
+    message,
     data: res.json,
     httpStatus: res.status,
   }
