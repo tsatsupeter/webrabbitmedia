@@ -216,6 +216,49 @@ export const groups = [
       },
     ],
   },
+  {
+    label: 'Policies',
+    items: [
+      {
+        slug: 'merchant-acceptance',
+        title: 'Merchant Acceptance Policy',
+        summary: 'Businesses we support, the prohibited list, review categories, and enforcement.',
+        Component: MerchantAcceptance,
+        headings: [
+          { id: 'supported', text: 'Businesses we support', depth: 2 },
+          { id: 'what-we-look-for', text: 'What we look for', depth: 2 },
+          { id: 'prohibited', text: 'Prohibited businesses', depth: 2 },
+          { id: 'review-required', text: 'Businesses that require review', depth: 2 },
+          { id: 'fulfillment', text: 'Fulfilment & access delivery', depth: 2 },
+          { id: 'monitoring', text: 'Review & monitoring', depth: 2 },
+          { id: 'enforcement', text: 'Enforcement', depth: 2 },
+          { id: 'appeals', text: 'Appeals', depth: 2 },
+        ],
+      },
+      {
+        slug: 'merchant-countries',
+        title: 'Merchant eligibility',
+        summary: 'Where you can register a business and receive payouts. Ghana only today.',
+        Component: MerchantCountries,
+        headings: [
+          { id: 'current', text: 'Where we onboard merchants today', depth: 2 },
+          { id: 'how-determined', text: 'How eligibility is determined', depth: 2 },
+          { id: 'planned', text: 'Planned expansion', depth: 2 },
+          { id: 'restricted', text: 'Restricted countries', depth: 2 },
+        ],
+      },
+      {
+        slug: 'accepted-countries',
+        title: 'Accepted countries',
+        summary: 'The countries and territories your customers can pay from.',
+        Component: AcceptedCountries,
+        headings: [
+          { id: 'how-it-works', text: 'How it works', depth: 2 },
+          { id: 'list', text: 'Accepted countries & territories', depth: 2 },
+        ],
+      },
+    ],
+  },
 ]
 
 // Flat list preserving order — used for prev/next pagers and search indexing.
