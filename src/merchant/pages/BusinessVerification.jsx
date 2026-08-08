@@ -189,6 +189,10 @@ export default function BusinessVerification() {
         setIncorpPath(data.incorporation_doc_path)
         setTaxPath(data.tax_doc_path)
         setAddrProofPath(data.address_proof_path)
+        setRegFormPath(data.registration_form_doc_path)
+        setOwnerCardPath(data.owner_ghana_card_path)
+        setDir1CardPath(data.director1_ghana_card_path)
+        setDir2CardPath(data.director2_ghana_card_path)
         setConfirmed(data.status === 'submitted')
       }
       setLoading(false)
@@ -199,13 +203,19 @@ export default function BusinessVerification() {
   const emailValid = !supportEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail.trim())
   const pctNum = ownerPct === '' ? null : Number(ownerPct)
   const pctValid = pctNum === null || (!Number.isNaN(pctNum) && pctNum >= 0 && pctNum <= 100)
+  const isSoleProp = entityType === 'Sole Proprietorship'
+
+  const idDocsValid = isSoleProp
+    ? Boolean(ownerCardFile || ownerCardPath)
+    : Boolean((dir1CardFile || dir1CardPath) && (dir2CardFile || dir2CardPath) && (taxFile || taxPath))
 
   const requiredValid =
-    legalName.trim() && entityType && incorpDate && regNumber.trim() && taxId.trim() &&
+    legalName.trim() && entityType && incorpDate && regNumber.trim() && (isSoleProp || taxId.trim()) &&
     country && addr1.trim() && city.trim() && postal.trim() &&
     supportEmail.trim() && emailValid &&
     ownerName.trim() && ownerRole.trim() && ownerDob && ownerPct !== '' && pctValid &&
-    (incorpFile || incorpPath) && (taxFile || taxPath) && (addrProofFile || addrProofPath)
+    (incorpFile || incorpPath) && (regFormFile || regFormPath) && idDocsValid &&
+    (addrProofFile || addrProofPath)
 
   const canSubmit = requiredValid && confirmed && !saving
 
