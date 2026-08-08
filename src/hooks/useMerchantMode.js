@@ -1,11 +1,15 @@
-import { useCallback, useLayoutEffect, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { useBusinesses } from './useBusinesses'
 
 const key = (id) => `wr.merchantMode.${id}`
 const ACTIVE_BUSINESS_KEY = 'wr.activeBusinessId'
-const SWITCH_MS = 650
+const SWITCH_MS = 600
 const TAIL_MS = 150
+// Give pages a beat to kick off their refetch before we start polling for idle.
+const SETTLE_GRACE_MS = 180
+const SETTLE_POLL_MS = 90
+const SETTLE_MAX_MS = 6000
 
 function initialStoredMode() {
   if (typeof window === 'undefined') return null
