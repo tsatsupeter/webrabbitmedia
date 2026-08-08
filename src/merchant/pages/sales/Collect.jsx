@@ -7,8 +7,9 @@ import Icon from '../../Icon'
 
 const NETWORKS = [
   { value: 'MTN', label: 'MTN' },
-  { value: 'TELECEL', label: 'Telecel (Vodafone)' },
-  { value: 'AT', label: 'AirtelTigo' },
+  { value: 'TELECEL', label: 'Telecel Cash' },
+  { value: 'AT', label: 'AT Money' },
+  { value: 'GMONEY', label: 'G-Money' },
 ]
 
 
