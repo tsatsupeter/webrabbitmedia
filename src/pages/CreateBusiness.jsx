@@ -30,11 +30,7 @@ const REFERRALS = [
   'Others',
 ]
 
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands',
-  'India', 'Singapore', 'Japan', 'Brazil', 'Mexico', 'South Africa', 'Nigeria', 'Ghana', 'Kenya',
-  'United Arab Emirates', 'Other',
-]
+const COUNTRY_OPTIONS = locationSelectOptions()
 
 function Field({ label, required, children }) {
   return (
