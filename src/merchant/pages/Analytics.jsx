@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { LineChart, ChartCard, DeltaLine } from '../Chart'
 import Icon from '../Icon'
 import { useBusinesses } from '../../hooks/useBusinesses'
-import { useMerchantMode } from '../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../hooks/useMerchantMode'
 import { useAnalyticsData } from '../analytics/useAnalyticsData'
 import {
   SUCCESS_STATUSES,
@@ -69,7 +69,7 @@ export default function Analytics() {
   const [rangeKey, setRangeKey] = useState('30')
   const [compareOn, setCompareOn] = useState('prev')
   const { active: business } = useBusinesses()
-  const { mode } = useMerchantMode()
+  const { mode, modeReady } = useMerchantMode()
 
   const { start, end, prevStart, prevEnd, days } = useMemo(() => {
     const r = RANGES.find((x) => x.key === rangeKey) ?? RANGES[1]
@@ -86,14 +86,17 @@ export default function Analytics() {
     return { start: s, end: e, prevStart: ps, prevEnd: pe, days: daysBetween(s, e) }
   }, [rangeKey])
 
-  const { loading, txns, prevTxns, payouts, prevPayouts } = useAnalyticsData({
-    businessId: business?.id,
+  const { loading: dataLoading, txns, prevTxns, payouts, prevPayouts } = useAnalyticsData({
+    businessId: modeReady ? business?.id : undefined,
     mode,
     start,
     end,
     prevStart,
     prevEnd,
   })
+
+  const loading = dataLoading || !modeReady
+  useModeDataLoading(loading)
 
   const successful = (r) => SUCCESS_STATUSES.includes(r.status)
   const failed = (r) => r.status === 'failed'
