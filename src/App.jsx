@@ -41,6 +41,8 @@ import SmsVoice from './sms/pages/Voice'
 import SmsUssd from './sms/pages/Ussd'
 import SmsWallet from './sms/pages/Wallet'
 import SmsSettingsPage from './sms/pages/SmsSettings'
+import SmsDeveloper from './sms/pages/Developer'
+
 
 import ProtectedRoute from './components/ProtectedRoute'
 
