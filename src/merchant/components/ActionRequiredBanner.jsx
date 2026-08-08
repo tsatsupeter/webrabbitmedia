@@ -3,9 +3,10 @@ import Icon from '../Icon'
 import { useActionRequired } from '../useActionRequired'
 
 export default function ActionRequiredBanner() {
-  const { required, items } = useActionRequired()
-  if (!required) return null
+  const { loading, required, items } = useActionRequired()
+  if (loading || !required) return null
   const top = items[0]
+
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg border border-red-500/30 bg-red-500/10">
       <div className="flex items-center gap-2.5 min-w-0">

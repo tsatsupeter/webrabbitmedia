@@ -133,15 +133,16 @@ function ActivateBanner() {
 }
 
 export default function GetStarted() {
-  const { mode, modeReady, business } = useMerchantMode()
+  const { mode, modeReady, business, loading } = useMerchantMode()
   const isLive = mode === 'live'
+  const ready = modeReady && !loading
   const approved = business?.status === 'approved'
   const completed = business?.id ? getCompletedSteps(business.id) : []
   const verifDone = VERIF_STEPS.filter((s) => completed.includes(s)).length
 
   return (
     <div className="w-full px-4 md:px-8 py-6 space-y-10">
-      {modeReady && !approved && (
+      {ready && !approved && (
         <div className="flex justify-center">
           <div
             className={`px-4 py-2 rounded-lg border text-[0.8rem] flex items-center gap-2 ${
@@ -160,7 +161,8 @@ export default function GetStarted() {
 
       <ActionRequiredBanner />
 
-      {!approved && <ActivateBanner />}
+      {ready && !approved && <ActivateBanner />}
+
 
       {/* Quick actions */}
       <section>

@@ -1,94 +1,158 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { supabase } from '../integrations/supabase/client'
-import { useAuth } from './useAuth'
+import { getAuthSnapshot, subscribeAuth } from './useAuth'
 
 const LS_KEY = 'wr.activeBusinessId'
 const BRAND_EVENT = 'wr:brands-changed'
 
+// Single shared businesses store. Every consumer (layout, sidebar, mode hook,
+// every page) reads the same snapshot, so a component that mounts after the
+// initial fetch sees loaded data immediately instead of restarting from
+// `loading: true` / `active: null` (which caused the stale-content flash).
+let businesses = []
+let activeId = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null
+let loading = true
+let snapshot = { businesses: [], active: null, activeId, loading: true }
+
+const listeners = new Set()
+const signedCache = new Map() // logo_path -> { url, exp }
+let currentUserId = undefined
+let inflight = null
+
+function emit() {
+  snapshot = {
+    businesses,
+    active: businesses.find((b) => b.id === activeId) || null,
+    activeId,
+    loading,
+  }
+  listeners.forEach((l) => l())
+}
+
+function subscribe(fn) {
+  listeners.add(fn)
+  return () => listeners.delete(fn)
+}
+
+function getSnapshot() {
+  return snapshot
+}
+
+async function resolveLogo(path) {
+  if (!path) return null
+  const now = Date.now()
+  const cached = signedCache.get(path)
+  if (cached && cached.exp > now) return cached.url
+  const { data } = await supabase.storage.from('avatars').createSignedUrl(path, 3600)
+  const url = data?.signedUrl || null
+  if (url) signedCache.set(path, { url, exp: now + 55 * 60 * 1000 })
+  return url
+}
+
+async function fetchAll(userId) {
+  const [{ data: biz }, { data: profile }] = await Promise.all([
+    supabase
+      .from('businesses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true }),
+    supabase.from('profiles').select('last_active_business_id').eq('id', userId).maybeSingle(),
+  ])
+  const list = biz ?? []
+  const ids = list.map((b) => b.id)
+  const brandsByBiz = new Map()
+  if (ids.length > 0) {
+    const { data: brandRows } = await supabase
+      .from('brands')
+      .select('business_id, name, logo_path')
+      .in('business_id', ids)
+      .eq('is_primary', true)
+    const rows = brandRows || []
+    const urls = await Promise.all(rows.map((r) => resolveLogo(r.logo_path)))
+    rows.forEach((r, i) => {
+      brandsByBiz.set(r.business_id, { name: r.name, logoUrl: urls[i] })
+    })
+  }
+  const merged = list.map((b) => ({ ...b, brand: brandsByBiz.get(b.id) || null }))
+
+  businesses = merged
+  const remembered = profile?.last_active_business_id || activeId
+  const valid = merged.find((b) => b.id === remembered)?.id || merged[0]?.id || null
+  activeId = valid
+  if (valid && typeof window !== 'undefined') localStorage.setItem(LS_KEY, valid)
+  loading = false
+  emit()
+}
+
+function load(force = false) {
+  const userId = currentUserId
+  if (!userId) {
+    businesses = []
+    loading = false
+    inflight = null
+    emit()
+    return Promise.resolve()
+  }
+  if (inflight && !force) return inflight
+  inflight = fetchAll(userId)
+    .catch(() => {
+      loading = false
+      emit()
+    })
+    .finally(() => {
+      inflight = null
+    })
+  return inflight
+}
+
+let started = false
+function start() {
+  if (started || typeof window === 'undefined') return
+  started = true
+
+  const onAuth = ({ user, loading: authLoading }) => {
+    if (authLoading) return
+    const uid = user?.id ?? null
+    if (uid === currentUserId) return
+    currentUserId = uid
+    businesses = []
+    loading = Boolean(uid)
+    inflight = null
+    signedCache.clear()
+    emit()
+    load(true)
+  }
+
+  subscribeAuth(onAuth)
+  onAuth(getAuthSnapshot())
+
+  window.addEventListener(BRAND_EVENT, () => load(true))
+}
+
 export function useBusinesses() {
-  const { user, loading: authLoading } = useAuth()
-  const [businesses, setBusinesses] = useState([])
-  const [activeId, setActiveIdState] = useState(() =>
-    typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null,
-  )
-  const [loading, setLoading] = useState(true)
-  const signedCache = useRef(new Map()) // logo_path -> { url, exp }
+  start()
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+  return {
+    businesses: snap.businesses,
+    active: snap.active,
+    activeId: snap.activeId,
+    loading: snap.loading,
+    setActive,
+    refresh,
+  }
+}
 
-  const resolveLogo = useCallback(async (path) => {
-    if (!path) return null
-    const now = Date.now()
-    const cached = signedCache.current.get(path)
-    if (cached && cached.exp > now) return cached.url
-    const { data } = await supabase.storage.from('avatars').createSignedUrl(path, 3600)
-    const url = data?.signedUrl || null
-    if (url) signedCache.current.set(path, { url, exp: now + 55 * 60 * 1000 })
-    return url
-  }, [])
+export async function setActive(id) {
+  activeId = id
+  if (typeof window !== 'undefined') localStorage.setItem(LS_KEY, id)
+  emit()
+  if (currentUserId) {
+    await supabase.from('profiles').update({ last_active_business_id: id }).eq('id', currentUserId)
+  }
+}
 
-  const load = useCallback(async () => {
-    if (!user) {
-      setBusinesses([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    const [{ data: biz }, { data: profile }] = await Promise.all([
-      supabase
-        .from('businesses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true }),
-      supabase.from('profiles').select('last_active_business_id').eq('id', user.id).maybeSingle(),
-    ])
-    const list = biz ?? []
-    const ids = list.map((b) => b.id)
-    let brandsByBiz = new Map()
-    if (ids.length > 0) {
-      const { data: brandRows } = await supabase
-        .from('brands')
-        .select('business_id, name, logo_path')
-        .in('business_id', ids)
-        .eq('is_primary', true)
-      const rows = brandRows || []
-      const urls = await Promise.all(rows.map((r) => resolveLogo(r.logo_path)))
-      rows.forEach((r, i) => {
-        brandsByBiz.set(r.business_id, { name: r.name, logoUrl: urls[i] })
-      })
-    }
-    const merged = list.map((b) => ({ ...b, brand: brandsByBiz.get(b.id) || null }))
-    setBusinesses(merged)
-    const remembered = profile?.last_active_business_id || activeId
-    const valid = merged.find((b) => b.id === remembered)?.id || merged[0]?.id || null
-    setActiveIdState(valid)
-    if (valid && typeof window !== 'undefined') localStorage.setItem(LS_KEY, valid)
-    setLoading(false)
-  }, [user, resolveLogo]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!authLoading) load()
-  }, [authLoading, load])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const onChange = () => load()
-    window.addEventListener(BRAND_EVENT, onChange)
-    return () => window.removeEventListener(BRAND_EVENT, onChange)
-  }, [load])
-
-  const setActive = useCallback(
-    async (id) => {
-      setActiveIdState(id)
-      if (typeof window !== 'undefined') localStorage.setItem(LS_KEY, id)
-      if (user) {
-        await supabase.from('profiles').update({ last_active_business_id: id }).eq('id', user.id)
-      }
-    },
-    [user],
-  )
-
-  const active = businesses.find((b) => b.id === activeId) || null
-
-  return { businesses, active, activeId, setActive, loading, refresh: load }
+export function refresh() {
+  return load(true)
 }
 
 export function notifyBrandsChanged() {
