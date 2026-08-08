@@ -33,12 +33,11 @@ export default function HostedCheckout() {
       <ParamTable
         rows={[
           { name: 'amount', type: 'number', required: true, desc: 'Total to charge, in GHS.' },
-          { name: 'channel', type: 'enum', desc: 'ANY (default), MOMO, or CARD — restricts the methods shown on the page.' },
-          { name: 'customer_name', type: 'string', desc: 'Shown on the checkout page.' },
-          { name: 'customer_email', type: 'string', desc: 'Stored with the transaction and used for the receipt.' },
-          { name: 'desc', type: 'string', desc: 'Order description. Used as the line item when products is omitted.' },
-          { name: 'redirect_url', type: 'string', desc: 'Where the customer returns after paying. Must be http(s).' },
-          { name: 'products', type: 'array', desc: 'Optional line items: [{ name, count, price }]. Must total amount.' },
+          { name: 'customer_email', type: 'string', required: true, desc: 'Payer email. Required by the checkout page and stored with the transaction.' },
+          { name: 'channel', type: 'enum', desc: 'ANY (default), MOMO, or CARD — recorded on the transaction.' },
+          { name: 'network', type: 'enum', desc: 'Optional MTN, TELECEL, AT or GMONEY — preselects the wallet on the page.' },
+          { name: 'subscriber_number', type: 'string', desc: 'Optional payer phone number, prefilled on the page.' },
+          { name: 'desc', type: 'string', desc: 'Order description shown in your dashboard. Max 100 chars.' },
         ]}
       />
 
@@ -53,15 +52,11 @@ export default function HostedCheckout() {
   -H "Content-Type: application/json" \\
   -d '{
     "amount": 170.00,
-    "channel": "ANY",
-    "customer_name": "Ama Serwaa",
     "customer_email": "customer@example.com",
-    "desc": "Order 1042",
-    "redirect_url": "https://yourshop.com/thank-you",
-    "products": [
-      { "name": "Wireless Mouse", "count": 2, "price": "25.00" },
-      { "name": "Mechanical Keyboard", "count": 1, "price": "120.00" }
-    ]
+    "channel": "ANY",
+    "network": "MTN",
+    "subscriber_number": "0240000000",
+    "desc": "Order 1042"
   }'`,
           },
           {
@@ -76,10 +71,9 @@ export default function HostedCheckout() {
   },
   body: JSON.stringify({
     amount: 170.0,
+    customer_email: "customer@example.com",
     channel: "ANY",
-    customer_name: "Ama Serwaa",
     desc: "Order 1042",
-    redirect_url: "https://yourshop.com/thank-you",
   }),
 })
 const session = await res.json()
@@ -94,10 +88,10 @@ window.location.href = session.checkout_url`,
         filename="Response · 201 Created"
         code={`{
   "transaction_id": "521888807466",
-  "order_id": "ORD-521888807466",
   "status": "pending",
   "checkout_url": "https://360pay-checkout.libertepay.com/checkout/2K0MNU1NSZ0Lj",
-  "checkout_timeout": 1800,
+  "access_code": "2K0MNU1NSZ0Lj",
+  "provider_reference": "TXN-8841002",
   "gross_amount": 170,
   "currency": "GHS"
 }`}
@@ -106,10 +100,12 @@ window.location.href = session.checkout_url`,
         rows={[
           { name: 'transaction_id', type: 'string', desc: '12-digit Web Rabbit transaction id — poll this for the outcome.' },
           { name: 'checkout_url', type: 'string', desc: 'Redirect the customer here.' },
-          { name: 'checkout_timeout', type: 'number', desc: 'Seconds the session stays valid (typically 1800).' },
+          { name: 'access_code', type: 'string', desc: 'Provider access code for the session (useful for support).' },
+          { name: 'provider_reference', type: 'string', desc: 'Provider-side reference for the session.' },
           { name: 'status', type: 'enum', desc: 'Always pending at creation; settles when the customer pays.' },
         ]}
       />
+
       <Callout type="note" title="Confirm before fulfilling">
         Never fulfil an order on the redirect alone. Confirm with{' '}
         <a href="/docs/transactions-retrieve" className="text-primary hover:underline">
