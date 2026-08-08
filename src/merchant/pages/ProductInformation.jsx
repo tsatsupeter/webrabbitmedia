@@ -143,6 +143,29 @@ function toggleInList(list, val) {
   return list.includes(val) ? list.filter((v) => v !== val) : [...list, val]
 }
 
+const BUSINESS_CATEGORY_MAP = {
+  'SaaS/AI or Digital products': 'SaaS',
+  Edtech: 'Online course',
+  Services: 'Consulting',
+  'Physical products': 'Other',
+  'Financial services': 'Other',
+  Gaming: 'Other',
+  Marketplace: 'Other',
+  Others: 'Other',
+}
+
+function mapBusinessCategory(cat) {
+  if (!cat) return ''
+  if (BUSINESS_CATEGORY_MAP[cat]) return BUSINESS_CATEGORY_MAP[cat]
+  return CATEGORY_OPTIONS.includes(cat) ? cat : ''
+}
+
+function stripUrlPrefix(url) {
+  if (!url) return ''
+  return url.trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '')
+}
+
+
 export default function ProductInformation() {
   const navigate = useNavigate()
   const { user } = useAuth()
