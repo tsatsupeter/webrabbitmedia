@@ -10,10 +10,17 @@ export type Mode = 'test' | 'live'
 export const UAT_BASE = 'https://uat-360pay-merchant-api.libertepay.com'
 export const LIVE_BASE = 'https://360pay-merchant-api.libertepay.com'
 
+// 360Pay issues both test and live keys on the same merchant host: the sandbox
+// (`uat-…`) host rejects portal-issued keys with `{"code":"01","msg":"Invalid
+// Key"}`, while the same key authenticates fine against the merchant host and
+// resolves sandbox accounts. So both modes default to the merchant host and the
+// key itself (sk_test_… vs sk_live_…) selects the environment. Override with
+// LIBERTE_TEST_BASE_URL / LIBERTE_LIVE_BASE_URL if that ever changes.
 export function baseUrl(mode: Mode) {
   const override = Deno.env.get(mode === 'live' ? 'LIBERTE_LIVE_BASE_URL' : 'LIBERTE_TEST_BASE_URL')
-  return (override || (mode === 'live' ? LIVE_BASE : UAT_BASE)).replace(/\/+$/, '')
+  return (override || LIVE_BASE).replace(/\/+$/, '')
 }
+
 
 export function secretKey(mode: Mode) {
   const key = Deno.env.get(mode === 'live' ? 'LIBERTE_LIVE_SECRET_KEY' : 'LIBERTE_TEST_SECRET_KEY')
