@@ -28,8 +28,22 @@ import History from './merchant/pages/payouts/History'
 import Collect from './merchant/pages/sales/Collect'
 import Settings from './merchant/pages/Settings'
 import AcceptInvite from './pages/AcceptInvite'
+import SmsLayout from './sms/SmsLayout'
+import SmsOverview from './sms/pages/Overview'
+import SmsQuickSend from './sms/pages/QuickSend'
+import SmsCampaigns from './sms/pages/Campaigns'
+import SmsCampaignDetail from './sms/pages/CampaignDetail'
+import SmsMessageLog from './sms/pages/MessageLog'
+import SmsSenderIds from './sms/pages/SenderIds'
+import SmsContacts from './sms/pages/Contacts'
+import SmsOtp from './sms/pages/Otp'
+import SmsVoice from './sms/pages/Voice'
+import SmsUssd from './sms/pages/Ussd'
+import SmsWallet from './sms/pages/Wallet'
+import SmsSettingsPage from './sms/pages/SmsSettings'
 
 import ProtectedRoute from './components/ProtectedRoute'
+
 
 
 function App() {
