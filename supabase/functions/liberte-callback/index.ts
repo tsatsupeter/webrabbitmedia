@@ -1,9 +1,9 @@
-// Public NaloPay webhook. NaloPay POSTs the terminal outcome of a collection or
-// hosted-checkout session here. There is no signature header, so we resolve the
-// transaction by order_id (and the reference we echo back via extra_data), then
-// settle the ledger row and compute the platform commission on approval.
+// Public 360Pay (LibertePay) webhook. 360Pay POSTs the terminal outcome of a
+// collection or hosted-checkout session here. We resolve the ledger row by the
+// transaction_id we sent (our 12-digit reference), or by the provider's own
+// transaction id / reference, then settle it and compute platform commission.
 import { admin, corsHeaders, jsonResponse } from '../_shared/auth.ts'
-import { mapStatus } from '../_shared/nalo.ts'
+import { mapStatusCode } from '../_shared/liberte.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -12,32 +12,42 @@ Deno.serve(async (req) => {
   let payload: any = {}
   try { payload = await req.json() } catch { payload = {} }
 
-  const orderId = String(payload?.order_id || '').trim()
-  const reference = String(payload?.extra_data?.reference || payload?.reference || '').trim()
-  if (!orderId && !reference) {
-    return jsonResponse({ received: true, matched: false, reason: 'missing order_id' }, 200)
+  // 360Pay echoes our consumer transaction_id as external_transaction_id and
+  // returns its own id as transaction_id — accept either ordering defensively.
+  const ours = [
+    payload?.external_transaction_id,
+    payload?.transaction_id,
+    payload?.transaction_reference,
+    payload?.metadata?.reference,
+  ].map((v) => String(v ?? '').trim()).filter((v) => /^\d{12}$/.test(v))
+
+  const providerIds = [payload?.transaction_id, payload?.external_transaction_id]
+    .map((v) => String(v ?? '').trim()).filter(Boolean)
+
+  if (!ours.length && !providerIds.length) {
+    return jsonResponse({ received: true, matched: false, reason: 'missing transaction_id' }, 200)
   }
 
   const db = admin()
   let row: any = null
 
-  if (reference) {
+  if (ours.length) {
     const { data } = await db.from('transactions')
       .select('id, business_id, gross_amount, status')
-      .eq('provider_transaction_id', reference)
+      .in('provider_transaction_id', ours)
       .maybeSingle()
     row = data ?? null
   }
-  if (!row && orderId) {
+  if (!row && providerIds.length) {
     const { data } = await db.from('transactions')
       .select('id, business_id, gross_amount, status')
-      .eq('provider_reference', orderId)
+      .in('provider_reference', providerIds)
       .maybeSingle()
     row = data ?? null
   }
 
   if (!row) {
-    console.log('nalo-callback: no matching transaction', { orderId, reference })
+    console.log('liberte-callback: no matching transaction', { ours, providerIds })
     return jsonResponse({ received: true, matched: false }, 200)
   }
 
@@ -46,7 +56,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ received: true, matched: true, changed: false }, 200)
   }
 
-  const status = mapStatus(payload?.status)
+  const status = mapStatusCode(payload?.status_code, payload?.status)
   if (status === 'pending') {
     return jsonResponse({ received: true, matched: true, changed: false }, 200)
   }
@@ -63,9 +73,9 @@ Deno.serve(async (req) => {
     status,
     fee_amount: fee,
     net_amount: net,
-    provider_reference: orderId || null,
-    provider_code: payload?.code != null ? String(payload.code) : null,
-    provider_reason: payload?.message ?? payload?.reason ?? String(payload?.status || ''),
+    provider_reference: payload?.transaction_id ? String(payload.transaction_id) : null,
+    provider_code: payload?.status_code != null ? String(payload.status_code) : null,
+    provider_reason: payload?.transaction_message ?? payload?.status ?? null,
     raw_response: payload,
   }).eq('id', row.id)
 

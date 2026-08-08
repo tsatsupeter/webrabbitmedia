@@ -19,25 +19,32 @@ export default function CollectMomo() {
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="POST" path={`/${API_VERSION}/collect/momo`} />
       <Callout type="info" title="Supported networks">
-        Pass the <code>network</code> field using one of these codes:{' '}
-        <code>MTN</code> · <code>TELECEL</code> (formerly Vodafone) · <code>AT</code> (AirtelTigo).
+        Pass the <code>network</code> field using one of these codes: <code>MTN</code> ·{' '}
+        <code>TELECEL</code> (formerly Vodafone) · <code>AT</code> (AirtelTigo) · <code>GMONEY</code>.
         Legacy codes <code>VDF</code>, <code>ATL</code> and <code>TGO</code> are still accepted and mapped
-        automatically.
+        automatically. See{' '}
+        <a href="/docs/provider-codes" className="text-primary hover:underline">institution codes</a>.
       </Callout>
       <p className="text-sm text-white/60 mt-2">
         <code>subscriber_number</code> accepts either the local format <code>0240000000</code> or the
-        international format <code>233240000000</code>. <code>amount</code> is decimal <strong>GHS</strong> —
-        no pesewa padding. See <a href="/docs/test-data" className="text-primary hover:underline">test numbers</a>.
+        international format <code>233240000000</code> — we normalise it for the provider.{' '}
+        <code>amount</code> is decimal <strong>GHS</strong> — no pesewa padding. See{' '}
+        <a href="/docs/test-data" className="text-primary hover:underline">test numbers</a>.
       </p>
+
+      <Callout type="note" title="Wallets are name-verified first">
+        Before any debit we run the provider's mandatory name lookup on the wallet. If the number cannot be
+        resolved you get <code>422 account_not_found</code> and <strong>no transaction is created</strong>.
+        On success the resolved <code>account_name</code> is returned and stored with the transaction.
+      </Callout>
 
       <h2 id="request">Request</h2>
       <ParamTable
         rows={[
           { name: 'amount', type: 'number', required: true, desc: 'Amount in GHS. Accepts number or numeric string, e.g. 10.50.' },
-          { name: 'subscriber_number', type: 'string', required: true, desc: 'Customer phone number, 10–12 digits, e.g. "0240000000".' },
-          { name: 'network', type: 'enum', required: true, desc: 'One of MTN, TELECEL, AT.' },
+          { name: 'subscriber_number', type: 'string', required: true, desc: 'Customer phone number, "0240000000" or "233240000000".' },
+          { name: 'network', type: 'enum', required: true, desc: 'One of MTN, TELECEL, AT, GMONEY.' },
           { name: 'desc', type: 'string', desc: 'Description shown in your dashboard. Max 100 chars.' },
-          { name: 'customer_name', type: 'string', desc: 'Name attached to the mobile money account.' },
           { name: 'customer_email', type: 'string', desc: 'Optional email captured with the transaction.' },
         ]}
       />
@@ -94,11 +101,12 @@ const tx = await res.json()`,
         filename="Response · 202 Pending"
         code={`{
   "transaction_id": "521888807466",
-  "order_id": "FPewDB25nodznJawcNykhx",
+  "provider_transaction_id": "TXN-8841002",
   "status": "pending",
-  "code": "PAY-CRTD-0055",
-  "reason": null,
-  "otp_code": "None*252#",
+  "code": "02",
+  "reason": "Transaction is being processed",
+  "account_name": "AMA SERWAA",
+  "subscriber_number": "0240000000",
   "gross_amount": 10.5,
   "fee_amount": 0,
   "net_amount": 10.5,
@@ -108,10 +116,10 @@ const tx = await res.json()`,
       <ParamTable
         rows={[
           { name: 'transaction_id', type: 'string', desc: '12-digit Web Rabbit transaction id. Use this to poll status.' },
-          { name: 'order_id', type: 'string', desc: 'Provider order id for the collection.' },
+          { name: 'provider_transaction_id', type: 'string', desc: 'Provider-side transaction id for the collection.' },
           { name: 'status', type: 'enum', desc: 'pending · approved · failed. MoMo charges start pending.' },
-          { name: 'code', type: 'string', desc: 'Upstream provider code, e.g. "PAY-CRTD-0055".' },
-          { name: 'otp_code', type: 'string', desc: 'USSD string the customer can dial if no prompt arrives.' },
+          { name: 'code', type: 'string', desc: 'Upstream status code: "00" success, "01" failed, "02" pending, "03" processing.' },
+          { name: 'account_name', type: 'string', desc: 'Wallet holder name resolved by the mandatory name lookup.' },
           { name: 'gross_amount', type: 'number', desc: 'Amount charged, before fee.' },
           { name: 'fee_amount', type: 'number', desc: 'Platform fee (15%), applied once the charge is approved.' },
           { name: 'net_amount', type: 'number', desc: 'Amount credited to your balance after settlement.' },
@@ -120,15 +128,15 @@ const tx = await res.json()`,
       />
       <Callout type="note" title="HTTP status">
         <code>202</code> for pending (the usual case — the customer still has to authorise on their phone),
-        <code>201</code> if the provider settles immediately, <code>200</code> for a resolved failure. All
-        responses include an <code>x-request-id</code> header — save it if you need support. The final
-        outcome is confirmed by{' '}
+        <code>201</code> if the provider settles immediately, <code>200</code> for a resolved failure,{' '}
+        <code>422</code> when the wallet fails name verification. All responses include an{' '}
+        <code>x-request-id</code> header — save it if you need support. The final outcome is confirmed by{' '}
         <a href="/docs/webhooks" className="text-primary hover:underline">polling the retrieve endpoint</a>.
       </Callout>
-      <Callout type="info" title="Test mode is simulated">
-        The provider has no sandbox, so <code>wr_test_</code> keys never reach the network. A test charge
-        stays pending for ~8 seconds, then settles as approved — unless the amount ends in{' '}
-        <code>.99</code>, which settles as failed so you can test both paths.
+      <Callout type="info" title="Test mode hits the provider sandbox">
+        <code>wr_test_</code> keys run against the provider's UAT environment — real API calls, no real
+        money. Use the sandbox wallet from{' '}
+        <a href="/docs/test-data" className="text-primary hover:underline">Test data</a>.
       </Callout>
     </>
   )

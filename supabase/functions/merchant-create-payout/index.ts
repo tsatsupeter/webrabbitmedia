@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       await admin.from('transactions').update({ payout_id: payout.id }).in('id', ids)
     }
 
-    // NaloPay has no disbursement API on our account: payouts stay pending and
+    // Payouts are not automated through 360Pay yet: payouts stay pending and
     // are settled manually by an admin from the payouts dashboard.
     const { data: refreshed } = await admin.from('payouts').select('*').eq('id', payout.id).single()
     return json({ payout: refreshed || payout, transaction_count: ids.length, provider: null }, 200)

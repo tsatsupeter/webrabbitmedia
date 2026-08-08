@@ -6,9 +6,11 @@ export default function Webhooks() {
     <>
       <p>
         Mobile Money and Hosted Checkout payments are asynchronous: a charge starts as <code>pending</code>{' '}
-        while the customer authorises it. Our platform receives the provider callback and settles your
-        ledger automatically — you observe the outcome by polling the retrieve endpoint.
+        while the customer authorises it. The provider posts the terminal outcome to our settlement
+        callback, which credits your ledger automatically — you observe the outcome by polling the retrieve
+        endpoint.
       </p>
+
 
       <Callout type="info" title="Merchant webhooks coming soon">
         HMAC-signed <code>POST</code> webhooks for <code>collection.approved</code> and{' '}

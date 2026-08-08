@@ -2,7 +2,7 @@
 
 Edge gateway for `api.webrabbitmedia.com`. Handles CORS, rate limiting, request ids,
 and structured logging, then forwards to the Supabase Edge Functions that implement
-the actual NaloPay integration.
+the actual 360Pay (LibertePay) integration.
 
 | Method | Path | Upstream function |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ the actual NaloPay integration.
 | GET | `/v1/transactions` | `list-transactions` |
 | GET | `/v1/transactions/:id` | `transaction-status` |
 
-Payment callbacks from NaloPay go directly to the Supabase function
-`nalo-callback` and do not pass through this worker.
+Payment callbacks from 360Pay go directly to the Supabase function
+`liberte-callback` and do not pass through this worker.
 
 Deploy with `npx wrangler deploy` from this directory.

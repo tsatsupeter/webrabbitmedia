@@ -7,8 +7,9 @@ import Icon from '../../Icon'
 
 const NETWORKS = [
   { value: 'MTN', label: 'MTN' },
-  { value: 'TELECEL', label: 'Telecel (Vodafone)' },
-  { value: 'AT', label: 'AirtelTigo' },
+  { value: 'TELECEL', label: 'Telecel Cash' },
+  { value: 'AT', label: 'AT Money' },
+  { value: 'GMONEY', label: 'G-Money' },
 ]
 
 
@@ -58,19 +59,25 @@ export default function Collect() {
           customer_name: customerName.trim(),
         },
       })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
+      if (error) {
+        // Surface the function's JSON body (e.g. 422 account_not_found).
+        let msg = error.message
+        try {
+          const body = await error.context?.json?.()
+          if (body?.reason || body?.error) msg = body.reason || body.error
+        } catch { /* keep default */ }
+        throw new Error(msg)
+      }
+      if (data?.error) throw new Error(data.reason || data.error)
+      const who = data?.account_name || phone
       if (data?.status === 'approved') {
-        toast.success(`Charged ${money(amt)} from ${phone}`)
+        toast.success(`Charged ${money(amt)} from ${who}`)
       } else if (data?.status === 'pending') {
-        toast.message(
-          data?.simulated
-            ? 'Test charge created — it settles automatically in a few seconds'
-            : `Prompt sent to ${phone}${data?.otp_code ? ` — customer can also dial ${data.otp_code}` : ''}`,
-        )
+        toast.message(`Prompt sent to ${who} (${phone}) — it settles once they approve on their handset`)
       } else {
         toast.error(data?.reason || 'Charge failed')
       }
+
 
       setAmount('')
       setCustomerName('')
