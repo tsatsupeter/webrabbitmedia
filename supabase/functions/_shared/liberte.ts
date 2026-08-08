@@ -228,9 +228,13 @@ export async function statusCheck(mode: Mode, transaction_id: string): Promise<S
   const res = await libertePost(mode, '/v1/payments/status-check', { transaction_id })
   const d = res.json?.data ?? {}
   const code = d.status_code != null ? String(d.status_code) : respCode(res.json)
+  const message = d.message ?? respMessage(res.json)
+  // A transaction 360Pay has not registered yet answers code "01" / FAILED with
+  // "Transaction Not Found." — that is NOT a payment failure, so keep it pending.
+  const notFound = /not\s*found/i.test(String(message ?? '')) || Object.keys(d).length === 0
   return {
     ok: res.ok,
-    status: mapStatusCode(code, d.status ?? res.json?.status),
+    status: notFound ? 'pending' : mapStatusCode(code, d.status ?? res.json?.status),
     code,
     message: d.message ?? respMessage(res.json),
     data: res.json,
@@ -257,7 +261,8 @@ export async function getInstitutions(mode: Mode, type: 'MNO' | 'BANK'): Promise
 export async function resolveInstitutionCode(mode: Mode, network: Network): Promise<string> {
   const slug = PAYMENT_SLUGS[network]
   const list = await getInstitutions(mode, 'MNO')
-  const hit = list?.find((i) => String(i.slug || '').toLowerCase() === slug)
+  const norm = (v: unknown) => String(v || '').toLowerCase().replace(/[^a-z]/g, '')
+  const hit = list?.find((i) => norm(i.slug) === norm(slug))
   return hit?.code ? String(hit.code) : INSTITUTION_CODES[network]
 }
 
