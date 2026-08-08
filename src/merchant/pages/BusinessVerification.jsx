@@ -234,10 +234,14 @@ export default function BusinessVerification() {
     if (!active?.id || !user?.id) { toast.error('No active business selected'); return { error: true } }
     setSaving(true)
     try {
-      const [ip, tp, ap] = await Promise.all([
+      const [ip, tp, ap, rf, oc, d1, d2] = await Promise.all([
         uploadIfNeeded(incorpFile, 'incorporation', incorpPath),
         uploadIfNeeded(taxFile, 'tax', taxPath),
         uploadIfNeeded(addrProofFile, 'address-proof', addrProofPath),
+        uploadIfNeeded(regFormFile, 'registration-form', regFormPath),
+        uploadIfNeeded(ownerCardFile, 'owner-ghana-card', ownerCardPath),
+        uploadIfNeeded(dir1CardFile, 'director1-ghana-card', dir1CardPath),
+        uploadIfNeeded(dir2CardFile, 'director2-ghana-card', dir2CardPath),
       ])
       const payload = {
         business_id: active.id,
@@ -247,7 +251,7 @@ export default function BusinessVerification() {
         entity_type: entityType || null,
         incorporation_date: incorpDate || null,
         registration_number: regNumber.trim() || null,
-        tax_id: taxId.trim() || null,
+        tax_id: isSoleProp ? null : (taxId.trim() || null),
         country: country || null,
         address_line1: addr1.trim() || null,
         address_line2: addr2.trim() || null,
@@ -262,8 +266,12 @@ export default function BusinessVerification() {
         owner_dob: ownerDob || null,
         owner_ownership_percent: pctNum,
         incorporation_doc_path: ip,
-        tax_doc_path: tp,
+        tax_doc_path: isSoleProp ? null : tp,
         address_proof_path: ap,
+        registration_form_doc_path: rf,
+        owner_ghana_card_path: isSoleProp ? oc : null,
+        director1_ghana_card_path: isSoleProp ? null : d1,
+        director2_ghana_card_path: isSoleProp ? null : d2,
         status,
         submitted_at: status === 'submitted' ? new Date().toISOString() : null,
       }
@@ -272,7 +280,9 @@ export default function BusinessVerification() {
         .upsert(payload, { onConflict: 'business_id' })
       if (error) throw error
       setIncorpPath(ip); setTaxPath(tp); setAddrProofPath(ap)
+      setRegFormPath(rf); setOwnerCardPath(oc); setDir1CardPath(d1); setDir2CardPath(d2)
       setIncorpFile(null); setTaxFile(null); setAddrProofFile(null)
+      setRegFormFile(null); setOwnerCardFile(null); setDir1CardFile(null); setDir2CardFile(null)
       return { error: false }
     } catch (e) {
       toast.error(e.message || 'Failed to save')
