@@ -54,7 +54,7 @@ export default function CreateBusiness() {
     name: '',
     website: '',
     category: '',
-    location: '',
+    location: 'Ghana',
     referral: '',
     note: '',
   })
