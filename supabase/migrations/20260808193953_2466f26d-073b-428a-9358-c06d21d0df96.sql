@@ -1,0 +1,1 @@
+UPDATE public.api_keys SET revoked_at = now() WHERE key_hash = '13110204d8e3028f682035e5de271b82c9054d84360d1c55d3df0a8ef36062b2';
