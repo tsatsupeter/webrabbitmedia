@@ -161,7 +161,7 @@ function ExpandableItem({ item, onNavigate, compact }) {
   )
 }
 
-export default function Sidebar({ onNavigate, compact = false }) {
+export default function Sidebar({ onNavigate, compact = false, groups = navGroups, product = 'payments' }) {
   const { mode, setMode, canUseLive, modeReady, switching } = useMerchantMode()
 
   return (
@@ -169,9 +169,10 @@ export default function Sidebar({ onNavigate, compact = false }) {
       className={`${compact ? 'w-[80px]' : 'w-[260px]'} shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border transition-all duration-200`}
     >
       <BusinessSwitcher compact={compact} />
+      <ProductSwitcher compact={compact} product={product} />
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
-        {navGroups.map((group, i) => (
+        {groups.map((group, i) => (
           <div key={i} className="space-y-0.5">
             {!compact && group.label && (
               <div className="px-3 pt-2 pb-1 text-[0.65rem] uppercase tracking-wider text-white/35">
