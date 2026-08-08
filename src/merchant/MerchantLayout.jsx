@@ -4,7 +4,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Icon from './Icon'
 import ModeSwitchOverlay from './components/ModeSwitchOverlay'
-import { PageLoader } from './components/EmptyState'
+import { FullScreenLoader } from './components/EmptyState'
 import { useAuth } from '../hooks/useAuth'
 import { useBusinesses } from '../hooks/useBusinesses'
 
@@ -40,6 +40,14 @@ export default function MerchantLayout() {
   const bareCanvas = pathname === '/merchant/sentra'
   const hydrating = authLoading || (user && bizLoading)
 
+
+  if (hydrating) {
+    return (
+      <div className="min-h-screen w-full bg-merchant-bg text-white font-body">
+        <FullScreenLoader />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex">
@@ -83,8 +91,9 @@ export default function MerchantLayout() {
           </button>
         )}
         <main className="flex-1 overflow-y-auto flex flex-col">
-          {hydrating ? <PageLoader label="Loading your dashboard…" /> : <Outlet />}
+          <Outlet />
         </main>
+
 
       </div>
     </div>

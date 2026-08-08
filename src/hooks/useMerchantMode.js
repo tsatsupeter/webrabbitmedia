@@ -1,11 +1,15 @@
-import { useCallback, useLayoutEffect, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { useBusinesses } from './useBusinesses'
 
 const key = (id) => `wr.merchantMode.${id}`
 const ACTIVE_BUSINESS_KEY = 'wr.activeBusinessId'
-const SWITCH_MS = 650
+const SWITCH_MS = 600
 const TAIL_MS = 150
+// Give pages a beat to kick off their refetch before we start polling for idle.
+const SETTLE_GRACE_MS = 180
+const SETTLE_POLL_MS = 90
+const SETTLE_MAX_MS = 6000
 
 function initialStoredMode() {
   if (typeof window === 'undefined') return null
@@ -45,11 +49,24 @@ function getSnapshot() {
   return snapshot
 }
 
+// Pages register while their mode-scoped data is in flight so the overlay can
+// stay up until the new mode's data has actually landed (no flash of stale rows).
+let busy = 0
+let settleTimer = null
+export function beginModeLoad() {
+  busy += 1
+}
+export function endModeLoad() {
+  busy = Math.max(0, busy - 1)
+}
+
 function clearTimers() {
   if (switchTimer) clearTimeout(switchTimer)
   if (tailTimer) clearTimeout(tailTimer)
+  if (settleTimer) clearTimeout(settleTimer)
   switchTimer = null
   tailTimer = null
+  settleTimer = null
 }
 
 function hydrate(activeId, canUseLive) {
@@ -98,7 +115,8 @@ function requestMode(next) {
     }
     emit()
 
-    tailTimer = setTimeout(() => {
+    const startedAt = Date.now()
+    const finish = () => {
       state.switching = false
       state.pendingMode = null
       emit()
@@ -108,8 +126,28 @@ function requestMode(next) {
             ? 'Real payments and payouts are enabled.'
             : 'Sandbox environment — no real money moves.',
       })
-    }, TAIL_MS)
+    }
+    const waitForIdle = () => {
+      if (busy === 0 || Date.now() - startedAt > SETTLE_MAX_MS) {
+        tailTimer = setTimeout(finish, TAIL_MS)
+        return
+      }
+      settleTimer = setTimeout(waitForIdle, SETTLE_POLL_MS)
+    }
+    settleTimer = setTimeout(waitForIdle, SETTLE_GRACE_MS)
   }, SWITCH_MS)
+}
+
+/**
+ * Register a page's mode-scoped fetch so the mode-switch overlay stays visible
+ * until the data for the new mode has finished loading.
+ */
+export function useModeDataLoading(loading) {
+  useEffect(() => {
+    if (!loading) return undefined
+    beginModeLoad()
+    return () => endModeLoad()
+  }, [loading])
 }
 
 export function useMerchantMode() {
@@ -138,3 +176,4 @@ export function useMerchantMode() {
     pendingMode: snap.pendingMode,
   }
 }
+

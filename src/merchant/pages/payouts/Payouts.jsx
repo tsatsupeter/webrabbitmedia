@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
-import { useMerchantMode } from '../../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 import WithdrawModal from '../../components/WithdrawModal'
 import { PageLoader } from '../../components/EmptyState'
@@ -38,6 +38,7 @@ export default function Payouts() {
   const [monthly, setMonthly] = useState([])
   const [banks, setBanks] = useState([])
   const [loading, setLoading] = useState(true)
+  useModeDataLoading(loading)
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 

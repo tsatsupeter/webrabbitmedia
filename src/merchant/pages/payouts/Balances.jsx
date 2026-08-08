@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../integrations/supabase/client'
 import { useBusinesses } from '../../../hooks/useBusinesses'
-import { useMerchantMode } from '../../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../../hooks/useMerchantMode'
 import Icon from '../../Icon'
 
 const fmt = (v, ccy = 'GHS') =>
@@ -76,6 +76,7 @@ export default function Balances() {
   const [txs, setTxs] = useState([])
   const [payouts, setPayouts] = useState([])
   const [loading, setLoading] = useState(true)
+  useModeDataLoading(loading)
   const [showBreakdown, setShowBreakdown] = useState(false)
 
   // toolbar state
