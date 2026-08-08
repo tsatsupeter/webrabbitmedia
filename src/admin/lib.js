@@ -54,7 +54,7 @@ export const VERIFICATION_TABLES = [
 /** Document columns per verification table, for the reviewer's signed links. */
 export const VERIFICATION_DOCS = {
   identity_verification: ['id_document_front_path', 'id_document_back_path', 'selfie_path'],
-  business_verification: ['incorporation_doc_path', 'tax_doc_path', 'address_proof_path'],
+  business_verification: ['incorporation_doc_path', 'registration_form_doc_path', 'owner_ghana_card_path', 'director1_ghana_card_path', 'director2_ghana_card_path', 'tax_doc_path', 'address_proof_path'],
   bank_verification: ['proof_doc_path'],
   product_information: [],
 }

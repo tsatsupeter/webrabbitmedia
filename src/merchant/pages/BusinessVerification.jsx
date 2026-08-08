@@ -143,9 +143,17 @@ export default function BusinessVerification() {
   const [incorpPath, setIncorpPath] = useState(null)
   const [taxPath, setTaxPath] = useState(null)
   const [addrProofPath, setAddrProofPath] = useState(null)
+  const [regFormPath, setRegFormPath] = useState(null)
+  const [ownerCardPath, setOwnerCardPath] = useState(null)
+  const [dir1CardPath, setDir1CardPath] = useState(null)
+  const [dir2CardPath, setDir2CardPath] = useState(null)
   const [incorpFile, setIncorpFile] = useState(null)
   const [taxFile, setTaxFile] = useState(null)
   const [addrProofFile, setAddrProofFile] = useState(null)
+  const [regFormFile, setRegFormFile] = useState(null)
+  const [ownerCardFile, setOwnerCardFile] = useState(null)
+  const [dir1CardFile, setDir1CardFile] = useState(null)
+  const [dir2CardFile, setDir2CardFile] = useState(null)
 
   useEffect(() => {
     if (!active?.id) return
@@ -181,6 +189,10 @@ export default function BusinessVerification() {
         setIncorpPath(data.incorporation_doc_path)
         setTaxPath(data.tax_doc_path)
         setAddrProofPath(data.address_proof_path)
+        setRegFormPath(data.registration_form_doc_path)
+        setOwnerCardPath(data.owner_ghana_card_path)
+        setDir1CardPath(data.director1_ghana_card_path)
+        setDir2CardPath(data.director2_ghana_card_path)
         setConfirmed(data.status === 'submitted')
       }
       setLoading(false)
@@ -191,13 +203,19 @@ export default function BusinessVerification() {
   const emailValid = !supportEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail.trim())
   const pctNum = ownerPct === '' ? null : Number(ownerPct)
   const pctValid = pctNum === null || (!Number.isNaN(pctNum) && pctNum >= 0 && pctNum <= 100)
+  const isSoleProp = entityType === 'Sole Proprietorship'
+
+  const idDocsValid = isSoleProp
+    ? Boolean(ownerCardFile || ownerCardPath)
+    : Boolean((dir1CardFile || dir1CardPath) && (dir2CardFile || dir2CardPath) && (taxFile || taxPath))
 
   const requiredValid =
-    legalName.trim() && entityType && incorpDate && regNumber.trim() && taxId.trim() &&
+    legalName.trim() && entityType && incorpDate && regNumber.trim() && (isSoleProp || taxId.trim()) &&
     country && addr1.trim() && city.trim() && postal.trim() &&
     supportEmail.trim() && emailValid &&
     ownerName.trim() && ownerRole.trim() && ownerDob && ownerPct !== '' && pctValid &&
-    (incorpFile || incorpPath) && (taxFile || taxPath) && (addrProofFile || addrProofPath)
+    (incorpFile || incorpPath) && (regFormFile || regFormPath) && idDocsValid &&
+    (addrProofFile || addrProofPath)
 
   const canSubmit = requiredValid && confirmed && !saving
 
@@ -216,10 +234,14 @@ export default function BusinessVerification() {
     if (!active?.id || !user?.id) { toast.error('No active business selected'); return { error: true } }
     setSaving(true)
     try {
-      const [ip, tp, ap] = await Promise.all([
+      const [ip, tp, ap, rf, oc, d1, d2] = await Promise.all([
         uploadIfNeeded(incorpFile, 'incorporation', incorpPath),
         uploadIfNeeded(taxFile, 'tax', taxPath),
         uploadIfNeeded(addrProofFile, 'address-proof', addrProofPath),
+        uploadIfNeeded(regFormFile, 'registration-form', regFormPath),
+        uploadIfNeeded(ownerCardFile, 'owner-ghana-card', ownerCardPath),
+        uploadIfNeeded(dir1CardFile, 'director1-ghana-card', dir1CardPath),
+        uploadIfNeeded(dir2CardFile, 'director2-ghana-card', dir2CardPath),
       ])
       const payload = {
         business_id: active.id,
@@ -229,7 +251,7 @@ export default function BusinessVerification() {
         entity_type: entityType || null,
         incorporation_date: incorpDate || null,
         registration_number: regNumber.trim() || null,
-        tax_id: taxId.trim() || null,
+        tax_id: isSoleProp ? null : (taxId.trim() || null),
         country: country || null,
         address_line1: addr1.trim() || null,
         address_line2: addr2.trim() || null,
@@ -244,8 +266,12 @@ export default function BusinessVerification() {
         owner_dob: ownerDob || null,
         owner_ownership_percent: pctNum,
         incorporation_doc_path: ip,
-        tax_doc_path: tp,
+        tax_doc_path: isSoleProp ? null : tp,
         address_proof_path: ap,
+        registration_form_doc_path: rf,
+        owner_ghana_card_path: isSoleProp ? oc : null,
+        director1_ghana_card_path: isSoleProp ? null : d1,
+        director2_ghana_card_path: isSoleProp ? null : d2,
         status,
         submitted_at: status === 'submitted' ? new Date().toISOString() : null,
       }
@@ -254,7 +280,9 @@ export default function BusinessVerification() {
         .upsert(payload, { onConflict: 'business_id' })
       if (error) throw error
       setIncorpPath(ip); setTaxPath(tp); setAddrProofPath(ap)
+      setRegFormPath(rf); setOwnerCardPath(oc); setDir1CardPath(d1); setDir2CardPath(d2)
       setIncorpFile(null); setTaxFile(null); setAddrProofFile(null)
+      setRegFormFile(null); setOwnerCardFile(null); setDir1CardFile(null); setDir2CardFile(null)
       return { error: false }
     } catch (e) {
       toast.error(e.message || 'Failed to save')
@@ -319,10 +347,12 @@ export default function BusinessVerification() {
               <Label required>Registration / company number</Label>
               <TextInput value={regNumber} onChange={(e) => setRegNumber(e.target.value)} />
             </div>
-            <div>
-              <Label required>Tax ID (EIN / GST / VAT)</Label>
-              <TextInput value={taxId} onChange={(e) => setTaxId(e.target.value)} />
-            </div>
+            {!isSoleProp && (
+              <div>
+                <Label required>Tax ID (EIN / GST / VAT)</Label>
+                <TextInput value={taxId} onChange={(e) => setTaxId(e.target.value)} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -404,21 +434,48 @@ export default function BusinessVerification() {
         {/* Documents */}
         <div className="space-y-5">
           <h3 className="text-white text-[0.95rem] font-medium">Documents</h3>
+          <p className="text-[0.8rem] text-white/50 -mt-2">
+            {isSoleProp
+              ? 'Sole proprietorships: upload your certificate of registration, Form A, the Ghana Card of the business owner and a proof of address.'
+              : 'Companies: upload your certificate of incorporation, Form 3, the Ghana Cards of any two directors, your tax document and a proof of address.'}
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FileUpload label="Certificate of incorporation"
+            <FileUpload label={isSoleProp ? 'Certificate of registration' : 'Certificate of incorporation'}
               path={incorpPath} file={incorpFile}
               onFile={setIncorpFile}
               onClear={() => { setIncorpFile(null); setIncorpPath(null) }} />
-            <FileUpload label="Tax document (EIN / GST / VAT)"
-              path={taxPath} file={taxFile}
-              onFile={setTaxFile}
-              onClear={() => { setTaxFile(null); setTaxPath(null) }} />
+            <FileUpload label={isSoleProp ? 'Form A (Sole Proprietorship)' : 'Form 3 (Company)'}
+              path={regFormPath} file={regFormFile}
+              onFile={setRegFormFile}
+              onClear={() => { setRegFormFile(null); setRegFormPath(null) }} />
+            {isSoleProp ? (
+              <FileUpload label="Ghana Card of the business owner"
+                path={ownerCardPath} file={ownerCardFile}
+                onFile={setOwnerCardFile}
+                onClear={() => { setOwnerCardFile(null); setOwnerCardPath(null) }} />
+            ) : (
+              <>
+                <FileUpload label="Ghana Card — director 1"
+                  path={dir1CardPath} file={dir1CardFile}
+                  onFile={setDir1CardFile}
+                  onClear={() => { setDir1CardFile(null); setDir1CardPath(null) }} />
+                <FileUpload label="Ghana Card — director 2"
+                  path={dir2CardPath} file={dir2CardFile}
+                  onFile={setDir2CardFile}
+                  onClear={() => { setDir2CardFile(null); setDir2CardPath(null) }} />
+                <FileUpload label="Tax document (EIN / GST / VAT)"
+                  path={taxPath} file={taxFile}
+                  onFile={setTaxFile}
+                  onClear={() => { setTaxFile(null); setTaxPath(null) }} />
+              </>
+            )}
             <FileUpload label="Proof of address (utility bill / bank statement)"
               path={addrProofPath} file={addrProofFile}
               onFile={setAddrProofFile}
               onClear={() => { setAddrProofFile(null); setAddrProofPath(null) }} />
           </div>
         </div>
+
 
         {/* Confirm */}
         <div className="pt-4 border-t border-merchant-border">

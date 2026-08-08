@@ -518,7 +518,7 @@ export default function ProductInformation() {
                 I confirm that the information provided above accurately describes my product. I
                 understand that Web Rabbit Payments may suspend payouts or terminate access to the
                 platform if the product is later found to violate the{' '}
-                <a href="#" className="text-accent-bright underline">
+                <a href="/docs/merchant-acceptance" target="_blank" rel="noreferrer" className="text-accent-bright underline">
                   Acceptance Policy
                 </a>
                 .

@@ -222,16 +222,20 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          director1_ghana_card_path: string | null
+          director2_ghana_card_path: string | null
           entity_type: string | null
           id: string
           incorporation_date: string | null
           incorporation_doc_path: string | null
           legal_name: string | null
           owner_dob: string | null
+          owner_ghana_card_path: string | null
           owner_name: string | null
           owner_ownership_percent: number | null
           owner_role: string | null
           postal_code: string | null
+          registration_form_doc_path: string | null
           registration_number: string | null
           state: string | null
           status: string
@@ -253,16 +257,20 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          director1_ghana_card_path?: string | null
+          director2_ghana_card_path?: string | null
           entity_type?: string | null
           id?: string
           incorporation_date?: string | null
           incorporation_doc_path?: string | null
           legal_name?: string | null
           owner_dob?: string | null
+          owner_ghana_card_path?: string | null
           owner_name?: string | null
           owner_ownership_percent?: number | null
           owner_role?: string | null
           postal_code?: string | null
+          registration_form_doc_path?: string | null
           registration_number?: string | null
           state?: string | null
           status?: string
@@ -284,16 +292,20 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          director1_ghana_card_path?: string | null
+          director2_ghana_card_path?: string | null
           entity_type?: string | null
           id?: string
           incorporation_date?: string | null
           incorporation_doc_path?: string | null
           legal_name?: string | null
           owner_dob?: string | null
+          owner_ghana_card_path?: string | null
           owner_name?: string | null
           owner_ownership_percent?: number | null
           owner_role?: string | null
           postal_code?: string | null
+          registration_form_doc_path?: string | null
           registration_number?: string | null
           state?: string | null
           status?: string
