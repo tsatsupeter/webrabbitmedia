@@ -1857,6 +1857,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
       sms_ensure_wallet: {
         Args: { _business_id: string; _mode: string }
         Returns: {
