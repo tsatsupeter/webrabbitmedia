@@ -98,8 +98,13 @@ export default function NewBusinessDrawer({ open, onClose, onCreated }) {
             <label className="text-[0.82rem] text-white/70">Where are you operating from? <span className="text-red-400">*</span></label>
             <select value={form.location} onChange={set('location')} className={`${inputCls} appearance-none`}>
               <option value="" disabled>Select Country</option>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {COUNTRY_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value} disabled={c.disabled}>{c.label}</option>
+              ))}
             </select>
+            <p className="mt-1.5 text-[0.72rem] text-white/40">
+              Ghana only for now — more countries are being added gradually.
+            </p>
           </div>
 
           <div>
