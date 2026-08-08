@@ -115,7 +115,8 @@ function requestMode(next) {
     }
     emit()
 
-    tailTimer = setTimeout(() => {
+    const startedAt = Date.now()
+    const finish = () => {
       state.switching = false
       state.pendingMode = null
       emit()
@@ -125,8 +126,28 @@ function requestMode(next) {
             ? 'Real payments and payouts are enabled.'
             : 'Sandbox environment — no real money moves.',
       })
-    }, TAIL_MS)
+    }
+    const waitForIdle = () => {
+      if (busy === 0 || Date.now() - startedAt > SETTLE_MAX_MS) {
+        tailTimer = setTimeout(finish, TAIL_MS)
+        return
+      }
+      settleTimer = setTimeout(waitForIdle, SETTLE_POLL_MS)
+    }
+    settleTimer = setTimeout(waitForIdle, SETTLE_GRACE_MS)
   }, SWITCH_MS)
+}
+
+/**
+ * Register a page's mode-scoped fetch so the mode-switch overlay stays visible
+ * until the data for the new mode has finished loading.
+ */
+export function useModeDataLoading(loading) {
+  useEffect(() => {
+    if (!loading) return undefined
+    beginModeLoad()
+    return () => endModeLoad()
+  }, [loading])
 }
 
 export function useMerchantMode() {
@@ -155,3 +176,4 @@ export function useMerchantMode() {
     pendingMode: snap.pendingMode,
   }
 }
+
