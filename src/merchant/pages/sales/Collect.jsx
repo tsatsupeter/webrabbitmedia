@@ -59,7 +59,15 @@ export default function Collect() {
           customer_name: customerName.trim(),
         },
       })
-      if (error) throw error
+      if (error) {
+        // Surface the function's JSON body (e.g. 422 account_not_found).
+        let msg = error.message
+        try {
+          const body = await error.context?.json?.()
+          if (body?.reason || body?.error) msg = body.reason || body.error
+        } catch { /* keep default */ }
+        throw new Error(msg)
+      }
       if (data?.error) throw new Error(data.reason || data.error)
       const who = data?.account_name || phone
       if (data?.status === 'approved') {
