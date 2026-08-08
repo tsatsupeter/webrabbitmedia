@@ -10,10 +10,17 @@ export type Mode = 'test' | 'live'
 export const UAT_BASE = 'https://uat-360pay-merchant-api.libertepay.com'
 export const LIVE_BASE = 'https://360pay-merchant-api.libertepay.com'
 
+// 360Pay issues both test and live keys on the same merchant host: the sandbox
+// (`uat-…`) host rejects portal-issued keys with `{"code":"01","msg":"Invalid
+// Key"}`, while the same key authenticates fine against the merchant host and
+// resolves sandbox accounts. So both modes default to the merchant host and the
+// key itself (sk_test_… vs sk_live_…) selects the environment. Override with
+// LIBERTE_TEST_BASE_URL / LIBERTE_LIVE_BASE_URL if that ever changes.
 export function baseUrl(mode: Mode) {
   const override = Deno.env.get(mode === 'live' ? 'LIBERTE_LIVE_BASE_URL' : 'LIBERTE_TEST_BASE_URL')
-  return (override || (mode === 'live' ? LIVE_BASE : UAT_BASE)).replace(/\/+$/, '')
+  return (override || LIVE_BASE).replace(/\/+$/, '')
 }
+
 
 export function secretKey(mode: Mode) {
   const key = Deno.env.get(mode === 'live' ? 'LIBERTE_LIVE_SECRET_KEY' : 'LIBERTE_TEST_SECRET_KEY')
@@ -203,4 +210,91 @@ export async function checkoutInitiate(mode: Mode, params: {
   if (params.phone_number) body.phone_number = params.phone_number
   if (params.payment_slug) body.payment_slug = params.payment_slug
   return await libertePost(mode, '/v1/transactions/initiate', body)
+}
+
+// ---- status check -------------------------------------------------------------
+// POST /v1/payments/status-check — synchronous lookup by OUR transaction_id.
+// Works for collections and disbursements.
+export type StatusCheckResult = {
+  ok: boolean
+  status: LedgerStatus
+  code: string | null
+  message: string | null
+  data: any
+  httpStatus: number
+}
+
+export async function statusCheck(mode: Mode, transaction_id: string): Promise<StatusCheckResult> {
+  const res = await libertePost(mode, '/v1/payments/status-check', { transaction_id })
+  const d = res.json?.data ?? {}
+  const code = d.status_code != null ? String(d.status_code) : respCode(res.json)
+  const message = d.message ?? respMessage(res.json)
+  // A transaction 360Pay has not registered yet answers code "01" / FAILED with
+  // "Transaction Not Found." — that is NOT a payment failure, so keep it pending.
+  const notFound = /not\s*found/i.test(String(message ?? '')) || Object.keys(d).length === 0
+  return {
+    ok: res.ok,
+    status: notFound ? 'pending' : mapStatusCode(code, d.status ?? res.json?.status),
+    code,
+    message,
+    data: res.json,
+    httpStatus: res.status,
+  }
+}
+
+// ---- institutions --------------------------------------------------------------
+export type Institution = { code: string; currency: string; name: string; slug: string; type: string }
+
+// GET /v1/payments/institutions?type=MNO|BANK
+export async function getInstitutions(mode: Mode, type: 'MNO' | 'BANK'): Promise<Institution[] | null> {
+  try {
+    const res = await liberteGet(mode, `/v1/payments/institutions?type=${type}`)
+    const list = res.json?.data
+    return Array.isArray(list) ? list as Institution[] : null
+  } catch {
+    return null
+  }
+}
+
+// Resolves a network to its live institution code, falling back to the static
+// table so a provider outage can never block a collection.
+export async function resolveInstitutionCode(mode: Mode, network: Network): Promise<string> {
+  const slug = PAYMENT_SLUGS[network]
+  const list = await getInstitutions(mode, 'MNO')
+  const norm = (v: unknown) => String(v || '').toLowerCase().replace(/[^a-z]/g, '')
+  const hit = list?.find((i) => norm(i.slug) === norm(slug))
+  return hit?.code ? String(hit.code) : INSTITUTION_CODES[network]
+}
+
+// ---- disbursement ----------------------------------------------------------------
+export async function disbursementBalance(mode: Mode) {
+  const res = await liberteGet(mode, '/v1/payments/disbursement-balance')
+  const available = Number(res.json?.data?.available_balance ?? NaN)
+  return {
+    ok: res.ok && Number.isFinite(available),
+    available: Number.isFinite(available) ? available : null,
+    currency: res.json?.data?.currency ?? 'GHS',
+    raw: res.json,
+  }
+}
+
+export async function disburse(mode: Mode, params: {
+  account_name: string
+  account_number: string
+  amount: number
+  institution_code: string
+  transaction_id: string
+  reference?: string
+  meta_data?: Record<string, unknown>
+}) {
+  return await libertePost(mode, '/v1/payments/disbursement', {
+    account_name: params.account_name,
+    account_number: params.account_number,
+    amount: Number(params.amount.toFixed(2)),
+    institution_code: params.institution_code,
+    transaction_id: params.transaction_id,
+    currency: 'GHS',
+    reference: params.reference ?? params.transaction_id,
+    meta_data: { ...(params.meta_data ?? {}), callback_url: callbackUrl() },
+  })
 }

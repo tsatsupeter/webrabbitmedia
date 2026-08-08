@@ -1,9 +1,15 @@
 // Public 360Pay (LibertePay) webhook. 360Pay POSTs the terminal outcome of a
-// collection or hosted-checkout session here. We resolve the ledger row by the
-// transaction_id we sent (our 12-digit reference), or by the provider's own
-// transaction id / reference, then settle it and compute platform commission.
+// collection, hosted-checkout session or disbursement here. We resolve the
+// ledger row by the transaction_id we sent (our 12-digit reference), or by the
+// provider's own transaction id / reference, then settle it.
+//
+// Documented callback fields: status_code, status, transaction_id,
+// external_transaction_id, account_name, account_number, transaction_reference,
+// transaction_currency, amount, fee, institution_code, transaction_message,
+// date_created.
 import { admin, corsHeaders, jsonResponse } from '../_shared/auth.ts'
 import { mapStatusCode } from '../_shared/liberte.ts'
+import { settleCollection } from '../_shared/settlement.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -19,6 +25,7 @@ Deno.serve(async (req) => {
     payload?.transaction_id,
     payload?.transaction_reference,
     payload?.metadata?.reference,
+    payload?.meta_data?.reference,
   ].map((v) => String(v ?? '').trim()).filter((v) => /^\d{12}$/.test(v))
 
   const providerIds = [payload?.transaction_id, payload?.external_transaction_id]
@@ -46,38 +53,44 @@ Deno.serve(async (req) => {
     row = data ?? null
   }
 
+  // Payout (disbursement) callbacks carry our payout reference instead.
+  if (!row && providerIds.length) {
+    const { data: payout } = await db.from('payouts')
+      .select('id, status')
+      .in('provider_reference', providerIds)
+      .maybeSingle()
+    if (payout) {
+      const status = mapStatusCode(payload?.status_code, payload?.status)
+      if (payout.status === 'success' || payout.status === 'failed' || status === 'pending') {
+        return jsonResponse({ received: true, matched: true, kind: 'payout', changed: false }, 200)
+      }
+      const patch: Record<string, unknown> = {
+        status: status === 'approved' ? 'success' : 'failed',
+        notes: payload?.transaction_message ?? payload?.status ?? null,
+      }
+      if (status === 'approved') patch.completed_at = new Date().toISOString()
+      await db.from('payouts').update(patch).eq('id', payout.id)
+      if (status === 'failed') {
+        await db.from('transactions').update({ payout_id: null }).eq('payout_id', payout.id)
+      }
+      return jsonResponse({ received: true, matched: true, kind: 'payout', changed: true }, 200)
+    }
+  }
+
   if (!row) {
     console.log('liberte-callback: no matching transaction', { ours, providerIds })
     return jsonResponse({ received: true, matched: false }, 200)
   }
 
-  // Terminal rows are never rewritten.
-  if (row.status === 'approved' || row.status === 'failed') {
-    return jsonResponse({ received: true, matched: true, changed: false }, 200)
-  }
-
+  // 00 SUCCESS · 01 FAILED · 02 PENDING · 03 PROCESSING (03 stays pending).
   const status = mapStatusCode(payload?.status_code, payload?.status)
-  if (status === 'pending') {
-    return jsonResponse({ received: true, matched: true, changed: false }, 200)
-  }
-
-  const { data: settings } = await db.from('platform_settings')
-    .select('commission_bps').eq('business_id', row.business_id).maybeSingle()
-  const commission_bps = settings?.commission_bps ?? 1500
-
-  const gross = Number(row.gross_amount)
-  const fee = status === 'approved' ? Math.round(gross * (commission_bps / 10000) * 100) / 100 : 0
-  const net = Math.round((gross - fee) * 100) / 100
-
-  await db.from('transactions').update({
+  const result = await settleCollection(db, row, {
     status,
-    fee_amount: fee,
-    net_amount: net,
-    provider_reference: payload?.transaction_id ? String(payload.transaction_id) : null,
-    provider_code: payload?.status_code != null ? String(payload.status_code) : null,
-    provider_reason: payload?.transaction_message ?? payload?.status ?? null,
-    raw_response: payload,
-  }).eq('id', row.id)
+    code: payload?.status_code != null ? String(payload.status_code) : null,
+    reason: payload?.transaction_message ?? payload?.status ?? null,
+    providerTransactionId: payload?.transaction_id ? String(payload.transaction_id) : null,
+    raw: payload,
+  })
 
-  return jsonResponse({ received: true, matched: true, changed: true, status }, 200)
+  return jsonResponse({ received: true, matched: true, ...result }, 200)
 })

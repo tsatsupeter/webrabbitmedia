@@ -1,8 +1,10 @@
-// Transaction status. 360Pay has no public collection status-check endpoint —
-// terminal outcomes arrive on the liberte-callback webhook — so this serves our
-// ledger row directly. Unknown ids MUST 404 rather than return a synthetic
-// "failed" verdict.
+// Transaction status for the public API. Pending rows are checked live against
+// 360Pay's synchronous status-check endpoint before we answer, so merchants
+// polling /v1/transactions/:id are never blocked waiting on a callback.
+// Unknown ids MUST 404 rather than return a synthetic "failed" verdict.
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
+import { statusCheck } from '../_shared/liberte.ts'
+import { settleCollection } from '../_shared/settlement.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -13,8 +15,9 @@ Deno.serve(async (req) => {
     if (!id || !/^\d{12}$/.test(id)) throw new HttpError(400, 'transaction_id invalid')
 
     const db = admin()
+    const cols = 'id, business_id, gross_amount, fee_amount, net_amount, status, provider_code, provider_reason, provider_reference, subscriber_number, created_at'
     const { data: existing } = await db.from('transactions')
-      .select('id, gross_amount, fee_amount, net_amount, status, provider_code, provider_reason, provider_reference, subscriber_number, created_at')
+      .select(cols)
       .eq('provider_transaction_id', id)
       .eq('business_id', auth.business.id)
       .eq('mode', auth.key.mode)
@@ -24,19 +27,39 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'transaction_not_found', transaction_id: id }, 404)
     }
 
+    let row = existing
+    if (row.status === 'pending') {
+      try {
+        const check = await statusCheck(auth.key.mode, id)
+        if (check.status !== 'pending') {
+          await settleCollection(db, row, {
+            status: check.status,
+            code: check.code,
+            reason: check.message,
+            providerTransactionId: check.data?.data?.transaction_id ?? null,
+            raw: check.data,
+          })
+          const { data: fresh } = await db.from('transactions').select(cols).eq('id', row.id).maybeSingle()
+          if (fresh) row = fresh
+        }
+      } catch (err) {
+        console.log('transaction-status: status-check failed', String(err))
+      }
+    }
+
     return jsonResponse({
       transaction_id: id,
-      provider_transaction_id: existing.provider_reference,
-      code: existing.provider_code != null ? String(existing.provider_code) : null,
-      reason: existing.provider_reason,
-      status: existing.status,
-      resolved_status: existing.status,
-      subscriber_number: existing.subscriber_number,
-      gross_amount: Number(existing.gross_amount),
-      fee_amount: Number(existing.fee_amount),
-      net_amount: Number(existing.net_amount),
+      provider_transaction_id: row.provider_reference,
+      code: row.provider_code != null ? String(row.provider_code) : null,
+      reason: row.provider_reason,
+      status: row.status,
+      resolved_status: row.status,
+      subscriber_number: row.subscriber_number,
+      gross_amount: Number(row.gross_amount),
+      fee_amount: Number(row.fee_amount),
+      net_amount: Number(row.net_amount),
       currency: 'GHS',
-      created_at: existing.created_at,
+      created_at: row.created_at,
     })
 
   } catch (e) {

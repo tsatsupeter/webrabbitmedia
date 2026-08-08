@@ -4,7 +4,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
 import {
-  collect, institutionCode, localMsisdn, mapStatusCode, nameVerify, newReference,
+  collect, resolveInstitutionCode, localMsisdn, mapStatusCode, nameVerify, newReference,
   normalizeMsisdn, normalizeNetwork, respCode, respMessage,
 } from '../_shared/liberte.ts'
 
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       .maybeSingle()
     const commission_bps = settings?.commission_bps ?? 1500
 
-    const inst = institutionCode(network)
+    const inst = await resolveInstitutionCode(mode, network)
 
     const verify = await nameVerify(mode, { account_number: msisdn, institution_code: inst })
     if (!verify.ok) {

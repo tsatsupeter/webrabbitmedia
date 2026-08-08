@@ -1,9 +1,10 @@
-// Merchant-side reconciliation. 360Pay settles collections via the
-// liberte-callback webhook and exposes no collection status-check endpoint, so
-// this simply reports the current ledger state; rows stay pending until the
-// callback arrives.
+// Merchant-side reconciliation. Pending rows are queried live against 360Pay's
+// synchronous status-check endpoint and settled through the same write path the
+// callback uses; rows the provider still reports as pending are left alone.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
+import { statusCheck } from '../_shared/liberte.ts'
+import { settleCollection } from '../_shared/settlement.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -33,14 +34,33 @@ Deno.serve(async (req) => {
     if (!existing) throw new HttpError(404, 'transaction_not_found')
     if (existing.user_id !== user.id) throw new HttpError(403, 'Not your transaction')
 
+    if (existing.status !== 'pending') {
+      return jsonResponse({
+        transaction_id,
+        resolved_status: existing.status,
+        changed: false,
+        code: existing.provider_code != null ? String(existing.provider_code) : null,
+        reason: existing.provider_reason,
+      })
+    }
+
+    const check = await statusCheck(existing.mode as 'test' | 'live', transaction_id)
+    const result = await settleCollection(db, existing, {
+      status: check.status,
+      code: check.code,
+      reason: check.message,
+      providerTransactionId: check.data?.data?.transaction_id ?? null,
+      raw: check.data,
+    })
+
     return jsonResponse({
       transaction_id,
-      resolved_status: existing.status,
-      changed: false,
-      code: existing.provider_code != null ? String(existing.provider_code) : null,
-      reason: existing.status === 'pending'
-        ? 'Awaiting settlement callback from 360Pay'
-        : existing.provider_reason,
+      resolved_status: result.status,
+      changed: result.changed,
+      code: check.code,
+      reason: result.status === 'pending'
+        ? (check.message || 'Still processing at 360Pay — awaiting settlement')
+        : check.message,
     })
   } catch (e) {
     return handleError(e)

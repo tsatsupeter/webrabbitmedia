@@ -92,7 +92,7 @@ export default {
       }
       // Payouts are settled manually — no provider disbursement API.
       if (req.method === 'POST' && (path === '/v1/payout/momo' || path === '/v1/payout/bank')) {
-        const resp = errorJson('provider_unsupported: payouts are processed manually', 501, requestId)
+        const resp = errorJson('provider_unsupported: payouts are initiated from the merchant dashboard, not the public API', 501, requestId)
         return finish(resp, { rl_source: rl.source })
       }
 
