@@ -79,7 +79,7 @@ export default {
           idempotency: r.idempotency,
         })
       }
-      // POST /v1/checkout/session — NaloPay Hosted Checkout (MoMo or card)
+      // POST /v1/checkout/session — 360Pay Hosted Checkout (MoMo or card)
       if (req.method === 'POST' && (path === '/v1/checkout/session' || path === '/v1/collect/card')) {
         const r = await forward(env, 'checkout-session', req, {}, requestId)
         return finish(r.response, {

@@ -96,7 +96,7 @@ window.location.href = session.checkout_url`,
   "transaction_id": "521888807466",
   "order_id": "ORD-521888807466",
   "status": "pending",
-  "checkout_url": "https://checkout.nalopay.com?id=84887d1d-b783-49ea-a528-13332e274667",
+  "checkout_url": "https://360pay-checkout.libertepay.com/checkout/2K0MNU1NSZ0Lj",
   "checkout_timeout": 1800,
   "gross_amount": 170,
   "currency": "GHS"
