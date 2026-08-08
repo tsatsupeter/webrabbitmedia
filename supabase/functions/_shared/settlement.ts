@@ -43,9 +43,8 @@ export async function settleCollection(
     provider_reason: input.reason ?? null,
   }
   if (input.providerTransactionId) patch.provider_reference = String(input.providerTransactionId)
-  if (input.accountName) patch.description = undefined // never clobber merchant description
   if (input.raw !== undefined) patch.raw_response = input.raw
-  delete patch.description
+
 
   await db.from('transactions').update(patch).eq('id', row.id)
   return { changed: true, status: input.status }
