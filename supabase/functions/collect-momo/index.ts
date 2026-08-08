@@ -3,7 +3,7 @@
 // outcome arrives on the liberte-callback webhook.
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError, requireScope } from '../_shared/auth.ts'
 import {
-  collect, institutionCode, localMsisdn, mapStatusCode, nameVerify, newReference,
+  collect, resolveInstitutionCode, localMsisdn, mapStatusCode, nameVerify, newReference,
   normalizeMsisdn, normalizeNetwork, respCode, respMessage,
 } from '../_shared/liberte.ts'
 import { tryClaimIdempotency, completeIdempotency } from '../_shared/idempotency.ts'
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     }
 
     const mode = auth.key.mode
-    const inst = institutionCode(network)
+    const inst = await resolveInstitutionCode(mode, network)
 
     // 1. Name Verify — mandatory before a debit. No transaction is recorded if
     //    the wallet cannot be resolved.
