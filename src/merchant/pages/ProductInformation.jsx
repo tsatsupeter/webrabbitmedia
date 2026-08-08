@@ -143,6 +143,29 @@ function toggleInList(list, val) {
   return list.includes(val) ? list.filter((v) => v !== val) : [...list, val]
 }
 
+const BUSINESS_CATEGORY_MAP = {
+  'SaaS/AI or Digital products': 'SaaS',
+  Edtech: 'Online course',
+  Services: 'Consulting',
+  'Physical products': 'Other',
+  'Financial services': 'Other',
+  Gaming: 'Other',
+  Marketplace: 'Other',
+  Others: 'Other',
+}
+
+function mapBusinessCategory(cat) {
+  if (!cat) return ''
+  if (BUSINESS_CATEGORY_MAP[cat]) return BUSINESS_CATEGORY_MAP[cat]
+  return CATEGORY_OPTIONS.includes(cat) ? cat : ''
+}
+
+function stripUrlPrefix(url) {
+  if (!url) return ''
+  return url.trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '')
+}
+
+
 export default function ProductInformation() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -192,13 +215,21 @@ export default function ProductInformation() {
         setStage(data.stage ?? '')
         setPaymentPlatform(data.payment_platform ?? '')
         setConfirmed(data.status === 'submitted')
+      } else {
+        // No saved record yet — seed from what the merchant already told us
+        // when they created the business.
+        const site = stripUrlPrefix(active.website_url)
+        if (site) setWebsites([site])
+        const cat = mapBusinessCategory(active.product_category)
+        if (cat) setCategory(cat)
+        if (active.monetization_note) setDescription(active.monetization_note)
       }
       setLoading(false)
     })()
     return () => {
       cancelled = true
     }
-  }, [active?.id])
+  }, [active?.id, active?.website_url, active?.product_category, active?.monetization_note])
 
   const requiredValid =
     websites.some((w) => w.trim()) &&
