@@ -63,7 +63,7 @@ export function useActionRequired() {
       setState({ loading: false, required: items.length > 0, items })
     })()
     return () => { cancelled = true }
-  }, [active?.id, active?.status, active?.business_type])
+  }, [bizLoading, active?.id, active?.status, active?.business_type])
 
   return state
 }
