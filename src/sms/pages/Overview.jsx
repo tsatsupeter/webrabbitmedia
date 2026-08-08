@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../integrations/supabase/client'
-import { useMerchantMode, useModeDataLoading } from '../../hooks/useMerchantMode'
+import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSmsWorkspace'
 
-import { Skeleton, PageLoader } from '../../merchant/components/EmptyState'
+import { Skeleton, PageLoader } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Stat, Button, Table, Row, Cell, StatusPill } from '../components/ui'
 import { useSmsWallet, useSmsRates, money } from '../lib'
-import Icon from '../../merchant/Icon'
+import Icon from '../Icon'
 
 export default function Overview() {
   const { business, mode, modeReady } = useMerchantMode()

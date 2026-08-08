@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useMerchantMode, useModeDataLoading } from '../../hooks/useMerchantMode'
-import { PageLoader, Skeleton } from '../../merchant/components/EmptyState'
-import Modal from '../../merchant/components/Modal'
+import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSmsWorkspace'
+import { PageLoader, Skeleton } from '../components/EmptyState'
+import Modal from '../components/Modal'
 import { Page, PageHeader, Card, CardHeader, Stat, Table, Row, Cell, Button, Field, inputClass } from '../components/ui'
 import { useSmsWallet, useSmsRates, money, walletEntry } from '../lib'
 

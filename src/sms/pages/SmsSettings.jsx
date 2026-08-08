@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
 import { useAuth } from '../../hooks/useAuth'
-import { useMerchantMode } from '../../hooks/useMerchantMode'
-import { PageLoader } from '../../merchant/components/EmptyState'
+import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
+import { PageLoader } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Button, Field, inputClass } from '../components/ui'
 
 export default function SmsSettings() {
