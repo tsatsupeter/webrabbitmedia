@@ -6,6 +6,7 @@ import { useBusinesses } from '../../hooks/useBusinesses'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../integrations/supabase/client'
 import { markStepComplete } from '../verificationProgress'
+import { COUNTRY_NAMES as COUNTRIES } from '../../lib/countries'
 
 const ID_TYPES = [
   { value: 'passport', label: 'Passport' },
@@ -13,11 +14,6 @@ const ID_TYPES = [
   { value: 'drivers_license', label: "Driver's license" },
 ]
 
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'India', 'Nigeria',
-  'Ghana', 'Kenya', 'South Africa', 'Germany', 'France', 'Netherlands',
-  'Singapore', 'United Arab Emirates', 'Other',
-]
 
 function Label({ children, required }) {
   return (

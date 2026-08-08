@@ -5,6 +5,7 @@ import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
 import Icon from '../merchant/Icon'
 import DisclaimerModal from '../components/DisclaimerModal'
+import { locationSelectOptions } from '../lib/countries'
 
 const CATEGORIES = [
   'SaaS/AI or Digital products',
@@ -30,11 +31,7 @@ const REFERRALS = [
   'Others',
 ]
 
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands',
-  'India', 'Singapore', 'Japan', 'Brazil', 'Mexico', 'South Africa', 'Nigeria', 'Ghana', 'Kenya',
-  'United Arab Emirates', 'Other',
-]
+const COUNTRY_OPTIONS = locationSelectOptions()
 
 function Field({ label, required, children }) {
   return (
@@ -193,12 +190,20 @@ export default function CreateBusiness() {
 
           <Field label="Where are you located?" required>
             <select value={form.location} onChange={set('location')} className={`${inputCls} appearance-none`}>
-              <option value="" disabled>Select...</option>
-              {COUNTRIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              <option value="" disabled>Select country</option>
+              {COUNTRY_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value} disabled={c.disabled}>{c.label}</option>
               ))}
             </select>
+            <p className="text-[0.75rem] text-white/40 leading-relaxed">
+              We currently onboard merchants in Ghana only. More countries are being added gradually —{' '}
+              <a href="/docs/merchant-countries" target="_blank" rel="noreferrer" className="underline hover:text-white/70">
+                see merchant eligibility
+              </a>
+              .
+            </p>
           </Field>
+
 
           <Field label="Where did you hear about us?" required>
             <select value={form.referral} onChange={set('referral')} className={`${inputCls} appearance-none`}>

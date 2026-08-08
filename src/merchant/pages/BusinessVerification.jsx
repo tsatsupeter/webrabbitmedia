@@ -5,6 +5,7 @@ import Icon from '../Icon'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../integrations/supabase/client'
+import { COUNTRY_NAMES as COUNTRIES } from '../../lib/countries'
 
 const ENTITY_TYPES = [
   'Private Limited (Pvt Ltd)',
@@ -17,11 +18,6 @@ const ENTITY_TYPES = [
   'Other',
 ]
 
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'India', 'Nigeria',
-  'Ghana', 'Kenya', 'South Africa', 'Germany', 'France', 'Netherlands',
-  'Singapore', 'United Arab Emirates', 'Other',
-]
 
 function Label({ children, required }) {
   return (

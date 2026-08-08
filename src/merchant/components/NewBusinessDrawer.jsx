@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
 import { useAuth } from '../../hooks/useAuth'
 import { useBusinesses, notifyBrandsChanged } from '../../hooks/useBusinesses'
+import { locationSelectOptions } from '../../lib/countries'
 
 const CATEGORIES = [
   'SaaS/AI or Digital products', 'Edtech', 'Services', 'Financial services',
@@ -12,11 +13,7 @@ const REFERRALS = [
   'Twitter/X', 'LinkedIn', 'Reddit', 'Google Search', 'ChatGPT', 'YouTube',
   'Instagram', 'TikTok', 'Referred by someone', 'Others',
 ]
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands',
-  'India', 'Singapore', 'Japan', 'Brazil', 'Mexico', 'South Africa', 'Nigeria', 'Ghana', 'Kenya',
-  'United Arab Emirates', 'Other',
-]
+const COUNTRY_OPTIONS = locationSelectOptions()
 
 const inputCls =
   'mt-1.5 w-full h-11 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.9rem] outline-none focus:border-white/25'
@@ -101,8 +98,13 @@ export default function NewBusinessDrawer({ open, onClose, onCreated }) {
             <label className="text-[0.82rem] text-white/70">Where are you operating from? <span className="text-red-400">*</span></label>
             <select value={form.location} onChange={set('location')} className={`${inputCls} appearance-none`}>
               <option value="" disabled>Select Country</option>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {COUNTRY_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value} disabled={c.disabled}>{c.label}</option>
+              ))}
             </select>
+            <p className="mt-1.5 text-[0.72rem] text-white/40">
+              Ghana only for now — more countries are being added gradually.
+            </p>
           </div>
 
           <div>

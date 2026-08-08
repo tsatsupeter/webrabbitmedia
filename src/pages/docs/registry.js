@@ -14,6 +14,9 @@ import ProviderCodes from './sections/ProviderCodes'
 import TestData from './sections/TestData'
 import Webhooks from './sections/Webhooks'
 import Me from './sections/Me'
+import AcceptedCountries from './sections/AcceptedCountries'
+import MerchantAcceptance from './sections/MerchantAcceptance'
+import MerchantCountries from './sections/MerchantCountries'
 
 // Single source of truth for sidebar, Cmd+K search, and prev/next pager.
 // `headings` is a flat list of {id, text, depth} for the on-this-page TOC / search.
@@ -209,6 +212,49 @@ export const groups = [
         headings: [
           { id: 'polling', text: 'Polling pattern (today)', depth: 2 },
           { id: 'notify-me', text: 'Get notified at launch', depth: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Policies',
+    items: [
+      {
+        slug: 'merchant-acceptance',
+        title: 'Merchant Acceptance Policy',
+        summary: 'Businesses we support, the prohibited list, review categories, and enforcement.',
+        Component: MerchantAcceptance,
+        headings: [
+          { id: 'supported', text: 'Businesses we support', depth: 2 },
+          { id: 'what-we-look-for', text: 'What we look for', depth: 2 },
+          { id: 'prohibited', text: 'Prohibited businesses', depth: 2 },
+          { id: 'review-required', text: 'Businesses that require review', depth: 2 },
+          { id: 'fulfillment', text: 'Fulfilment & access delivery', depth: 2 },
+          { id: 'monitoring', text: 'Review & monitoring', depth: 2 },
+          { id: 'enforcement', text: 'Enforcement', depth: 2 },
+          { id: 'appeals', text: 'Appeals', depth: 2 },
+        ],
+      },
+      {
+        slug: 'merchant-countries',
+        title: 'Merchant eligibility',
+        summary: 'Where you can register a business and receive payouts. Ghana only today.',
+        Component: MerchantCountries,
+        headings: [
+          { id: 'current', text: 'Where we onboard merchants today', depth: 2 },
+          { id: 'how-determined', text: 'How eligibility is determined', depth: 2 },
+          { id: 'planned', text: 'Planned expansion', depth: 2 },
+          { id: 'restricted', text: 'Restricted countries', depth: 2 },
+        ],
+      },
+      {
+        slug: 'accepted-countries',
+        title: 'Accepted countries',
+        summary: 'The countries and territories your customers can pay from.',
+        Component: AcceptedCountries,
+        headings: [
+          { id: 'how-it-works', text: 'How it works', depth: 2 },
+          { id: 'list', text: 'Accepted countries & territories', depth: 2 },
         ],
       },
     ],
