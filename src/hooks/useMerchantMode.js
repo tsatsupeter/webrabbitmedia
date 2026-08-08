@@ -49,11 +49,24 @@ function getSnapshot() {
   return snapshot
 }
 
+// Pages register while their mode-scoped data is in flight so the overlay can
+// stay up until the new mode's data has actually landed (no flash of stale rows).
+let busy = 0
+let settleTimer = null
+export function beginModeLoad() {
+  busy += 1
+}
+export function endModeLoad() {
+  busy = Math.max(0, busy - 1)
+}
+
 function clearTimers() {
   if (switchTimer) clearTimeout(switchTimer)
   if (tailTimer) clearTimeout(tailTimer)
+  if (settleTimer) clearTimeout(settleTimer)
   switchTimer = null
   tailTimer = null
+  settleTimer = null
 }
 
 function hydrate(activeId, canUseLive) {
