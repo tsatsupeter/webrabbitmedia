@@ -5,7 +5,7 @@ import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
 import NotificationsPopover from './components/NotificationsPopover'
 
-export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick }) {
+export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick, showSearch = true }) {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const { user } = useAuth()
