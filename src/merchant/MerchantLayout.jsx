@@ -41,6 +41,14 @@ export default function MerchantLayout() {
   const hydrating = authLoading || (user && bizLoading)
 
 
+  if (hydrating) {
+    return (
+      <div className="min-h-screen w-full bg-merchant-bg text-white font-body">
+        <FullScreenLoader />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex">
       <ModeSwitchOverlay />
