@@ -93,6 +93,22 @@ function App() {
           <Route path="payouts/history" element={<History />} />
           <Route path="settings" element={<Settings />} />
         </Route>
+
+        <Route path="/sms" element={<ProtectedRoute requireBusiness><SmsLayout /></ProtectedRoute>}>
+          <Route index element={<SmsOverview />} />
+          <Route path="send" element={<SmsQuickSend />} />
+          <Route path="campaigns" element={<SmsCampaigns />} />
+          <Route path="campaigns/:id" element={<SmsCampaignDetail />} />
+          <Route path="messages" element={<SmsMessageLog />} />
+          <Route path="sender-ids" element={<SmsSenderIds />} />
+          <Route path="contacts" element={<SmsContacts />} />
+          <Route path="otp" element={<SmsOtp />} />
+          <Route path="voice" element={<SmsVoice />} />
+          <Route path="ussd" element={<SmsUssd />} />
+          <Route path="wallet" element={<SmsWallet />} />
+          <Route path="settings" element={<SmsSettingsPage />} />
+        </Route>
+
       </Routes>
     </BrowserRouter>
   )
