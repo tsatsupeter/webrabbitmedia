@@ -4,6 +4,7 @@ import { navGroups } from './nav'
 import Icon from './Icon'
 import BusinessSwitcher from './BusinessSwitcher'
 import { useMerchantMode } from '../hooks/useMerchantMode'
+import ProductSwitcher from './components/ProductSwitcher'
 
 function Tooltip({ children, label }) {
   return (
