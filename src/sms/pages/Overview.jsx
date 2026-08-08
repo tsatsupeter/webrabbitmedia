@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../integrations/supabase/client'
-import { useMerchantMode } from '../../hooks/useMerchantMode'
-import { useModeDataLoading } from '../../hooks/useMerchantMode'
+import { useMerchantMode, useModeDataLoading } from '../../hooks/useMerchantMode'
+
 import { Skeleton, PageLoader } from '../../merchant/components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Stat, Button, Table, Row, Cell, StatusPill } from '../components/ui'
 import { useSmsWallet, useSmsRates, money } from '../lib'
