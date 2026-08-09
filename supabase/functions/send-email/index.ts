@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
       'payment_received', 'payment_failed',
       'payout_completed', 'payout_failed',
       'business_approved', 'verification_submitted',
+      'verification_on_hold', 'verification_reminder',
       'team_invite',
     ]
     if (!event || !validEvents.includes(event)) return json({ error: 'invalid_event' }, 400)
