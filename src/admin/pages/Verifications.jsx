@@ -67,9 +67,7 @@ export default function Verifications() {
                 : 'border-transparent text-white/50 hover:text-white/80'
             }`}
           >
-            {f}
-          </button>
-        ))}
+            {f === 'on_hold' ? 'On hold' : f}
         <div className="flex-1" />
         <div className="text-[0.78rem] text-white/45">{items.length} submissions</div>
       </Card>
