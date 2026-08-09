@@ -290,10 +290,14 @@ export default function Verification() {
     : ['product', 'identity', 'bank']
 
   function statusFor(key) {
+    if (holds[key] !== undefined) return 'on_hold'
     if (completedSteps.includes(key)) return 'completed'
-    const nextIdx = steps.findIndex((s) => !completedSteps.includes(s))
+    // A step on hold has already been submitted once, so it no longer blocks later steps.
+    const settled = (s) => completedSteps.includes(s) || holds[s] !== undefined
+    const nextIdx = steps.findIndex((s) => !settled(s))
     return steps[nextIdx] === key ? 'active' : 'locked'
   }
+
 
   function completeStep(key) {
     if (key === 'product') return navigate('/merchant/verification/product-information')
