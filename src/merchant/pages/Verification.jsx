@@ -223,6 +223,8 @@ export default function Verification() {
   const [choice, setChoice] = useState(null)
   const [saving, setSaving] = useState(false)
   const [completedSteps, setCompletedStepsState] = useState([])
+  const [holds, setHolds] = useState({})
+  const [reasonOpen, setReasonOpen] = useState(null)
   const [bankHolder, setBankHolder] = useState(null)
 
   const approved = active?.status === 'approved'
@@ -235,23 +237,32 @@ export default function Verification() {
     if (!active?.id) return
     let cancelled = false
     ;(async () => {
+      const cols = 'status, rejection_reason'
       const [{ data: prod }, { data: ident }, { data: biz }, { data: bank }] = await Promise.all([
-        supabase.from('product_information').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('identity_verification').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('business_verification').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('bank_verification').select('status, account_holder_name').eq('business_id', active.id).maybeSingle(),
+        supabase.from('product_information').select(cols).eq('business_id', active.id).maybeSingle(),
+        supabase.from('identity_verification').select(cols).eq('business_id', active.id).maybeSingle(),
+        supabase.from('business_verification').select(cols).eq('business_id', active.id).maybeSingle(),
+        supabase.from('bank_verification').select(`${cols}, account_holder_name`).eq('business_id', active.id).maybeSingle(),
       ])
       if (cancelled) return
+      const rows = { product: prod, identity: ident, business: biz, bank }
       const done = []
-      if (prod?.status === 'submitted') done.push('product')
-      if (ident?.status === 'submitted') done.push('identity')
-      if (biz?.status === 'submitted') done.push('business')
-      if (bank?.status === 'submitted') done.push('bank')
+      const held = {}
+      for (const [key, row] of Object.entries(rows)) {
+        if (!row) continue
+        if (row.status === 'on_hold' || row.status === 'rejected') {
+          held[key] = row.rejection_reason || ''
+        } else if (row.status === 'submitted' || row.status === 'approved') {
+          done.push(key)
+        }
+      }
       setCompletedStepsState(done)
+      setHolds(held)
       setBankHolder(bank?.account_holder_name ?? null)
     })()
     return () => { cancelled = true }
   }, [active?.id])
+
 
   const state = !active?.business_type ? 'basics' : mode === 'edit' ? 'editType' : 'overview'
 
