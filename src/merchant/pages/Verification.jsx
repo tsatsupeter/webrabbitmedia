@@ -128,22 +128,27 @@ function TypePicker({ value, onChange }) {
   )
 }
 
-function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
-  // status: 'active' | 'locked' | 'completed'
+function DetailRow({ icon, title, desc, last, status, onSubmit, verified, hold, onShowReason }) {
+  // status: 'active' | 'locked' | 'completed' | 'on_hold'
+  const onHold = status === 'on_hold'
   const isVerified = verified || status === 'completed'
   return (
     <div className={`relative flex items-start gap-4 p-4 rounded-xl border ${
-      isVerified && verified
-        ? 'border-accent/30 bg-accent/[0.04]'
-        : 'border-merchant-border bg-black/20'
+      onHold
+        ? 'border-orange-500/40 bg-orange-500/[0.07]'
+        : isVerified && verified
+          ? 'border-accent/30 bg-accent/[0.04]'
+          : 'border-merchant-border bg-black/20'
     }`}>
       {!last && (
         <span className="absolute left-[38px] top-[68px] bottom-[-16px] w-px bg-white/10" />
       )}
       <div className={`w-11 h-11 shrink-0 rounded-lg flex items-center justify-center border ${
-        isVerified && verified
-          ? 'bg-accent/15 border-accent/30 text-accent-bright'
-          : 'bg-white/[0.05] border-white/10 text-white/80'
+        onHold
+          ? 'bg-orange-500/15 border-orange-500/30 text-orange-300'
+          : isVerified && verified
+            ? 'bg-accent/15 border-accent/30 text-accent-bright'
+            : 'bg-white/[0.05] border-white/10 text-white/80'
       }`}>
         <Icon name={icon} size={20} />
       </div>
@@ -154,7 +159,27 @@ function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
         </div>
         <p className="text-[0.85rem] text-white/55 leading-relaxed mt-1">{desc}</p>
       </div>
-      {verified ? (
+      {onHold ? (
+        <div className="shrink-0 flex items-center gap-2">
+          <span className="inline-flex items-center h-8 px-3 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-300 text-[0.78rem]">
+            On hold
+          </span>
+          <button
+            type="button"
+            onClick={onShowReason}
+            className="h-8 px-1 text-[0.78rem] text-white/85 underline underline-offset-4 hover:text-white"
+          >
+            reason for hold
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="h-8 px-3 rounded-lg bg-white/[0.08] border border-white/10 text-white text-[0.78rem] hover:bg-white/15"
+          >
+            Resubmit
+          </button>
+        </div>
+      ) : verified ? (
         <div className="shrink-0 flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright text-[0.78rem]">
             Verified
@@ -188,6 +213,7 @@ function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
     </div>
   )
 }
+
 
 
 export default function Verification() {
