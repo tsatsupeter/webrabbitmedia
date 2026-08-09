@@ -4,19 +4,50 @@ import { supabase } from '../../integrations/supabase/client'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { toast } from 'sonner'
 import Icon from '../Icon'
+import Modal from '../components/Modal'
 import { PageLoader } from '../components/EmptyState'
 
 
-function StatusPills() {
+function StatusPills({ holdPending }) {
   return (
     <div className="flex flex-wrap gap-3">
       <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-[0.78rem] tracking-[0.12em]">
         <Icon name="x" size={16} /> LIVE PAYMENTS INACTIVE
       </span>
       <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 font-mono text-[0.78rem] tracking-[0.12em]">
-        <Icon name="info" size={16} /> ACTION REQUIRED : IDENTITY VERIFICATION PENDING
+        <Icon name="info" size={16} />
+        {holdPending
+          ? 'ACTION REQUIRED : ADDITIONAL INFORMATION PENDING'
+          : 'ACTION REQUIRED : IDENTITY VERIFICATION PENDING'}
       </span>
     </div>
+  )
+}
+
+function ReasonModal({ open, reason, onClose }) {
+  return (
+    <Modal open={open} onClose={onClose} width={520}>
+      <div className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/70">
+            <Icon name="info" size={20} />
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full border border-accent/40 text-white/70 hover:text-white flex items-center justify-center"
+            aria-label="Close"
+          >
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+        <h3 className="font-display text-white text-[1.15rem] font-semibold mt-5">Reason for hold</h3>
+        <p className="text-[0.9rem] text-white/60 mt-2">Your form is on hold due to the following reason:</p>
+        <div className="mt-4 rounded-xl border border-merchant-border bg-black/30 px-4 py-4 text-[0.95rem] text-white/90 leading-relaxed">
+          {reason || 'Our team needs a bit more information to finish reviewing this form.'}
+        </div>
+      </div>
+    </Modal>
   )
 }
 
@@ -27,6 +58,7 @@ function LivePill() {
     </span>
   )
 }
+
 
 function TypeCard({ value, selected, onSelect, title, bullets }) {
   const active = selected === value
