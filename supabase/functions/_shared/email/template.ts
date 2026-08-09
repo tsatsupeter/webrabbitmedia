@@ -318,6 +318,12 @@ function renderHtml(c: Content, recipient: { name?: string }): string {
             <div style="font-size:13px;color:${BRAND.muted};margin-top:2px;">${esc(c.hero.caption)}</div>
           </div>
         ` : ''}
+        ${c.quote ? `
+          <div style="background:${BRAND.warnBg};border:1px solid #f0dca8;border-radius:10px;padding:14px 16px;margin:0 0 18px;">
+            <div style="font-size:12px;font-weight:600;color:${BRAND.warn};text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Reason</div>
+            <div style="font-size:14px;line-height:1.55;color:${BRAND.ink};">${esc(c.quote)}</div>
+          </div>
+        ` : ''}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.border};">
           ${rowsHtml(c.rows)}
         </table>
