@@ -59,6 +59,32 @@ export const VERIFICATION_DOCS = {
   product_information: [],
 }
 
+const DOC_LABELS = {
+  id_document_front_path: 'ID document (front)',
+  id_document_back_path: 'ID document (back)',
+  selfie_path: 'Selfie',
+  incorporation_doc_path: 'Certificate of registration',
+  registration_form_doc_path: 'Registration form (Form A / Form 3)',
+  owner_ghana_card_path: 'Owner Ghana Card',
+  director1_ghana_card_path: 'Director 1 Ghana Card',
+  director2_ghana_card_path: 'Director 2 Ghana Card',
+  tax_doc_path: 'Tax document',
+  address_proof_path: 'Proof of address',
+  proof_doc_path: 'Bank proof document',
+}
+
+export const docLabel = (col) =>
+  DOC_LABELS[col] || col.replace(/_path$/, '').replace(/_/g, ' ')
+
+/** Build [{ label, path }] for a verification row. */
+export function docsForRow(row, table) {
+  if (!row) return []
+  return (VERIFICATION_DOCS[table] || [])
+    .filter((col) => row[col])
+    .map((col) => ({ label: docLabel(col), path: row[col] }))
+}
+
+
 const HIDDEN_FIELDS = new Set([
   'id',
   'business_id',

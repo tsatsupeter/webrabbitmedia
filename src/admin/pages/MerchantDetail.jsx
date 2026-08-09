@@ -7,8 +7,9 @@ import {
 } from '../components/ui'
 import EmptyState, { PageLoader } from '../components/EmptyState'
 import Icon from '../Icon'
+import DocGrid from '../components/DocViewer'
 import { useAdminMode, useAdminQuery, useAdminRole, logAdminAction } from '../useAdmin'
-import { money, fmtDate, VERIFICATION_TABLES } from '../lib'
+import { money, fmtDate, VERIFICATION_TABLES, docsForRow } from '../lib'
 
 async function loadMerchant(id, mode) {
   const [biz, txs, payouts, brands, keys, team, ...verifs] = await Promise.all([
@@ -67,6 +68,7 @@ export default function MerchantDetail() {
 
   const b = data.business
   const approvedTx = data.transactions.filter((t) => t.type === 'collection' && t.status === 'approved')
+  const allDocs = data.verifications.flatMap((v) => docsForRow(v.row, v.table))
 
   return (
     <Page>
@@ -123,16 +125,35 @@ export default function MerchantDetail() {
         <Card>
           <CardHeader title="Verification" subtitle="KYC steps for this merchant" action={<Link to="/admin/verifications" className="text-[0.78rem] text-accent-bright no-underline hover:underline">Review queue</Link>} />
           <div className="px-5 py-4 space-y-2.5">
-            {data.verifications.map((v) => (
-              <div key={v.table} className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 text-[0.84rem] text-white/75">
-                  <Icon name={v.icon} size={15} className="text-white/40" /> {v.label}
-                </span>
-                <StatusPill status={v.row?.status || 'not started'} />
-              </div>
-            ))}
+            {data.verifications.map((v) => {
+              const notRequired = v.table === 'business_verification' && b.business_type !== 'registered' && !v.row
+              return (
+                <div key={v.table} className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2 text-[0.84rem] text-white/75">
+                    <Icon name={v.icon} size={15} className="text-white/40" /> {v.label}
+                  </span>
+                  {notRequired ? (
+                    <span className="text-[0.75rem] text-white/40">Not required</span>
+                  ) : (
+                    <StatusPill status={v.row?.status || 'not started'} />
+                  )}
+                </div>
+              )
+            })}
           </div>
         </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader title="Submitted documents" subtitle="Click a thumbnail to view it here — links are generated on demand" />
+          <div className="px-5 py-4 space-y-5">
+            {allDocs.length === 0 ? (
+              <div className="text-[0.83rem] text-white/45">No documents uploaded yet.</div>
+            ) : (
+              <DocGrid docs={allDocs} title="KYC documents" />
+            )}
+          </div>
+        </Card>
+
 
         <Card>
           <CardHeader title="Brands" subtitle={`${data.brands.length} registered`} />

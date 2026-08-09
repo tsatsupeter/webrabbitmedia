@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
 import { Page, PageHeader, Card, CardHeader, Table, Row, Cell, StatusPill, Button, inputClass, textareaClass } from '../components/ui'
 import EmptyState, { PageLoader } from '../components/EmptyState'
 import Modal from '../components/Modal'
+import DocGrid from '../components/DocViewer'
 import Icon from '../Icon'
 import { useAdminQuery, useAdminRole, logAdminAction } from '../useAdmin'
-import { fmtDate, VERIFICATION_TABLES, VERIFICATION_DOCS, reviewableFields } from '../lib'
+import { fmtDate, VERIFICATION_TABLES, docsForRow, reviewableFields } from '../lib'
+
 
 async function loadQueue() {
   const [businesses, ...tables] = await Promise.all([
@@ -120,30 +122,19 @@ export default function Verifications() {
 function ReviewDrawer({ item, onClose, onDone, isAdmin }) {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
-  const [docs, setDocs] = useState({})
-  const [docsLoaded, setDocsLoaded] = useState(false)
 
   const fields = item ? reviewableFields(item.row, item.table) : []
+  const docs = item ? docsForRow(item.row, item.table) : []
 
-  async function loadDocs() {
-    if (!item || docsLoaded) return
-    const cols = VERIFICATION_DOCS[item.table] || []
-    const out = {}
-    for (const col of cols) {
-      const path = item.row[col]
-      if (!path) continue
-      const { data } = await supabase.storage.from('identity-docs').createSignedUrl(path, 300)
-      if (data?.signedUrl) out[col] = data.signedUrl
-    }
-    setDocs(out)
-    setDocsLoaded(true)
-  }
+  useEffect(() => {
+    setNote('')
+  }, [item?.row?.id])
 
   async function decide(status) {
     setBusy(true)
     const { error } = await supabase
       .from(item.table)
-      .update({ status, ...(status === 'rejected' ? {} : {}) })
+      .update({ status })
       .eq('id', item.row.id)
     setBusy(false)
     if (error) return toast.error(error.message)
@@ -153,12 +144,9 @@ function ReviewDrawer({ item, onClose, onDone, isAdmin }) {
     })
     toast.success(`${item.label} ${status}`)
     setNote('')
-    setDocs({})
-    setDocsLoaded(false)
     onDone()
   }
 
-  if (item && !docsLoaded) loadDocs()
 
   return (
     <Modal open={!!item} onClose={onClose} width={620}>
@@ -187,26 +175,8 @@ function ReviewDrawer({ item, onClose, onDone, isAdmin }) {
               )}
             </div>
 
-            {Object.keys(docs).length > 0 && (
-              <div>
-                <div className="text-[0.75rem] uppercase tracking-wide text-white/40 mb-2">Documents</div>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(docs).map(([col, url]) => (
-                    <a
-                      key={col}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 h-9 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-[0.8rem] text-white/80 no-underline hover:bg-white/[0.08]"
-                    >
-                      <Icon name="file" size={14} />
-                      {col.replace(/_path$/, '').replace(/_/g, ' ')}
-                    </a>
-                  ))}
-                </div>
-                <div className="text-[0.7rem] text-white/35 mt-2">Links expire after 5 minutes.</div>
-              </div>
-            )}
+            <DocGrid docs={docs} />
+
 
             {isAdmin && (
               <textarea
