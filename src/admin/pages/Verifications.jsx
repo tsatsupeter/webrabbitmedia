@@ -173,26 +173,8 @@ function ReviewDrawer({ item, onClose, onDone, isAdmin }) {
               )}
             </div>
 
-            {Object.keys(docs).length > 0 && (
-              <div>
-                <div className="text-[0.75rem] uppercase tracking-wide text-white/40 mb-2">Documents</div>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(docs).map(([col, url]) => (
-                    <a
-                      key={col}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 h-9 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-[0.8rem] text-white/80 no-underline hover:bg-white/[0.08]"
-                    >
-                      <Icon name="file" size={14} />
-                      {col.replace(/_path$/, '').replace(/_/g, ' ')}
-                    </a>
-                  ))}
-                </div>
-                <div className="text-[0.7rem] text-white/35 mt-2">Links expire after 5 minutes.</div>
-              </div>
-            )}
+            <DocGrid docs={docs} />
+
 
             {isAdmin && (
               <textarea
