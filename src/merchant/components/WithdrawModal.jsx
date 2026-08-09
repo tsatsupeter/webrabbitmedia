@@ -45,16 +45,20 @@ export default function WithdrawModal({ open, onClose, businessId, mode, availab
     }
   }
 
+  const isMomo = bank?.destination_type === 'momo'
+
   return (
     <Modal open={open} onClose={busy ? undefined : onClose} width={480}>
       <div className="p-6">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-            <Icon name="bank" size={18} />
+            <Icon name={isMomo ? 'mobile' : 'bank'} size={18} />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Withdraw funds</h3>
-            <p className="text-xs text-white/50">Manual bank transfer, reviewed within 72 hours.</p>
+            <p className="text-xs text-white/50">
+              {isMomo ? 'Manual mobile money transfer, reviewed within 72 hours.' : 'Manual bank transfer, reviewed within 72 hours.'}
+            </p>
           </div>
         </div>
 
@@ -66,7 +70,7 @@ export default function WithdrawModal({ open, onClose, businessId, mode, availab
           <div className="flex items-center justify-between">
             <span className="text-white/60">Destination</span>
             <span className="text-white text-right">
-              {bank?.bank_name || 'Bank account'}
+              {bank?.bank_name || (isMomo ? 'Mobile money wallet' : 'Bank account')}
               {bank?.account_number && <span className="text-white/50"> • ****{String(bank.account_number).slice(-4)}</span>}
             </span>
           </div>
@@ -75,6 +79,7 @@ export default function WithdrawModal({ open, onClose, businessId, mode, availab
             <span className="text-white/80 tabular-nums">{fmt(MIN)}</span>
           </div>
         </div>
+
 
         <label className="mt-5 block">
           <span className="text-xs font-medium text-white/70">Amount (GHS)</span>
