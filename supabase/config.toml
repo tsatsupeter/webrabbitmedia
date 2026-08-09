@@ -23,6 +23,3 @@ verify_jwt = true
 
 [functions.admin-verification-reminder]
 verify_jwt = false
-
-[functions.merchant-additional-info]
-verify_jwt = false
