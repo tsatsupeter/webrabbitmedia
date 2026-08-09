@@ -289,6 +289,9 @@ export default function Verification() {
     ? ['product', 'identity', 'business', 'bank']
     : ['product', 'identity', 'bank']
 
+  const holdKeys = steps.filter((s) => holds[s] !== undefined)
+
+
   function statusFor(key) {
     if (holds[key] !== undefined) return 'on_hold'
     if (completedSteps.includes(key)) return 'completed'
