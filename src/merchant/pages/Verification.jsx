@@ -128,7 +128,7 @@ function TypePicker({ value, onChange }) {
   )
 }
 
-function DetailRow({ icon, title, desc, last, status, onSubmit, verified, hold, onShowReason }) {
+function DetailRow({ icon, title, desc, last, status, onSubmit, verified, onShowReason }) {
   // status: 'active' | 'locked' | 'completed' | 'on_hold'
   const onHold = status === 'on_hold'
   const isVerified = verified || status === 'completed'
