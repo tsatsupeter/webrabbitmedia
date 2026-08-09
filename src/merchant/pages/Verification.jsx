@@ -388,7 +388,33 @@ export default function Verification() {
 
       {state === 'overview' && (
         <>
-          {approved ? <LivePill /> : <StatusPills />}
+          {approved ? <LivePill /> : <StatusPills holdPending={holdKeys.length > 0} />}
+
+          {holdKeys.length > 0 && (
+            <div className="rounded-xl border border-orange-500/40 bg-orange-500/[0.07] p-5">
+              <div className="flex items-center gap-2 text-orange-300 text-[0.85rem] font-medium">
+                <Icon name="info" size={16} /> Additional verification required
+              </div>
+              <p className="text-[0.88rem] text-white/70 mt-2 leading-relaxed">
+                Our compliance team needs a bit more information for{' '}
+                <span className="text-white">{active.name}</span>. This does not block your payouts,
+                but completing it now keeps your transactions moving without extra checks. Once you
+                resubmit, we'll review and let you know if anything else is needed.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {holdKeys.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => completeStep(k)}
+                    className="h-9 px-4 rounded-lg bg-white text-black text-[0.82rem] font-medium hover:bg-white/90"
+                  >
+                    Provide {STEP_LABELS[k]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {!approved && (
             <div className="flex items-start justify-between gap-4 rounded-xl border border-merchant-border bg-merchant-panel p-5">
@@ -426,6 +452,7 @@ export default function Verification() {
                 status={statusFor('product')}
                 verified={approved && completedSteps.includes('product')}
                 onSubmit={() => completeStep('product')}
+                onShowReason={() => setReasonOpen(holds.product)}
               />
               <DetailRow
                 icon="user"
@@ -434,6 +461,7 @@ export default function Verification() {
                 status={statusFor('identity')}
                 verified={approved && completedSteps.includes('identity')}
                 onSubmit={() => completeStep('identity')}
+                onShowReason={() => setReasonOpen(holds.identity)}
               />
               {active.business_type === 'registered' && (
                 <DetailRow
@@ -443,6 +471,7 @@ export default function Verification() {
                   status={statusFor('business')}
                   verified={approved && completedSteps.includes('business')}
                   onSubmit={() => completeStep('business')}
+                  onShowReason={() => setReasonOpen(holds.business)}
                 />
               )}
               <DetailRow
@@ -453,6 +482,7 @@ export default function Verification() {
                 status={statusFor('bank')}
                 verified={approved && completedSteps.includes('bank')}
                 onSubmit={() => completeStep('bank')}
+                onShowReason={() => setReasonOpen(holds.bank)}
               />
 
               {approved && completedSteps.includes('bank') && bankHolder && (
@@ -474,6 +504,13 @@ export default function Verification() {
           </div>
         </>
       )}
+
+      <ReasonModal
+        open={reasonOpen !== null}
+        reason={reasonOpen}
+        onClose={() => setReasonOpen(null)}
+      />
     </div>
   )
+
 }
