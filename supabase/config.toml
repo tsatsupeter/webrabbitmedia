@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.team-invites]
 verify_jwt = true
+
+[functions.admin-verification-reminder]
+verify_jwt = false

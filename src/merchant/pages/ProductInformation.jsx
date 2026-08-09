@@ -263,6 +263,7 @@ export default function ProductInformation() {
       stage: stage || null,
       payment_platform: paymentPlatform.trim() || null,
       status,
+      rejection_reason: null,
       confirmed_at: status === 'submitted' ? new Date().toISOString() : null,
     }
   }

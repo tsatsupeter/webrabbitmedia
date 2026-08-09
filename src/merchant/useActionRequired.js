@@ -34,6 +34,7 @@ export function useActionRequired() {
       ])
       if (cancelled) return
       const items = []
+      const onHold = (r) => r?.status === 'on_hold' || r?.status === 'rejected'
       const piDone = pi?.status === 'confirmed' || pi?.status === 'submitted'
       const ivDone = iv?.status === 'submitted' || iv?.status === 'approved'
       const bvDone = bv?.status === 'submitted' || bv?.status === 'approved'
@@ -42,24 +43,25 @@ export function useActionRequired() {
 
       if (!piDone) items.push({
         step: 'product',
-        label: 'Product information form failed',
+        label: onHold(pi) ? 'Product information is on hold' : 'Product information form failed',
         href: '/merchant/verification/product-information',
       })
       if (!ivDone) items.push({
         step: 'identity',
-        label: 'Identity verification pending',
+        label: onHold(iv) ? 'Identity verification is on hold' : 'Identity verification pending',
         href: '/merchant/verification/identity',
       })
       if (isRegistered && !bvDone) items.push({
         step: 'business',
-        label: 'Business verification pending',
+        label: onHold(bv) ? 'Business verification is on hold' : 'Business verification pending',
         href: '/merchant/verification/business',
       })
       if (!bankDone) items.push({
         step: 'bank',
-        label: 'Bank account not verified',
+        label: onHold(bank) ? 'Payout details are on hold' : 'Bank account not verified',
         href: '/merchant/verification/bank',
       })
+
       setState({ loading: false, required: items.length > 0, items })
     })()
     return () => { cancelled = true }

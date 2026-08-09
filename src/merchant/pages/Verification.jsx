@@ -4,19 +4,50 @@ import { supabase } from '../../integrations/supabase/client'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { toast } from 'sonner'
 import Icon from '../Icon'
+import Modal from '../components/Modal'
 import { PageLoader } from '../components/EmptyState'
 
 
-function StatusPills() {
+function StatusPills({ holdPending }) {
   return (
     <div className="flex flex-wrap gap-3">
       <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-[0.78rem] tracking-[0.12em]">
         <Icon name="x" size={16} /> LIVE PAYMENTS INACTIVE
       </span>
       <span className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 font-mono text-[0.78rem] tracking-[0.12em]">
-        <Icon name="info" size={16} /> ACTION REQUIRED : IDENTITY VERIFICATION PENDING
+        <Icon name="info" size={16} />
+        {holdPending
+          ? 'ACTION REQUIRED : ADDITIONAL INFORMATION PENDING'
+          : 'ACTION REQUIRED : IDENTITY VERIFICATION PENDING'}
       </span>
     </div>
+  )
+}
+
+function ReasonModal({ open, reason, onClose }) {
+  return (
+    <Modal open={open} onClose={onClose} width={520}>
+      <div className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/70">
+            <Icon name="info" size={20} />
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full border border-accent/40 text-white/70 hover:text-white flex items-center justify-center"
+            aria-label="Close"
+          >
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+        <h3 className="font-display text-white text-[1.15rem] font-semibold mt-5">Reason for hold</h3>
+        <p className="text-[0.9rem] text-white/60 mt-2">Your form is on hold due to the following reason:</p>
+        <div className="mt-4 rounded-xl border border-merchant-border bg-black/30 px-4 py-4 text-[0.95rem] text-white/90 leading-relaxed">
+          {reason || 'Our team needs a bit more information to finish reviewing this form.'}
+        </div>
+      </div>
+    </Modal>
   )
 }
 
@@ -27,6 +58,7 @@ function LivePill() {
     </span>
   )
 }
+
 
 function TypeCard({ value, selected, onSelect, title, bullets }) {
   const active = selected === value
@@ -96,22 +128,27 @@ function TypePicker({ value, onChange }) {
   )
 }
 
-function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
-  // status: 'active' | 'locked' | 'completed'
+function DetailRow({ icon, title, desc, last, status, onSubmit, verified, onShowReason }) {
+  // status: 'active' | 'locked' | 'completed' | 'on_hold'
+  const onHold = status === 'on_hold'
   const isVerified = verified || status === 'completed'
   return (
     <div className={`relative flex items-start gap-4 p-4 rounded-xl border ${
-      isVerified && verified
-        ? 'border-accent/30 bg-accent/[0.04]'
-        : 'border-merchant-border bg-black/20'
+      onHold
+        ? 'border-orange-500/40 bg-orange-500/[0.07]'
+        : isVerified && verified
+          ? 'border-accent/30 bg-accent/[0.04]'
+          : 'border-merchant-border bg-black/20'
     }`}>
       {!last && (
         <span className="absolute left-[38px] top-[68px] bottom-[-16px] w-px bg-white/10" />
       )}
       <div className={`w-11 h-11 shrink-0 rounded-lg flex items-center justify-center border ${
-        isVerified && verified
-          ? 'bg-accent/15 border-accent/30 text-accent-bright'
-          : 'bg-white/[0.05] border-white/10 text-white/80'
+        onHold
+          ? 'bg-orange-500/15 border-orange-500/30 text-orange-300'
+          : isVerified && verified
+            ? 'bg-accent/15 border-accent/30 text-accent-bright'
+            : 'bg-white/[0.05] border-white/10 text-white/80'
       }`}>
         <Icon name={icon} size={20} />
       </div>
@@ -122,7 +159,27 @@ function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
         </div>
         <p className="text-[0.85rem] text-white/55 leading-relaxed mt-1">{desc}</p>
       </div>
-      {verified ? (
+      {onHold ? (
+        <div className="shrink-0 flex items-center gap-2">
+          <span className="inline-flex items-center h-8 px-3 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-300 text-[0.78rem]">
+            On hold
+          </span>
+          <button
+            type="button"
+            onClick={onShowReason}
+            className="h-8 px-1 text-[0.78rem] text-white/85 underline underline-offset-4 hover:text-white"
+          >
+            reason for hold
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="h-8 px-3 rounded-lg bg-white/[0.08] border border-white/10 text-white text-[0.78rem] hover:bg-white/15"
+          >
+            Resubmit
+          </button>
+        </div>
+      ) : verified ? (
         <div className="shrink-0 flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright text-[0.78rem]">
             Verified
@@ -157,14 +214,23 @@ function DetailRow({ icon, title, desc, last, status, onSubmit, verified }) {
   )
 }
 
+const STEP_LABELS = {
+  product: 'product information',
+  identity: 'identity verification',
+  business: 'business verification',
+  bank: 'payout details',
+}
 
 export default function Verification() {
+
   const navigate = useNavigate()
   const { active, refresh, loading } = useBusinesses()
   const [mode, setMode] = useState('view') // 'view' | 'edit'
   const [choice, setChoice] = useState(null)
   const [saving, setSaving] = useState(false)
   const [completedSteps, setCompletedStepsState] = useState([])
+  const [holds, setHolds] = useState({})
+  const [reasonOpen, setReasonOpen] = useState(null)
   const [bankHolder, setBankHolder] = useState(null)
 
   const approved = active?.status === 'approved'
@@ -177,23 +243,32 @@ export default function Verification() {
     if (!active?.id) return
     let cancelled = false
     ;(async () => {
+      const cols = 'status, rejection_reason'
       const [{ data: prod }, { data: ident }, { data: biz }, { data: bank }] = await Promise.all([
-        supabase.from('product_information').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('identity_verification').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('business_verification').select('status').eq('business_id', active.id).maybeSingle(),
-        supabase.from('bank_verification').select('status, account_holder_name').eq('business_id', active.id).maybeSingle(),
+        supabase.from('product_information').select(cols).eq('business_id', active.id).maybeSingle(),
+        supabase.from('identity_verification').select(cols).eq('business_id', active.id).maybeSingle(),
+        supabase.from('business_verification').select(cols).eq('business_id', active.id).maybeSingle(),
+        supabase.from('bank_verification').select(`${cols}, account_holder_name`).eq('business_id', active.id).maybeSingle(),
       ])
       if (cancelled) return
+      const rows = { product: prod, identity: ident, business: biz, bank }
       const done = []
-      if (prod?.status === 'submitted') done.push('product')
-      if (ident?.status === 'submitted') done.push('identity')
-      if (biz?.status === 'submitted') done.push('business')
-      if (bank?.status === 'submitted') done.push('bank')
+      const held = {}
+      for (const [key, row] of Object.entries(rows)) {
+        if (!row) continue
+        if (row.status === 'on_hold' || row.status === 'rejected') {
+          held[key] = row.rejection_reason || ''
+        } else if (row.status === 'submitted' || row.status === 'approved') {
+          done.push(key)
+        }
+      }
       setCompletedStepsState(done)
+      setHolds(held)
       setBankHolder(bank?.account_holder_name ?? null)
     })()
     return () => { cancelled = true }
   }, [active?.id])
+
 
   const state = !active?.business_type ? 'basics' : mode === 'edit' ? 'editType' : 'overview'
 
@@ -220,11 +295,18 @@ export default function Verification() {
     ? ['product', 'identity', 'business', 'bank']
     : ['product', 'identity', 'bank']
 
+  const holdKeys = steps.filter((s) => holds[s] !== undefined)
+
+
   function statusFor(key) {
+    if (holds[key] !== undefined) return 'on_hold'
     if (completedSteps.includes(key)) return 'completed'
-    const nextIdx = steps.findIndex((s) => !completedSteps.includes(s))
+    // A step on hold has already been submitted once, so it no longer blocks later steps.
+    const settled = (s) => completedSteps.includes(s) || holds[s] !== undefined
+    const nextIdx = steps.findIndex((s) => !settled(s))
     return steps[nextIdx] === key ? 'active' : 'locked'
   }
+
 
   function completeStep(key) {
     if (key === 'product') return navigate('/merchant/verification/product-information')
@@ -315,7 +397,33 @@ export default function Verification() {
 
       {state === 'overview' && (
         <>
-          {approved ? <LivePill /> : <StatusPills />}
+          {approved ? <LivePill /> : <StatusPills holdPending={holdKeys.length > 0} />}
+
+          {holdKeys.length > 0 && (
+            <div className="rounded-xl border border-orange-500/40 bg-orange-500/[0.07] p-5">
+              <div className="flex items-center gap-2 text-orange-300 text-[0.85rem] font-medium">
+                <Icon name="info" size={16} /> Additional verification required
+              </div>
+              <p className="text-[0.88rem] text-white/70 mt-2 leading-relaxed">
+                Our compliance team needs a bit more information for{' '}
+                <span className="text-white">{active.name}</span>. This does not block your payouts,
+                but completing it now keeps your transactions moving without extra checks. Once you
+                resubmit, we'll review and let you know if anything else is needed.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {holdKeys.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => completeStep(k)}
+                    className="h-9 px-4 rounded-lg bg-white text-black text-[0.82rem] font-medium hover:bg-white/90"
+                  >
+                    Provide {STEP_LABELS[k]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {!approved && (
             <div className="flex items-start justify-between gap-4 rounded-xl border border-merchant-border bg-merchant-panel p-5">
@@ -353,6 +461,7 @@ export default function Verification() {
                 status={statusFor('product')}
                 verified={approved && completedSteps.includes('product')}
                 onSubmit={() => completeStep('product')}
+                onShowReason={() => setReasonOpen(holds.product)}
               />
               <DetailRow
                 icon="user"
@@ -361,6 +470,7 @@ export default function Verification() {
                 status={statusFor('identity')}
                 verified={approved && completedSteps.includes('identity')}
                 onSubmit={() => completeStep('identity')}
+                onShowReason={() => setReasonOpen(holds.identity)}
               />
               {active.business_type === 'registered' && (
                 <DetailRow
@@ -370,6 +480,7 @@ export default function Verification() {
                   status={statusFor('business')}
                   verified={approved && completedSteps.includes('business')}
                   onSubmit={() => completeStep('business')}
+                  onShowReason={() => setReasonOpen(holds.business)}
                 />
               )}
               <DetailRow
@@ -380,6 +491,7 @@ export default function Verification() {
                 status={statusFor('bank')}
                 verified={approved && completedSteps.includes('bank')}
                 onSubmit={() => completeStep('bank')}
+                onShowReason={() => setReasonOpen(holds.bank)}
               />
 
               {approved && completedSteps.includes('bank') && bankHolder && (
@@ -401,6 +513,13 @@ export default function Verification() {
           </div>
         </>
       )}
+
+      <ReasonModal
+        open={reasonOpen !== null}
+        reason={reasonOpen}
+        onClose={() => setReasonOpen(null)}
+      />
     </div>
   )
+
 }

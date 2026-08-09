@@ -8,6 +8,8 @@ export type EmailEvent =
   | 'payout_failed'
   | 'business_approved'
   | 'verification_submitted'
+  | 'verification_on_hold'
+  | 'verification_reminder'
   | 'team_invite'
 
 
@@ -63,6 +65,7 @@ type Content = {
   intro: string
   pill: Pill
   hero?: { amount: string; caption: string }
+  quote?: string
   rows: Row[]
   lines?: LineItem[]
   cta?: { label: string; href: string }
@@ -193,6 +196,43 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
           { label: 'Submitted', value: fmtDate(d.submitted_at as string) },
         ],
         cta: { label: 'View progress', href: `${BRAND.dashboard}/verification` },
+      }
+    }
+    case 'verification_on_hold': {
+      const step = String(d.step || 'verification').replace(/_/g, ' ')
+      const reason = String(d.reason || 'Our compliance team needs a bit more information.')
+      return {
+        subject: `[IMP] Additional verification required for ${businessName}`,
+        preheader: `Additional verification needed for ${businessName}.`,
+        headline: `Additional verification needed for ${businessName}`,
+        intro: `Our compliance team needs a bit more information for ${businessName}. This request will not block payouts, but completing it now ensures you can keep transacting smoothly on ${BRAND.name}. Once submitted, we'll review everything and notify you if anything else is required.`,
+        pill: { label: 'On hold', tone: 'warn' },
+        quote: reason,
+        rows: [
+          { label: 'Form', value: step.replace(/\b\w/g, (c) => c.toUpperCase()) },
+          { label: 'Business', value: businessName },
+          { label: 'Requested', value: fmtDate(d.reviewed_at as string) },
+        ],
+        cta: { label: 'Provide Information', href: `${BRAND.dashboard}/verification` },
+        outro: 'Next steps: complete the verification checklist in your dashboard. It takes just a couple of minutes.',
+      }
+    }
+    case 'verification_reminder': {
+      const step = String(d.step || 'verification').replace(/_/g, ' ')
+      const reason = d.reason ? String(d.reason) : undefined
+      return {
+        subject: `[Urgent] - complete additional information for ${businessName}`,
+        preheader: `Reminder: share the additional info for ${businessName}.`,
+        headline: `Reminder: share the additional info for ${businessName}`,
+        intro: `Quick reminder: we still need the additional information for ${businessName}. This will not block payouts, but sharing it now keeps your transactions moving without extra checks. It takes just a couple of minutes to complete the form.`,
+        pill: { label: 'Action required', tone: 'warn' },
+        quote: reason,
+        rows: [
+          { label: 'Form', value: step.replace(/\b\w/g, (c) => c.toUpperCase()) },
+          { label: 'Business', value: businessName },
+        ],
+        cta: { label: 'Update Information', href: `${BRAND.dashboard}/verification` },
+      }
     }
     case 'team_invite': {
       const inviter = String(d.inviter_name || d.inviter_email || 'A teammate')
@@ -219,7 +259,6 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
   }
 }
 
-}
 
 function pillHtml(p: Pill): string {
   const map = {
@@ -279,6 +318,12 @@ function renderHtml(c: Content, recipient: { name?: string }): string {
             <div style="font-size:13px;color:${BRAND.muted};margin-top:2px;">${esc(c.hero.caption)}</div>
           </div>
         ` : ''}
+        ${c.quote ? `
+          <div style="background:${BRAND.warnBg};border:1px solid #f0dca8;border-radius:10px;padding:14px 16px;margin:0 0 18px;">
+            <div style="font-size:12px;font-weight:600;color:${BRAND.warn};text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Reason</div>
+            <div style="font-size:14px;line-height:1.55;color:${BRAND.ink};">${esc(c.quote)}</div>
+          </div>
+        ` : ''}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.border};">
           ${rowsHtml(c.rows)}
         </table>
@@ -307,7 +352,8 @@ function renderText(c: Content, recipient: { name?: string }): string {
   const cta = c.cta ? `\n\n${c.cta.label}: ${c.cta.href}` : ''
   const outro = c.outro ? `\n\n${c.outro}` : ''
   const hero = c.hero ? `\n${c.hero.amount} ${c.hero.caption}\n` : ''
-  return `${greeting}\n\n${c.intro}\n${hero}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
+  const quote = c.quote ? `\nReason: ${c.quote}\n` : ''
+  return `${greeting}\n\n${c.intro}\n${hero}${quote}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
 }
 
 export type RenderedEmail = {

@@ -273,6 +273,7 @@ export default function BusinessVerification() {
         director1_ghana_card_path: isSoleProp ? null : d1,
         director2_ghana_card_path: isSoleProp ? null : d2,
         status,
+        rejection_reason: null,
         submitted_at: status === 'submitted' ? new Date().toISOString() : null,
       }
       const { error } = await supabase
