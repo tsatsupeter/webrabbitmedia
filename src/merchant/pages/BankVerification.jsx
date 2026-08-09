@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import Icon from '../Icon'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { useAuth } from '../../hooks/useAuth'
+import { useMerchantMode } from '../../hooks/useMerchantMode'
 import { supabase } from '../../integrations/supabase/client'
 import { COUNTRY_NAMES as COUNTRIES } from '../../lib/countries'
 
@@ -14,6 +15,13 @@ const ROUTING_TYPES = [
   { value: 'ifsc', label: 'IFSC (India)', len: [11, 11] },
   { value: 'routing', label: 'Routing number (US)', len: [9, 9] },
   { value: 'swift', label: 'SWIFT / BIC', len: [8, 11] },
+]
+
+export const MOMO_NETWORKS = [
+  { value: 'MTN', label: 'MTN Mobile Money' },
+  { value: 'TELECEL', label: 'Telecel Cash' },
+  { value: 'AT', label: 'AT Money' },
+  { value: 'GMONEY', label: 'G-Money' },
 ]
 
 function Label({ children, required }) {
@@ -113,6 +121,33 @@ function FileUpload({ label, path, file, onFile, onClear }) {
   )
 }
 
+function DestinationTypeCard({ active, icon, title, subtitle, onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex-1 text-left rounded-xl border p-4 transition-colors ${
+        active
+          ? 'border-accent-bright bg-accent-bright/10'
+          : 'border-merchant-border bg-black/20 hover:bg-black/30'
+      } disabled:opacity-40 disabled:cursor-not-allowed`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
+          active ? 'bg-accent-bright/20 border-accent-bright/40 text-accent-bright' : 'bg-white/[0.04] border-white/10 text-white/60'
+        }`}>
+          <Icon name={icon} size={18} />
+        </div>
+        <div className="min-w-0">
+          <div className="text-white text-[0.9rem] font-medium">{title}</div>
+          <div className="text-white/50 text-[0.75rem]">{subtitle}</div>
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export default function BankVerification() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -120,6 +155,7 @@ export default function BankVerification() {
   const isNew = params.get('new') === '1'
   const { user } = useAuth()
   const { active } = useBusinesses()
+  const { mode } = useMerchantMode()
   const readOnly = active?.status === 'approved' && !isNew && !editId
 
 
@@ -127,6 +163,11 @@ export default function BankVerification() {
   const [isPrimary, setIsPrimary] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  const [destinationType, setDestinationType] = useState('bank')
+  const [momoNetwork, setMomoNetwork] = useState('')
+  const [nameVerified, setNameVerified] = useState(false)
+  const [verifying, setVerifying] = useState(false)
 
   const [holderName, setHolderName] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
@@ -141,6 +182,8 @@ export default function BankVerification() {
   const [proofPath, setProofPath] = useState(null)
   const [proofFile, setProofFile] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
+
+  const isMomo = destinationType === 'momo'
 
   useEffect(() => {
     if (!active?.id) return
@@ -158,6 +201,9 @@ export default function BankVerification() {
       if (data) {
         setRowId(data.id)
         setIsPrimary(!!data.is_primary)
+        setDestinationType(data.destination_type === 'momo' ? 'momo' : 'bank')
+        setMomoNetwork(data.momo_network ?? '')
+        setNameVerified(!!data.account_name_verified)
         setHolderName(data.account_holder_name ?? '')
         setAccountNumber(data.account_number ?? '')
         setConfirmAccount(data.account_number ?? '')
@@ -177,19 +223,60 @@ export default function BankVerification() {
   }, [active?.id, isNew, editId])
 
   const acctClean = accountNumber.replace(/\s+/g, '')
-  const acctValid = /^[A-Za-z0-9]{6,34}$/.test(acctClean)
-  const acctMatch = accountNumber === confirmAccount
+  const acctValid = isMomo
+    ? /^0\d{9}$/.test(acctClean)
+    : /^[A-Za-z0-9]{6,34}$/.test(acctClean)
+  const acctMatch = accountNumber.trim() === confirmAccount.trim()
   const routingCfg = ROUTING_TYPES.find((r) => r.value === routingType)
   const routingValid = !routingCfg || (routingCode.length >= routingCfg.len[0] && routingCode.length <= routingCfg.len[1])
 
-  const requiredValid =
-    holderName.trim() &&
-    acctValid && acctMatch &&
-    routingType && routingCode.trim() && routingValid &&
-    currency && bankName.trim() && branchName.trim() && branchAddress.trim() && country &&
-    (proofFile || proofPath)
+  const requiredValid = isMomo
+    ? Boolean(momoNetwork && acctValid && acctMatch && holderName.trim())
+    : Boolean(
+        holderName.trim() &&
+        acctValid && acctMatch &&
+        routingType && routingCode.trim() && routingValid &&
+        currency && bankName.trim() && branchName.trim() && branchAddress.trim() && country &&
+        (proofFile || proofPath),
+      )
 
   const canSubmit = requiredValid && confirmed && !saving
+
+  function switchDestination(next) {
+    if (next === destinationType) return
+    setDestinationType(next)
+    setAccountNumber('')
+    setConfirmAccount('')
+    setHolderName('')
+    setNameVerified(false)
+    setConfirmed(false)
+    if (next === 'momo') {
+      setCurrency('GHS')
+      setCountry('Ghana')
+    } else {
+      setMomoNetwork('')
+    }
+  }
+
+  async function verifyWallet() {
+    if (!active?.id || !momoNetwork || !acctValid || verifying) return
+    setVerifying(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-payout-account', {
+        body: { business_id: active.id, account_number: acctClean, network: momoNetwork, mode: mode || 'live' },
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      setHolderName(String(data.account_name || '').toUpperCase())
+      setNameVerified(true)
+      toast.success('Wallet verified', { description: data.account_name })
+    } catch (e) {
+      setNameVerified(false)
+      toast.error('Could not verify wallet', { description: String(e?.message || e) })
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   async function uploadIfNeeded(file, existingPath) {
     if (!file) return existingPath ?? null
@@ -206,27 +293,48 @@ export default function BankVerification() {
     if (!active?.id || !user?.id) { toast.error('No active business selected'); return { error: true } }
     setSaving(true)
     try {
-      const pp = await uploadIfNeeded(proofFile, proofPath)
-      const basePayload = {
-        account_holder_name: holderName.trim() || null,
-        account_number: acctClean || null,
-        routing_code: routingCode.trim() || null,
-        routing_type: routingType || null,
-        bank_name: bankName.trim() || null,
-        branch_name: branchName.trim() || null,
-        branch_address: branchAddress.trim() || null,
-        country: country || null,
-        currency: currency || null,
-        proof_doc_path: pp,
-        status,
-        submitted_at: status === 'submitted' ? new Date().toISOString() : null,
-      }
+      const pp = isMomo ? null : await uploadIfNeeded(proofFile, proofPath)
+      const basePayload = isMomo
+        ? {
+            destination_type: 'momo',
+            momo_network: momoNetwork || null,
+            account_name_verified: nameVerified,
+            account_holder_name: holderName.trim() || null,
+            account_number: acctClean || null,
+            routing_code: null,
+            routing_type: null,
+            bank_name: MOMO_NETWORKS.find((n) => n.value === momoNetwork)?.label || null,
+            branch_name: null,
+            branch_address: null,
+            country: 'Ghana',
+            currency: 'GHS',
+            proof_doc_path: null,
+            status,
+            submitted_at: status === 'submitted' ? new Date().toISOString() : null,
+          }
+        : {
+            destination_type: 'bank',
+            momo_network: null,
+            account_name_verified: false,
+            account_holder_name: holderName.trim() || null,
+            account_number: acctClean || null,
+            routing_code: routingCode.trim() || null,
+            routing_type: routingType || null,
+            bank_name: bankName.trim() || null,
+            branch_name: branchName.trim() || null,
+            branch_address: branchAddress.trim() || null,
+            country: country || null,
+            currency: currency || null,
+            proof_doc_path: pp,
+            status,
+            submitted_at: status === 'submitted' ? new Date().toISOString() : null,
+          }
 
       if (rowId) {
         const { error } = await supabase.from('bank_verification').update(basePayload).eq('id', rowId)
         if (error) throw error
       } else {
-        // Determine if this should be primary: only when no bank exists yet for this business
+        // Determine if this should be primary: only when no destination exists yet for this business
         const { count } = await supabase
           .from('bank_verification').select('id', { count: 'exact', head: true })
           .eq('business_id', active.id)
@@ -255,7 +363,9 @@ export default function BankVerification() {
     if (!canSubmit) { toast.error('Please complete all required fields'); return }
     const { error } = await persist('submitted')
     if (error) return
-    toast.success('Bank details submitted', { description: "We'll verify your account shortly." })
+    toast.success(isMomo ? 'Mobile money wallet submitted' : 'Bank details submitted', {
+      description: "We'll verify your payout destination shortly.",
+    })
     navigate(returnTo)
   }
 
@@ -274,102 +384,188 @@ export default function BankVerification() {
           aria-label="Back">
           <Icon name="chevronLeft" size={18} />
         </button>
-        <h1 className="font-display text-white text-[1.25rem] font-semibold">Bank Verification{isPrimary ? '' : (rowId || isNew ? ' — Additional Account' : '')}</h1>
+        <h1 className="font-display text-white text-[1.25rem] font-semibold">Payout Destination{isPrimary ? '' : (rowId || isNew ? ' — Additional Destination' : '')}</h1>
       </div>
 
       <p className="text-[0.9rem] text-white/60">
-        Add the bank account where you'd like to receive payouts. Make sure the account name matches your verified identity or business.
+        Choose where you'd like to receive your payouts — a bank account or a mobile money wallet. The account name must match your verified identity or business.
       </p>
 
       <div className={`bg-merchant-panel border border-merchant-border rounded-xl p-6 space-y-8 ${loading ? 'opacity-60 pointer-events-none' : ''} ${readOnly ? 'pointer-events-none opacity-90 select-none' : ''}`}>
-        {/* Holder */}
-        <div className="space-y-5">
-          <h3 className="text-white text-[0.95rem] font-medium">Account holder</h3>
-          <div>
-            <Label required>Account holder name</Label>
-            <TextInput value={holderName} onChange={(e) => setHolderName(e.target.value)} maxLength={120}
-              placeholder="Exactly as it appears on the bank account" />
-            <div className="text-white/50 text-[0.75rem] mt-1">Must match your verified identity or business name.</div>
+        {/* Destination type */}
+        <div className="space-y-4">
+          <h3 className="text-white text-[0.95rem] font-medium">Destination type</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <DestinationTypeCard
+              active={!isMomo}
+              icon="bank"
+              title="Bank account"
+              subtitle="Transfer to a bank account"
+              onClick={() => switchDestination('bank')}
+            />
+            <DestinationTypeCard
+              active={isMomo}
+              icon="phone"
+              title="Mobile money"
+              subtitle="MTN, Telecel, AT or G-Money wallet"
+              onClick={() => switchDestination('momo')}
+            />
           </div>
         </div>
 
-        {/* Account */}
-        <div className="space-y-5">
-          <h3 className="text-white text-[0.95rem] font-medium">Bank account</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <Label required>Account number / IBAN</Label>
-              <TextInput value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)}
-                maxLength={34} autoComplete="off" spellCheck={false} />
-              {accountNumber && !acctValid && (
-                <div className="text-red-400 text-[0.75rem] mt-1">6–34 letters or digits</div>
-              )}
+        {isMomo ? (
+          <>
+            {/* Mobile money wallet */}
+            <div className="space-y-5">
+              <h3 className="text-white text-[0.95rem] font-medium">Mobile money wallet</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <Label required>Network</Label>
+                  <Select value={momoNetwork} onChange={(v) => { setMomoNetwork(v); setNameVerified(false); setHolderName('') }}
+                    options={MOMO_NETWORKS} placeholder="Select network" />
+                </div>
+                <div>
+                  <Label required>Wallet number</Label>
+                  <TextInput value={accountNumber} inputMode="numeric" maxLength={10}
+                    onChange={(e) => { setAccountNumber(e.target.value.replace(/\D/g, '')); setNameVerified(false); setHolderName('') }}
+                    placeholder="0248980332" autoComplete="off" spellCheck={false} />
+                  {accountNumber && !acctValid && (
+                    <div className="text-red-400 text-[0.75rem] mt-1">Enter a 10-digit number starting with 0</div>
+                  )}
+                </div>
+                <div>
+                  <Label required>Confirm wallet number</Label>
+                  <TextInput value={confirmAccount} inputMode="numeric" maxLength={10}
+                    onChange={(e) => setConfirmAccount(e.target.value.replace(/\D/g, ''))}
+                    autoComplete="off" spellCheck={false} onPaste={(e) => e.preventDefault()} />
+                  {confirmAccount && !acctMatch && (
+                    <div className="text-red-400 text-[0.75rem] mt-1">Wallet numbers do not match</div>
+                  )}
+                </div>
+                <div>
+                  <Label required>Registered name</Label>
+                  <div className="flex gap-2">
+                    <TextInput value={holderName} onChange={(e) => setHolderName(e.target.value.toUpperCase())}
+                      maxLength={120} readOnly={nameVerified}
+                      placeholder="Verify the wallet to fetch the name" />
+                    <button type="button" onClick={verifyWallet}
+                      disabled={!momoNetwork || !acctValid || verifying}
+                      className="h-11 px-4 shrink-0 rounded-lg bg-accent-bright text-black text-[0.8rem] font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">
+                      {verifying ? 'Checking…' : nameVerified ? 'Re-verify' : 'Verify'}
+                    </button>
+                  </div>
+                  <div className={`text-[0.75rem] mt-1 ${nameVerified ? 'text-emerald-400' : 'text-white/50'}`}>
+                    {nameVerified ? 'Name confirmed with the network' : 'We look the name up with the mobile money network.'}
+                  </div>
+                </div>
+                <div>
+                  <Label>Currency</Label>
+                  <TextInput value="GHS" readOnly disabled />
+                </div>
+                <div>
+                  <Label>Country</Label>
+                  <TextInput value="Ghana" readOnly disabled />
+                </div>
+              </div>
+              <div className="text-white/50 text-[0.75rem]">
+                No document upload is required for mobile money — the network name lookup is the proof of ownership.
+              </div>
             </div>
-            <div>
-              <Label required>Confirm account number</Label>
-              <TextInput value={confirmAccount} onChange={(e) => setConfirmAccount(e.target.value)}
-                maxLength={34} autoComplete="off" spellCheck={false} onPaste={(e) => e.preventDefault()} />
-              {confirmAccount && !acctMatch && (
-                <div className="text-red-400 text-[0.75rem] mt-1">Account numbers do not match</div>
-              )}
+          </>
+        ) : (
+          <>
+            {/* Holder */}
+            <div className="space-y-5">
+              <h3 className="text-white text-[0.95rem] font-medium">Account holder</h3>
+              <div>
+                <Label required>Account holder name</Label>
+                <TextInput value={holderName} onChange={(e) => setHolderName(e.target.value)} maxLength={120}
+                  placeholder="Exactly as it appears on the bank account" />
+                <div className="text-white/50 text-[0.75rem] mt-1">Must match your verified identity or business name.</div>
+              </div>
             </div>
-            <div>
-              <Label required>Routing type</Label>
-              <Select value={routingType} onChange={(v) => { setRoutingType(v); setRoutingCode('') }}
-                options={ROUTING_TYPES} placeholder="Select routing type" />
-            </div>
-            <div>
-              <Label required>Routing code</Label>
-              <TextInput value={routingCode} onChange={(e) => setRoutingCode(e.target.value.toUpperCase())}
-                maxLength={routingCfg ? routingCfg.len[1] : 20}
-                placeholder={routingCfg ? `${routingCfg.len[0]}${routingCfg.len[0] === routingCfg.len[1] ? '' : '–' + routingCfg.len[1]} characters` : 'Select routing type first'}
-                disabled={!routingType} />
-              {routingCode && !routingValid && (
-                <div className="text-red-400 text-[0.75rem] mt-1">Invalid length for this routing type</div>
-              )}
-            </div>
-            <div>
-              <Label required>Currency</Label>
-              <Select value={currency} onChange={setCurrency} options={CURRENCIES} placeholder="Select currency" />
-            </div>
-          </div>
-        </div>
 
-        {/* Bank */}
-        <div className="space-y-5">
-          <h3 className="text-white text-[0.95rem] font-medium">Bank details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <Label required>Bank name</Label>
-              <TextInput value={bankName} onChange={(e) => setBankName(e.target.value)} maxLength={120} />
+            {/* Account */}
+            <div className="space-y-5">
+              <h3 className="text-white text-[0.95rem] font-medium">Bank account</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <Label required>Account number / IBAN</Label>
+                  <TextInput value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)}
+                    maxLength={34} autoComplete="off" spellCheck={false} />
+                  {accountNumber && !acctValid && (
+                    <div className="text-red-400 text-[0.75rem] mt-1">6–34 letters or digits</div>
+                  )}
+                </div>
+                <div>
+                  <Label required>Confirm account number</Label>
+                  <TextInput value={confirmAccount} onChange={(e) => setConfirmAccount(e.target.value)}
+                    maxLength={34} autoComplete="off" spellCheck={false} onPaste={(e) => e.preventDefault()} />
+                  {confirmAccount && !acctMatch && (
+                    <div className="text-red-400 text-[0.75rem] mt-1">Account numbers do not match</div>
+                  )}
+                </div>
+                <div>
+                  <Label required>Routing type</Label>
+                  <Select value={routingType} onChange={(v) => { setRoutingType(v); setRoutingCode('') }}
+                    options={ROUTING_TYPES} placeholder="Select routing type" />
+                </div>
+                <div>
+                  <Label required>Routing code</Label>
+                  <TextInput value={routingCode} onChange={(e) => setRoutingCode(e.target.value.toUpperCase())}
+                    maxLength={routingCfg ? routingCfg.len[1] : 20}
+                    placeholder={routingCfg ? `${routingCfg.len[0]}${routingCfg.len[0] === routingCfg.len[1] ? '' : '–' + routingCfg.len[1]} characters` : 'Select routing type first'}
+                    disabled={!routingType} />
+                  {routingCode && !routingValid && (
+                    <div className="text-red-400 text-[0.75rem] mt-1">Invalid length for this routing type</div>
+                  )}
+                </div>
+                <div>
+                  <Label required>Currency</Label>
+                  <Select value={currency} onChange={setCurrency} options={CURRENCIES} placeholder="Select currency" />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label required>Branch name</Label>
-              <TextInput value={branchName} onChange={(e) => setBranchName(e.target.value)} maxLength={120} />
-            </div>
-            <div className="md:col-span-2">
-              <Label required>Branch address</Label>
-              <TextInput value={branchAddress} onChange={(e) => setBranchAddress(e.target.value)} maxLength={240} />
-            </div>
-            <div>
-              <Label required>Country</Label>
-              <Select value={country} onChange={setCountry} options={COUNTRIES} placeholder="Select country" />
-            </div>
-          </div>
-        </div>
 
-        {/* Proof */}
-        <div className="space-y-5">
-          <h3 className="text-white text-[0.95rem] font-medium">Proof of account</h3>
-          <FileUpload label="Cancelled cheque or recent bank statement"
-            path={proofPath} file={proofFile}
-            onFile={setProofFile} onClear={() => { setProofFile(null); setProofPath(null) }} />
-        </div>
+            {/* Bank */}
+            <div className="space-y-5">
+              <h3 className="text-white text-[0.95rem] font-medium">Bank details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <Label required>Bank name</Label>
+                  <TextInput value={bankName} onChange={(e) => setBankName(e.target.value)} maxLength={120} />
+                </div>
+                <div>
+                  <Label required>Branch name</Label>
+                  <TextInput value={branchName} onChange={(e) => setBranchName(e.target.value)} maxLength={120} />
+                </div>
+                <div className="md:col-span-2">
+                  <Label required>Branch address</Label>
+                  <TextInput value={branchAddress} onChange={(e) => setBranchAddress(e.target.value)} maxLength={240} />
+                </div>
+                <div>
+                  <Label required>Country</Label>
+                  <Select value={country} onChange={setCountry} options={COUNTRIES} placeholder="Select country" />
+                </div>
+              </div>
+            </div>
+
+            {/* Proof */}
+            <div className="space-y-5">
+              <h3 className="text-white text-[0.95rem] font-medium">Proof of account</h3>
+              <FileUpload label="Cancelled cheque or recent bank statement"
+                path={proofPath} file={proofFile}
+                onFile={setProofFile} onClear={() => { setProofFile(null); setProofPath(null) }} />
+            </div>
+          </>
+        )}
 
         {/* Confirm */}
         <div className="pt-2 border-t border-merchant-border">
           <Checkbox checked={confirmed} onChange={setConfirmed}
-            label="I confirm the information above is accurate and this account belongs to the verified account holder." />
+            label={isMomo
+              ? 'I confirm this mobile money wallet belongs to the verified account holder and is correct.'
+              : 'I confirm the information above is accurate and this account belongs to the verified account holder.'} />
         </div>
       </div>
 
