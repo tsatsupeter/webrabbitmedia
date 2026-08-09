@@ -7,8 +7,9 @@ import {
 } from '../components/ui'
 import EmptyState, { PageLoader } from '../components/EmptyState'
 import Icon from '../Icon'
+import DocGrid from '../components/DocViewer'
 import { useAdminMode, useAdminQuery, useAdminRole, logAdminAction } from '../useAdmin'
-import { money, fmtDate, VERIFICATION_TABLES } from '../lib'
+import { money, fmtDate, VERIFICATION_TABLES, docsForRow } from '../lib'
 
 async function loadMerchant(id, mode) {
   const [biz, txs, payouts, brands, keys, team, ...verifs] = await Promise.all([
@@ -67,6 +68,7 @@ export default function MerchantDetail() {
 
   const b = data.business
   const approvedTx = data.transactions.filter((t) => t.type === 'collection' && t.status === 'approved')
+  const allDocs = data.verifications.flatMap((v) => docsForRow(v.row, v.table))
 
   return (
     <Page>
