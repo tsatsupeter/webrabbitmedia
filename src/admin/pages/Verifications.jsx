@@ -68,6 +68,8 @@ export default function Verifications() {
             }`}
           >
             {f === 'on_hold' ? 'On hold' : f}
+          </button>
+        ))}
         <div className="flex-1" />
         <div className="text-[0.78rem] text-white/45">{items.length} submissions</div>
       </Card>
