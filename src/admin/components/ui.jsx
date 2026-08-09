@@ -105,6 +105,7 @@ const STATUS_TONES = {
   draft: 'bg-white/[0.07] text-white/60',
   cancelled: 'bg-white/[0.07] text-white/60',
   expired: 'bg-white/[0.07] text-white/60',
+  on_hold: 'bg-orange-500/15 text-orange-400',
   failed: 'bg-red-500/15 text-red-400',
   rejected: 'bg-red-500/15 text-red-400',
   suspended: 'bg-red-500/15 text-red-400',
