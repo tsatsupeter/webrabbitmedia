@@ -8,6 +8,8 @@ export type EmailEvent =
   | 'payout_failed'
   | 'business_approved'
   | 'verification_submitted'
+  | 'verification_on_hold'
+  | 'verification_reminder'
   | 'team_invite'
 
 
