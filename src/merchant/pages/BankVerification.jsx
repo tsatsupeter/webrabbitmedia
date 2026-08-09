@@ -405,7 +405,7 @@ export default function BankVerification() {
             />
             <DestinationTypeCard
               active={isMomo}
-              icon="phone"
+              icon="mobile"
               title="Mobile money"
               subtitle="MTN, Telecel, AT or G-Money wallet"
               onClick={() => switchDestination('momo')}
