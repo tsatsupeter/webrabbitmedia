@@ -214,6 +214,7 @@ export default function IdentityVerification() {
         id_document_back_path: bp,
         selfie_path: sp,
         status,
+        rejection_reason: null,
         submitted_at: status === 'submitted' ? new Date().toISOString() : null,
       }
       const { error } = await supabase

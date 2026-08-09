@@ -310,6 +310,7 @@ export default function BankVerification() {
             currency: 'GHS',
             proof_doc_path: null,
             status,
+            rejection_reason: null,
             submitted_at: status === 'submitted' ? new Date().toISOString() : null,
           }
         : {
@@ -327,6 +328,7 @@ export default function BankVerification() {
             currency: currency || null,
             proof_doc_path: pp,
             status,
+            rejection_reason: null,
             submitted_at: status === 'submitted' ? new Date().toISOString() : null,
           }
 
