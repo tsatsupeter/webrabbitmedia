@@ -56,7 +56,7 @@ export default function Verifications() {
       />
 
       <Card className="px-4 py-3 flex flex-wrap items-center gap-2">
-        {['submitted', 'approved', 'rejected', 'all'].map((f) => (
+        {['submitted', 'on_hold', 'approved', 'all'].map((f) => (
           <button
             key={f}
             type="button"
