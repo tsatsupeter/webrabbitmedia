@@ -114,6 +114,9 @@ export type Database = {
           is_primary: boolean
           momo_network: string | null
           proof_doc_path: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           routing_code: string | null
           routing_type: string | null
           status: string
@@ -137,6 +140,9 @@ export type Database = {
           is_primary?: boolean
           momo_network?: string | null
           proof_doc_path?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           routing_code?: string | null
           routing_type?: string | null
           status?: string
@@ -160,6 +166,9 @@ export type Database = {
           is_primary?: boolean
           momo_network?: string | null
           proof_doc_path?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           routing_code?: string | null
           routing_type?: string | null
           status?: string
@@ -246,6 +255,9 @@ export type Database = {
           postal_code: string | null
           registration_form_doc_path: string | null
           registration_number: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           state: string | null
           status: string
           submitted_at: string | null
@@ -281,6 +293,9 @@ export type Database = {
           postal_code?: string | null
           registration_form_doc_path?: string | null
           registration_number?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           state?: string | null
           status?: string
           submitted_at?: string | null
@@ -316,6 +331,9 @@ export type Database = {
           postal_code?: string | null
           registration_form_doc_path?: string | null
           registration_number?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           state?: string | null
           status?: string
           submitted_at?: string | null
@@ -340,6 +358,10 @@ export type Database = {
       }
       businesses: {
         Row: {
+          additional_info_request: string | null
+          additional_info_requested_at: string | null
+          additional_info_responded_at: string | null
+          additional_info_response: string | null
           business_type: string | null
           created_at: string
           disclaimer_accepted_at: string
@@ -355,6 +377,10 @@ export type Database = {
           website_url: string
         }
         Insert: {
+          additional_info_request?: string | null
+          additional_info_requested_at?: string | null
+          additional_info_responded_at?: string | null
+          additional_info_response?: string | null
           business_type?: string | null
           created_at?: string
           disclaimer_accepted_at?: string
@@ -370,6 +396,10 @@ export type Database = {
           website_url: string
         }
         Update: {
+          additional_info_request?: string | null
+          additional_info_requested_at?: string | null
+          additional_info_responded_at?: string | null
+          additional_info_response?: string | null
           business_type?: string | null
           created_at?: string
           disclaimer_accepted_at?: string
@@ -444,6 +474,9 @@ export type Database = {
           id_number: string | null
           id_type: string | null
           postal_code: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           selfie_path: string | null
           state: string | null
           status: string
@@ -466,6 +499,9 @@ export type Database = {
           id_number?: string | null
           id_type?: string | null
           postal_code?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           selfie_path?: string | null
           state?: string | null
           status?: string
@@ -488,6 +524,9 @@ export type Database = {
           id_number?: string | null
           id_type?: string | null
           postal_code?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           selfie_path?: string | null
           state?: string | null
           status?: string
@@ -702,6 +741,9 @@ export type Database = {
           payment_platform: string | null
           receive_flow: string | null
           receive_methods: string[]
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           risks: string[]
           socials: string[]
           stage: string | null
@@ -724,6 +766,9 @@ export type Database = {
           payment_platform?: string | null
           receive_flow?: string | null
           receive_methods?: string[]
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           risks?: string[]
           socials?: string[]
           stage?: string | null
@@ -746,6 +791,9 @@ export type Database = {
           payment_platform?: string | null
           receive_flow?: string | null
           receive_methods?: string[]
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           risks?: string[]
           socials?: string[]
           stage?: string | null
