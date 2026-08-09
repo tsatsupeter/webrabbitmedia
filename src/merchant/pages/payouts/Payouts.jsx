@@ -280,6 +280,8 @@ export default function Payouts() {
 }
 
 function BankRow({ bank, pill, pillClass }) {
+  const isMomo = bank.destination_type === 'momo'
+  const last4 = bank.account_number ? String(bank.account_number).slice(-4) : ''
   return (
     <Link
       to={`/merchant/verification/bank?id=${bank.id}`}
@@ -287,11 +289,11 @@ function BankRow({ bank, pill, pillClass }) {
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70">
-          <Icon name="bank" size={16} />
+          <Icon name={isMomo ? 'mobile' : 'bank'} size={16} />
         </div>
         <div className="min-w-0">
-          <div className="text-sm text-white truncate">{bank.account_holder_name || 'Unnamed account'}</div>
-          {bank.bank_name && <div className="text-xs text-white/50 truncate">{bank.bank_name}{bank.account_number ? ` • ****${bank.account_number.slice(-4)}` : ''}</div>}
+          <div className="text-sm text-white truncate">{bank.account_holder_name || (isMomo ? 'Unnamed wallet' : 'Unnamed account')}</div>
+          {bank.bank_name && <div className="text-xs text-white/50 truncate">{bank.bank_name}{last4 ? ` • ****${last4}` : ''}</div>}
         </div>
       </div>
       <span className={`inline-flex items-center h-6 px-2 rounded-md text-[0.72rem] font-medium border ${pillClass}`}>{pill}</span>
