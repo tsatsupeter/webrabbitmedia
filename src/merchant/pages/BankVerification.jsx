@@ -17,7 +17,7 @@ const ROUTING_TYPES = [
   { value: 'swift', label: 'SWIFT / BIC', len: [8, 11] },
 ]
 
-export const MOMO_NETWORKS = [
+const MOMO_NETWORKS = [
   { value: 'MTN', label: 'MTN Mobile Money' },
   { value: 'TELECEL', label: 'Telecel Cash' },
   { value: 'AT', label: 'AT Money' },
