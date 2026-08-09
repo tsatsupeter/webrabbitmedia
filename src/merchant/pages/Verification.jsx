@@ -214,9 +214,15 @@ function DetailRow({ icon, title, desc, last, status, onSubmit, verified, hold, 
   )
 }
 
-
+const STEP_LABELS = {
+  product: 'product information',
+  identity: 'identity verification',
+  business: 'business verification',
+  bank: 'payout details',
+}
 
 export default function Verification() {
+
   const navigate = useNavigate()
   const { active, refresh, loading } = useBusinesses()
   const [mode, setMode] = useState('view') // 'view' | 'edit'
