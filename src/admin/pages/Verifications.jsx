@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
 import { Page, PageHeader, Card, CardHeader, Table, Row, Cell, StatusPill, Button, inputClass, textareaClass } from '../components/ui'
 import EmptyState, { PageLoader } from '../components/EmptyState'
 import Modal from '../components/Modal'
+import DocGrid from '../components/DocViewer'
 import Icon from '../Icon'
 import { useAdminQuery, useAdminRole, logAdminAction } from '../useAdmin'
-import { fmtDate, VERIFICATION_TABLES, VERIFICATION_DOCS, reviewableFields } from '../lib'
+import { fmtDate, VERIFICATION_TABLES, docsForRow, reviewableFields } from '../lib'
+
 
 async function loadQueue() {
   const [businesses, ...tables] = await Promise.all([
