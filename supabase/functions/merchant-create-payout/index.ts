@@ -38,10 +38,10 @@ Deno.serve(async (req) => {
     if (biz.status !== 'approved') return json({ error: 'Business must be approved to withdraw' }, 403)
 
     const { data: bankRow } = await admin.from('bank_verification')
-      .select('id,is_primary,status,account_number,account_holder_name,bank_name,routing_code')
+      .select('id,is_primary,status,account_number,account_holder_name,bank_name,routing_code,destination_type,momo_network')
       .eq('business_id', business_id)
       .order('is_primary', { ascending: false }).limit(1).maybeSingle()
-    if (!bankRow) return json({ error: 'No bank account linked' }, 400)
+    if (!bankRow) return json({ error: 'No payout destination linked' }, 400)
 
     const { data: txs, error: txErr } = await admin
       .from('transactions')
@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       tax_deducted: 0,
       currency_conversion: 0,
       net_amount: stampedTotal,
-      payment_method: 'Bank Transfer',
+      payment_method: bankRow.destination_type === 'momo' ? 'Mobile Money' : 'Bank Transfer',
       status: 'pending',
       notes: note || null,
     }).select('*').single()

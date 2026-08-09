@@ -138,7 +138,7 @@ export default function Payouts() {
                     ? 'Loading payout mode'
                     : !activated
                     ? 'Complete verification to enable withdrawals'
-                    : !primaryBank ? 'Link a bank account first'
+                    : !primaryBank ? 'Link a payout destination first'
                     : totals.available < MIN_WITHDRAW ? `Minimum withdrawal is ${fmt(MIN_WITHDRAW)}`
                     : ''
                   return (
@@ -212,7 +212,7 @@ export default function Payouts() {
             <dl className="mt-5 space-y-4 text-sm">
               <Row label="Minimum Payout" value="GHS 2,000.00" />
               <Row label="Payout Frequency" value="Manual, after review" />
-              <Row label="Payment Method" value="Bank Transfer" />
+              <Row label="Payment Method" value={primaryBank?.destination_type === 'momo' ? 'Mobile Money' : 'Bank Transfer'} />
             </dl>
             <p className="mt-4 text-xs text-white/50">
               Payouts are initiated manually after review. Once your available balance reaches the minimum, it will be transferred to your active bank account.
@@ -222,14 +222,14 @@ export default function Payouts() {
           {/* Linked bank accounts */}
           <section className="rounded-xl border border-white/10 bg-[hsl(var(--card))] p-6">
             <div className="flex items-center gap-1.5">
-              <h2 className="text-base font-semibold text-white">Linked Bank Accounts</h2>
+              <h2 className="text-base font-semibold text-white">Payout Destinations</h2>
               <Icon name="help" size={12} className="text-white/40" />
             </div>
 
             {primaryBank ? (
               <>
                 <div className="mt-5 text-[10px] font-semibold text-white/50 uppercase tracking-wide flex items-center gap-1">
-                  Active Bank Account <Icon name="help" size={10} />
+                  Active Destination <Icon name="help" size={10} />
                 </div>
                 <BankRow bank={primaryBank} pill="Active" pillClass="bg-emerald-500/15 text-emerald-400 border-emerald-500/25" />
 
@@ -245,21 +245,21 @@ export default function Payouts() {
                 )}
               </>
             ) : (
-              <div className="mt-5 text-sm text-white/60">No bank account linked yet.</div>
+              <div className="mt-5 text-sm text-white/60">No payout destination linked yet.</div>
             )}
 
             <div className="mt-6">
-              <div className="text-sm font-medium text-white">Add another bank account</div>
-              <p className="mt-1 text-xs text-white/50">You can add up to 3 bank accounts to ensure your payouts always have a destination.</p>
+              <div className="text-sm font-medium text-white">Add another destination</div>
+              <p className="mt-1 text-xs text-white/50">You can add up to 3 payout destinations — bank accounts or mobile money wallets.</p>
               {banks.length < 3 ? (
                 <Link
                   to="/merchant/verification/bank?new=1"
                   className="mt-4 inline-flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:bg-emerald-400 transition-colors"
                 >
-                  <Icon name="plus" size={14} /> Add Bank Account
+                  <Icon name="plus" size={14} /> Add Payout Destination
                 </Link>
               ) : (
-                <div className="mt-4 text-xs text-white/50 text-center">Maximum of 3 bank accounts reached.</div>
+                <div className="mt-4 text-xs text-white/50 text-center">Maximum of 3 payout destinations reached.</div>
               )}
             </div>
           </section>
@@ -280,6 +280,8 @@ export default function Payouts() {
 }
 
 function BankRow({ bank, pill, pillClass }) {
+  const isMomo = bank.destination_type === 'momo'
+  const last4 = bank.account_number ? String(bank.account_number).slice(-4) : ''
   return (
     <Link
       to={`/merchant/verification/bank?id=${bank.id}`}
@@ -287,11 +289,11 @@ function BankRow({ bank, pill, pillClass }) {
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70">
-          <Icon name="bank" size={16} />
+          <Icon name={isMomo ? 'mobile' : 'bank'} size={16} />
         </div>
         <div className="min-w-0">
-          <div className="text-sm text-white truncate">{bank.account_holder_name || 'Unnamed account'}</div>
-          {bank.bank_name && <div className="text-xs text-white/50 truncate">{bank.bank_name}{bank.account_number ? ` • ****${bank.account_number.slice(-4)}` : ''}</div>}
+          <div className="text-sm text-white truncate">{bank.account_holder_name || (isMomo ? 'Unnamed wallet' : 'Unnamed account')}</div>
+          {bank.bank_name && <div className="text-xs text-white/50 truncate">{bank.bank_name}{last4 ? ` • ****${last4}` : ''}</div>}
         </div>
       </div>
       <span className={`inline-flex items-center h-6 px-2 rounded-md text-[0.72rem] font-medium border ${pillClass}`}>{pill}</span>

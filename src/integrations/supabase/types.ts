@@ -100,6 +100,7 @@ export type Database = {
       bank_verification: {
         Row: {
           account_holder_name: string | null
+          account_name_verified: boolean
           account_number: string | null
           bank_name: string | null
           branch_address: string | null
@@ -108,8 +109,10 @@ export type Database = {
           country: string | null
           created_at: string
           currency: string | null
+          destination_type: string
           id: string
           is_primary: boolean
+          momo_network: string | null
           proof_doc_path: string | null
           routing_code: string | null
           routing_type: string | null
@@ -120,6 +123,7 @@ export type Database = {
         }
         Insert: {
           account_holder_name?: string | null
+          account_name_verified?: boolean
           account_number?: string | null
           bank_name?: string | null
           branch_address?: string | null
@@ -128,8 +132,10 @@ export type Database = {
           country?: string | null
           created_at?: string
           currency?: string | null
+          destination_type?: string
           id?: string
           is_primary?: boolean
+          momo_network?: string | null
           proof_doc_path?: string | null
           routing_code?: string | null
           routing_type?: string | null
@@ -140,6 +146,7 @@ export type Database = {
         }
         Update: {
           account_holder_name?: string | null
+          account_name_verified?: boolean
           account_number?: string | null
           bank_name?: string | null
           branch_address?: string | null
@@ -148,8 +155,10 @@ export type Database = {
           country?: string | null
           created_at?: string
           currency?: string | null
+          destination_type?: string
           id?: string
           is_primary?: boolean
+          momo_network?: string | null
           proof_doc_path?: string | null
           routing_code?: string | null
           routing_type?: string | null
