@@ -120,30 +120,19 @@ export default function Verifications() {
 function ReviewDrawer({ item, onClose, onDone, isAdmin }) {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
-  const [docs, setDocs] = useState({})
-  const [docsLoaded, setDocsLoaded] = useState(false)
 
   const fields = item ? reviewableFields(item.row, item.table) : []
+  const docs = item ? docsForRow(item.row, item.table) : []
 
-  async function loadDocs() {
-    if (!item || docsLoaded) return
-    const cols = VERIFICATION_DOCS[item.table] || []
-    const out = {}
-    for (const col of cols) {
-      const path = item.row[col]
-      if (!path) continue
-      const { data } = await supabase.storage.from('identity-docs').createSignedUrl(path, 300)
-      if (data?.signedUrl) out[col] = data.signedUrl
-    }
-    setDocs(out)
-    setDocsLoaded(true)
-  }
+  useEffect(() => {
+    setNote('')
+  }, [item?.row?.id])
 
   async function decide(status) {
     setBusy(true)
     const { error } = await supabase
       .from(item.table)
-      .update({ status, ...(status === 'rejected' ? {} : {}) })
+      .update({ status })
       .eq('id', item.row.id)
     setBusy(false)
     if (error) return toast.error(error.message)
@@ -153,12 +142,9 @@ function ReviewDrawer({ item, onClose, onDone, isAdmin }) {
     })
     toast.success(`${item.label} ${status}`)
     setNote('')
-    setDocs({})
-    setDocsLoaded(false)
     onDone()
   }
 
-  if (item && !docsLoaded) loadDocs()
 
   return (
     <Modal open={!!item} onClose={onClose} width={620}>
