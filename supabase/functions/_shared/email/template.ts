@@ -193,6 +193,43 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
           { label: 'Submitted', value: fmtDate(d.submitted_at as string) },
         ],
         cta: { label: 'View progress', href: `${BRAND.dashboard}/verification` },
+      }
+    }
+    case 'verification_on_hold': {
+      const step = String(d.step || 'verification').replace(/_/g, ' ')
+      const reason = String(d.reason || 'Our compliance team needs a bit more information.')
+      return {
+        subject: `[IMP] Additional verification required for ${businessName}`,
+        preheader: `Additional verification needed for ${businessName}.`,
+        headline: `Additional verification needed for ${businessName}`,
+        intro: `Our compliance team needs a bit more information for ${businessName}. This request will not block payouts, but completing it now ensures you can keep transacting smoothly on ${BRAND.name}. Once submitted, we'll review everything and notify you if anything else is required.`,
+        pill: { label: 'On hold', tone: 'warn' },
+        quote: reason,
+        rows: [
+          { label: 'Form', value: step.replace(/\b\w/g, (c) => c.toUpperCase()) },
+          { label: 'Business', value: businessName },
+          { label: 'Requested', value: fmtDate(d.reviewed_at as string) },
+        ],
+        cta: { label: 'Provide Information', href: `${BRAND.dashboard}/verification` },
+        outro: 'Next steps: complete the verification checklist in your dashboard. It takes just a couple of minutes.',
+      }
+    }
+    case 'verification_reminder': {
+      const step = String(d.step || 'verification').replace(/_/g, ' ')
+      const reason = d.reason ? String(d.reason) : undefined
+      return {
+        subject: `[Urgent] - complete additional information for ${businessName}`,
+        preheader: `Reminder: share the additional info for ${businessName}.`,
+        headline: `Reminder: share the additional info for ${businessName}`,
+        intro: `Quick reminder: we still need the additional information for ${businessName}. This will not block payouts, but sharing it now keeps your transactions moving without extra checks. It takes just a couple of minutes to complete the form.`,
+        pill: { label: 'Action required', tone: 'warn' },
+        quote: reason,
+        rows: [
+          { label: 'Form', value: step.replace(/\b\w/g, (c) => c.toUpperCase()) },
+          { label: 'Business', value: businessName },
+        ],
+        cta: { label: 'Update Information', href: `${BRAND.dashboard}/verification` },
+      }
     }
     case 'team_invite': {
       const inviter = String(d.inviter_name || d.inviter_email || 'A teammate')
@@ -219,7 +256,6 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
   }
 }
 
-}
 
 function pillHtml(p: Pill): string {
   const map = {
