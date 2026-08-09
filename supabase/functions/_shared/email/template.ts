@@ -352,7 +352,8 @@ function renderText(c: Content, recipient: { name?: string }): string {
   const cta = c.cta ? `\n\n${c.cta.label}: ${c.cta.href}` : ''
   const outro = c.outro ? `\n\n${c.outro}` : ''
   const hero = c.hero ? `\n${c.hero.amount} ${c.hero.caption}\n` : ''
-  return `${greeting}\n\n${c.intro}\n${hero}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
+  const quote = c.quote ? `\nReason: ${c.quote}\n` : ''
+  return `${greeting}\n\n${c.intro}\n${hero}${quote}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
 }
 
 export type RenderedEmail = {
