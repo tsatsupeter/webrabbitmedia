@@ -27,8 +27,8 @@ function GithubMark({ size = 18 }) {
 export default function Auth() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const redirectParam = params.get('redirect') || '/merchant'
-  const safeRedirect = redirectParam.startsWith('/') ? redirectParam : '/merchant'
+  const redirectParam = params.get('redirect') || '/welcome'
+  const safeRedirect = redirectParam.startsWith('/') ? redirectParam : '/welcome'
   const { session } = useAuth()
   const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [step, setStep] = useState('email') // 'email' | 'password' | 'otp'
