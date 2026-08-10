@@ -35,7 +35,14 @@ Deno.serve(async (req) => {
       throw new HttpError(400, 'customer_email required for hosted checkout')
     }
 
+    // Hosted Checkout is a 360Pay-hosted page. Businesses routed to JuniPay use
+    // the direct MoMo collection endpoint instead.
+    if (auth.gateway !== 'liberte') {
+      throw new HttpError(400, 'Hosted checkout is not available on this account gateway. Use /v1/collect/momo instead.')
+    }
+
     const mode = auth.key.mode
+
     const reference = newReference()
 
     const db = admin()
