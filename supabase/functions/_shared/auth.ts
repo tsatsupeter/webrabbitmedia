@@ -39,7 +39,9 @@ export type AuthedKey = {
   }
   business: { id: string; user_id: string; status: string; name: string }
   commission_bps: number
+  gateway: 'liberte' | 'junipay'
 }
+
 
 export async function authenticateKey(req: Request): Promise<AuthedKey> {
   const h = req.headers.get('authorization') || req.headers.get('Authorization') || ''
