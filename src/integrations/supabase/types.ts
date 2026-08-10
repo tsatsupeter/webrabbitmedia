@@ -707,6 +707,7 @@ export type Database = {
           business_id: string
           commission_bps: number
           created_at: string
+          gateway: string
           id: string
           updated_at: string
         }
@@ -714,6 +715,7 @@ export type Database = {
           business_id: string
           commission_bps?: number
           created_at?: string
+          gateway?: string
           id?: string
           updated_at?: string
         }
@@ -721,6 +723,7 @@ export type Database = {
           business_id?: string
           commission_bps?: number
           created_at?: string
+          gateway?: string
           id?: string
           updated_at?: string
         }
