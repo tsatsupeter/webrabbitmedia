@@ -259,8 +259,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'SaaS & Startups',
-                  desc: 'MVPs, platforms, recurring billing',
+                  label: 'Custom Websites',
+                  desc: 'Landing pages, business sites, online stores',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="5" width="20" height="15" rx="3" />
@@ -271,8 +271,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'AI & Dev Tools',
-                  desc: 'AI agents, APIs, vibe coding',
+                  label: 'Custom Tools',
+                  desc: 'AI tools, dashboards, integrations',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9,9 4,14 9,19" />
@@ -282,8 +282,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'Full-Stack Software',
-                  desc: 'Web apps, backends, databases',
+                  label: 'Custom Software',
+                  desc: 'Web apps, platforms, internal systems',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="7" y="3" width="14" height="22" rx="3" />
@@ -294,8 +294,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'Automation & Bots',
-                  desc: 'Workflows, chatbots, integrations',
+                  label: 'Automation & Workflows',
+                  desc: 'Bots, WhatsApp, SMS, CRM',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="6" width="20" height="16" rx="4" />
@@ -316,6 +316,7 @@ export default function Home() {
                     </svg>
                   ),
                 },
+
               ].map((s, i) => (
                 <div
                   key={i}
