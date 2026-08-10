@@ -85,7 +85,7 @@ export async function authenticateKey(req: Request): Promise<AuthedKey> {
 
   const { data: settings } = await db
     .from('platform_settings')
-    .select('commission_bps')
+    .select('commission_bps, gateway')
     .eq('business_id', business.id)
     .maybeSingle()
 
@@ -93,8 +93,10 @@ export async function authenticateKey(req: Request): Promise<AuthedKey> {
     key: key as AuthedKey['key'],
     business: business as AuthedKey['business'],
     commission_bps: settings?.commission_bps ?? 1500,
+    gateway: String(settings?.gateway ?? '').toLowerCase() === 'junipay' ? 'junipay' : 'liberte',
   }
 }
+
 
 export class HttpError extends Error {
   status: number
