@@ -299,6 +299,7 @@ export default function Navbar() {
     menu.columns.some((c) => c.items.some((i) => i.to && i.to !== '/' && pathname.startsWith(i.to.split('#')[0])))
 
   return (
+    <>
     <header
       ref={headerRef}
       className={`sticky top-0 z-50 transition-all duration-300 ${
