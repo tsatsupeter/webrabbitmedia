@@ -483,10 +483,10 @@ export default function Home() {
                     Automation & Bots
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
-                    <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors border border-border">
+                    <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                       Get started
                     </a>
-                    <Link to="/about" className="inline-flex items-center font-medium text-text-primary border border-border px-4 py-2 text-sm rounded-full no-underline hover:bg-surface transition-colors">
+                    <Link to="/about" className="inline-flex items-center font-medium text-white bg-white/10 px-4 py-2 text-sm rounded-full no-underline hover:bg-white/15 transition-colors">
                       Learn more
                     </Link>
                   </div>
