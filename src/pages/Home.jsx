@@ -40,17 +40,18 @@ const HERO_SLIDES = [
   },
   {
     id: 'developers',
-    eyebrow: 'Developer solutions',
-    title: 'Backends, automation and bots — built with you.',
-    body: 'Stuck integrating payments, webhooks or a backend? We work alongside your team with real code, sandbox keys and architecture support until it ships.',
+    eyebrow: 'Custom software solutions',
+    title: 'Need a website, custom software, or business tools? We build it.',
+    body: 'From landing pages and online stores to full-stack apps and internal tools, we build custom software that brings your business online.',
     image: heroDeveloper,
-    imageAlt: 'Developer working on an API dashboard and code editor at a dark desk',
+    imageAlt: 'Team building a custom website and software app on a dark desk',
     overlay: heroApiCard,
     overlayClass: 'right-[6%] top-[24%] w-[330px]',
-    facts: ['REST API & webhooks', 'Sandbox keys', 'Automation & bots', 'Ship in days, not months'],
-    primary: { label: 'Talk to a developer', href: 'mailto:hello@webrabbitmedia.com' },
+    facts: ['Custom websites', 'Web & mobile apps', 'Internal tools', 'Automation & integrations'],
+    primary: { label: 'Start your project', href: 'mailto:hello@webrabbitmedia.com' },
     secondary: { label: 'Read the docs', to: '/docs' },
   },
+
 ]
 
 function HeroCta({ cta, variant }) {
@@ -258,8 +259,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'SaaS & Startups',
-                  desc: 'MVPs, platforms, recurring billing',
+                  label: 'Custom Websites',
+                  desc: 'Landing pages, business sites, online stores',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="5" width="20" height="15" rx="3" />
@@ -270,8 +271,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'AI & Dev Tools',
-                  desc: 'AI agents, APIs, vibe coding',
+                  label: 'Custom Tools',
+                  desc: 'AI tools, dashboards, integrations',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9,9 4,14 9,19" />
@@ -281,8 +282,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'Full-Stack Software',
-                  desc: 'Web apps, backends, databases',
+                  label: 'Custom Software',
+                  desc: 'Web apps, platforms, internal systems',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="7" y="3" width="14" height="22" rx="3" />
@@ -293,8 +294,8 @@ export default function Home() {
                   ),
                 },
                 {
-                  label: 'Automation & Bots',
-                  desc: 'Workflows, chatbots, integrations',
+                  label: 'Automation & Workflows',
+                  desc: 'Bots, WhatsApp, SMS, CRM',
                   icon: (
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="6" width="20" height="16" rx="4" />
@@ -315,6 +316,7 @@ export default function Home() {
                     </svg>
                   ),
                 },
+
               ].map((s, i) => (
                 <div
                   key={i}
@@ -332,7 +334,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ FOR DEVELOPERS — we help you ship backends ═══ */}
+      {/* ═══ CUSTOM SOFTWARE SOLUTIONS — we build websites, apps & tools ═══ */}
       <section className="bg-surface-raised border-b border-border">
         <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-24">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
@@ -383,32 +385,31 @@ export default function Home() {
               </div>
             </ScrollReveal>
             <ScrollReveal delay={100}>
-              <span className="text-accent font-medium text-[0.8rem] uppercase tracking-[0.08em] mb-3 block">For developers</span>
+              <span className="text-accent font-medium text-[0.8rem] uppercase tracking-[0.08em] mb-3 block">Custom software solutions</span>
               <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-5">
-                Stuck on a backend? We help you implement it.
+                Bring your business online with software built for you
               </h2>
               <p className="text-text-secondary text-[1rem] leading-relaxed mb-7">
-                From auth and payments to webhooks, databases, automation and bots, we work alongside
-                developers to ship production-ready backends — faster, and without guesswork.
+                We build websites, custom tools, web apps, and automation that fit how you work. Tell us what you need — we design, build, and launch it with you.
               </p>
 
               <ol className="list-none p-0 m-0 mb-7 space-y-5">
                 {[
                   {
-                    t: 'Tell us what\u2019s blocking you',
-                    d: 'Payments, auth, webhooks, data models or a bot — share the problem and the stack you\u2019re on.',
+                    t: 'Tell us what you need',
+                    d: 'A website, custom software, internal tools, or automation — share your idea and the problem it solves.',
                   },
                   {
-                    t: 'Architecture call',
-                    d: 'We map the endpoints, schema and integration path, then agree on scope and timeline.',
+                    t: 'Design & scope',
+                    d: 'We plan the UI, architecture, and timeline together so the build matches your business.',
                   },
                   {
-                    t: 'We implement with you',
-                    d: 'Working code, sandbox API keys and real test transactions — reviewed together as we go.',
+                    t: 'Build & iterate',
+                    d: 'Working prototypes, real reviews, and steady progress — no surprises, no black boxes.',
                   },
                   {
-                    t: 'Ship and monitor',
-                    d: 'Go live with verified webhooks, dashboards and alerts so you know it keeps working.',
+                    t: 'Launch & support',
+                    d: 'We ship the final product and stay around for updates, hosting, and improvements.',
                   },
                 ].map((s, i, arr) => (
                   <li key={s.t} className="relative flex gap-4">
@@ -430,11 +431,12 @@ export default function Home() {
 
               <ul className="flex flex-wrap gap-2 list-none p-0 mb-7">
                 {[
-                  'Backend integration',
+                  'Website development',
+                  'Custom web apps',
+                  'Internal tools',
+                  'Mobile apps',
                   'Automation & workflows',
-                  'Bots (WhatsApp, Telegram, SMS)',
-                  'API & webhook debugging',
-                  'Faster time-to-live',
+                  'API integrations',
                 ].map((c) => (
                   <li
                     key={c}
@@ -447,13 +449,14 @@ export default function Home() {
 
               <div className="flex flex-wrap gap-3">
                 <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-display font-medium text-white bg-accent px-5 py-2.5 text-sm rounded-full no-underline hover:bg-accent-dim transition-colors">
-                  Talk to a developer
+                  Start your project
                 </a>
                 <Link to="/docs" className="inline-flex items-center font-display font-medium text-text-primary border border-border px-5 py-2.5 text-sm rounded-full no-underline hover:bg-surface-raised transition-colors">
                   Read the docs
                 </Link>
               </div>
             </ScrollReveal>
+
           </div>
         </div>
       </section>
@@ -488,10 +491,11 @@ export default function Home() {
               </div>
               {/* Text overlay */}
               <div className="relative p-8 md:p-12 max-w-[500px]">
-                <span className="text-white/50 text-sm font-medium mb-2 block">For founders and builders</span>
+                <span className="text-white/50 text-sm font-medium mb-2 block">Built for your business</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                  SaaS & Product Building
+                  Custom Software Development
                 </h2>
+
                 <div className="flex flex-wrap gap-3">
                   <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                     Get started
@@ -534,10 +538,11 @@ export default function Home() {
                 </svg>
               </div>
               <div className="relative p-8 md:p-12 max-w-[500px]">
-                <span className="text-white/50 text-sm font-medium mb-2 block">Ship faster with AI</span>
+                <span className="text-white/50 text-sm font-medium mb-2 block">Built to fit your workflow</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                  AI Tools & Vibe Coding
+                  Custom Tools & Integrations
                 </h2>
+
                 <div className="flex flex-wrap gap-3">
                   <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                     Get started
@@ -617,10 +622,11 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="relative p-7 md:p-10">
-                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Full-stack engineering</span>
+                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Custom software & apps</span>
                   <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
-                    Software & Apps
+                    Web & Mobile Apps
                   </h3>
+
                   <div className="flex flex-wrap gap-2.5">
                     <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                       Get started
