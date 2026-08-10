@@ -31,15 +31,19 @@ Deno.serve(async (req) => {
     let row = existing
     if (row.status === 'pending') {
       try {
-        const check = await statusCheck(auth.key.mode, id)
+        const check = await statusCheck(auth.gateway, auth.key.mode, {
+          reference: id,
+          providerRef: row.provider_reference,
+        })
         if (check.status !== 'pending') {
           await settleCollection(db, row, {
             status: check.status,
             code: check.code,
             reason: check.message,
-            providerTransactionId: check.data?.data?.transaction_id ?? null,
+            providerTransactionId: check.providerTransactionId,
             raw: check.data,
           })
+
           const { data: fresh } = await db.from('transactions').select(cols).eq('id', row.id).maybeSingle()
           if (fresh) row = fresh
         }
