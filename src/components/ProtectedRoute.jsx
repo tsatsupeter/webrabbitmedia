@@ -51,7 +51,7 @@ export default function ProtectedRoute({ children, requireBusiness = false }) {
     return <div className="min-h-screen bg-merchant-bg" />
   }
   if (requireBusiness && !hasBusiness) {
-    return <Navigate to="/auth/create-business" replace />
+    return <Navigate to="/welcome?choose=1" replace />
   }
   return children
 }

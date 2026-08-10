@@ -115,7 +115,7 @@ export default function CreateBusiness() {
       }
 
       toast.success('Business created')
-      navigate('/merchant', { replace: true })
+      navigate(nextPath, { replace: true })
     } catch (err) {
       toast.error(err.message || 'Could not create business')
       setBusy(false)

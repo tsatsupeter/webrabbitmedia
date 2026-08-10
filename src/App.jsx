@@ -10,6 +10,7 @@ import Auth from './pages/Auth'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import CreateBusiness from './pages/CreateBusiness'
+import Welcome from './pages/Welcome'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
 import Verification from './merchant/pages/Verification'
@@ -80,6 +81,14 @@ function App() {
         <Route path="/docs/:section" element={<Docs />} />
         <Route path="/team/accept" element={<AcceptInvite />} />
 
+        <Route
+          path="/welcome"
+          element={
+            <ProtectedRoute>
+              <Welcome />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/auth/create-business"
           element={
