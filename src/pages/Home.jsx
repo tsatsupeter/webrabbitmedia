@@ -1,76 +1,100 @@
 import { Link } from 'react-router-dom'
 import ScrollReveal from '../components/ScrollReveal'
+import heroMerchant from '../assets/hero-merchant.jpg'
+import heroPaymentCard from '../assets/hero-payment-card.png'
+import heroPayoutGlyph from '../assets/hero-payout-glyph.png'
 
 export default function Home() {
   return (
     <>
-      {/* ═══ HERO — full-width dark block with graphic + overlaid text ═══ */}
+      {/* ═══ HERO — photographic payments hero ═══ */}
       <section className="relative bg-surface-dark overflow-hidden">
-        {/* Background SVG graphic */}
+        {/* Background photo */}
+        <img
+          src={heroMerchant}
+          alt="Shop owner in Ghana confirming a mobile money payment on a phone at the counter"
+          width={1920}
+          height={1088}
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-90"
+        />
+        {/* Scrim + texture */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-surface-dark via-surface-dark/90 to-surface-dark/20"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-transparent to-surface-dark/40" aria-hidden="true" />
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <svg viewBox="0 0 1200 700" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-            {/* Grid pattern */}
+          <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
             <defs>
               <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
                 <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="0.3" opacity="0.06" />
               </pattern>
             </defs>
-            <rect width="1200" height="700" fill="url(#grid)" />
-            {/* Floating UI cards */}
-            <rect x="700" y="80" width="280" height="180" rx="16" fill="white" opacity="0.04" />
-            <rect x="720" y="100" width="120" height="10" rx="5" fill="var(--color-accent-bright)" opacity="0.25" />
-            <rect x="720" y="120" width="200" height="8" rx="4" fill="white" opacity="0.08" />
-            <rect x="720" y="136" width="160" height="8" rx="4" fill="white" opacity="0.05" />
-            <rect x="720" y="160" width="80" height="28" rx="8" fill="var(--color-accent)" opacity="0.3" />
-            <rect x="720" y="200" width="240" height="1" fill="white" opacity="0.06" />
-            <rect x="740" y="340" width="240" height="160" rx="16" fill="white" opacity="0.03" />
-            <rect x="760" y="360" width="80" height="80" rx="12" fill="var(--color-accent)" opacity="0.08" />
-            <rect x="860" y="365" width="100" height="8" rx="4" fill="white" opacity="0.07" />
-            <rect x="860" y="382" width="70" height="8" rx="4" fill="white" opacity="0.04" />
-            <rect x="860" y="410" width="100" height="24" rx="6" fill="var(--color-accent)" opacity="0.12" />
-            {/* Phone outline */}
-            <rect x="160" y="380" width="120" height="220" rx="20" fill="white" opacity="0.03" stroke="white" strokeWidth="1" />
-            <rect x="172" y="400" width="96" height="170" rx="4" fill="white" opacity="0.02" />
-            <rect x="182" y="410" width="76" height="40" rx="6" fill="var(--color-accent)" opacity="0.06" />
-            <rect x="182" y="460" width="76" height="8" rx="4" fill="white" opacity="0.05" />
-            <rect x="182" y="476" width="50" height="8" rx="4" fill="white" opacity="0.03" />
-            <rect x="182" y="500" width="40" height="20" rx="5" fill="var(--color-accent)" opacity="0.1" />
-            {/* Decorative circles */}
-            <circle cx="500" cy="550" r="80" fill="var(--color-accent)" opacity="0.04" />
-            <circle cx="500" cy="550" r="120" stroke="var(--color-accent)" strokeWidth="1" opacity="0.04" fill="none" />
-            <circle cx="900" cy="600" r="60" fill="var(--color-accent)" opacity="0.03" />
-            {/* Chart */}
-            <rect x="380" y="400" width="200" height="140" rx="12" fill="white" opacity="0.03" />
-            <polyline points="400,510 430,490 460,500 490,470 520,480 550,450" stroke="var(--color-accent-bright)" strokeWidth="2" strokeLinecap="round" opacity="0.2" fill="none" />
-            <polygon points="400,510 430,490 460,500 490,470 520,480 550,450 550,520 400,520" fill="var(--color-accent)" opacity="0.04" />
+            <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
         </div>
 
         <div className="relative max-w-[1200px] mx-auto px-6 pt-28 pb-24 md:pt-44 md:pb-40">
-          <div className="max-w-[650px]">
-            <h1 className="font-display font-bold text-[clamp(2.6rem,6vw,4.5rem)] leading-[1.05] tracking-[-0.04em] text-white mb-6 animate-fade-up">
-              Building. Learning. Shipping.
+          <div className="max-w-[640px]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[0.72rem] uppercase tracking-[0.12em] text-white/70 mb-6 animate-fade-up">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-bright" />
+              Payments &amp; messaging for Ghana
+            </span>
+            <h1 className="font-display font-bold text-[clamp(2.5rem,5.6vw,4.3rem)] leading-[1.05] tracking-[-0.04em] text-white mb-6 animate-fade-up">
+              Accept mobile money and card payments. Get paid in GHS.
             </h1>
-            <p className="text-white/60 text-[1.1rem] leading-relaxed max-w-[520px] mb-8 animate-fade-up-delay-1">
-              Web Rabbit Media connects founders, developers, indie hackers, and entrepreneurs to build SaaS/B2B platforms together. Stuck on a project? Let's build it.
+            <p className="text-white/65 text-[1.08rem] leading-relaxed max-w-[540px] mb-8 animate-fade-up-delay-1">
+              One integration for MTN, Telecel and AirtelTigo mobile money plus cards — with a
+              transparent platform fee, payouts straight to your bank account or wallet, and bulk
+              SMS from the same dashboard.
             </p>
             <div className="flex flex-wrap gap-3 animate-fade-up-delay-2">
-              <a
-                href="mailto:hello@webrabbitmedia.com"
+              <Link
+                to="/auth"
                 className="inline-flex items-center gap-2 font-display font-medium text-surface-dark bg-white px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors duration-150"
               >
-                Let's connect
-              </a>
+                Start accepting payments
+              </Link>
               <Link
-                to="/about"
+                to="/docs"
                 className="inline-flex items-center font-display font-medium text-white/80 border border-white/20 px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/5 hover:border-white/30 transition-all duration-150"
               >
-                What we build
+                Read the docs
               </Link>
             </div>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 mt-10 text-[0.8rem] text-white/45 animate-fade-up-delay-2 list-none p-0">
+              {['MTN · Telecel · AirtelTigo', 'GHS settlement', 'Bank or wallet payouts', 'Developer API'].map((t) => (
+                <li key={t} className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-accent-bright/70" />
+                  {t}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
+
+        {/* Floating overlays */}
+        <img
+          src={heroPaymentCard}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          width={928}
+          height={720}
+          className="hidden lg:block absolute right-[6%] top-[22%] w-[320px] drop-shadow-2xl animate-fade-up-delay-1 pointer-events-none"
+        />
+        <img
+          src={heroPayoutGlyph}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          width={700}
+          height={700}
+          className="hidden lg:block absolute right-[3%] bottom-[16%] w-[120px] drop-shadow-2xl animate-fade-up-delay-2 pointer-events-none"
+        />
       </section>
+
 
       {/* ═══ SERVICE CATEGORY CARDS — icon row like Meta Store categories ═══ */}
       <section className="border-b border-border">
