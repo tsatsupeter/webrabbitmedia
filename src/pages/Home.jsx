@@ -1,102 +1,226 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ScrollReveal from '../components/ScrollReveal'
 import heroMerchant from '../assets/hero-merchant.jpg'
+import heroUssd from '../assets/hero-ussd.jpg'
+import heroDeveloper from '../assets/hero-developer.jpg'
 import heroPaymentCard from '../assets/hero-payment-card.png'
 import heroPayoutGlyph from '../assets/hero-payout-glyph.png'
+import heroUssdCard from '../assets/hero-ussd-card.png'
+import heroApiCard from '../assets/hero-api-card.png'
+import showcaseUssd from '../assets/showcase-ussd.jpg'
+import showcaseAutomation from '../assets/showcase-automation.jpg'
 
-export default function Home() {
+const HERO_SLIDES = [
+  {
+    id: 'payments',
+    eyebrow: 'Payment gateway',
+    title: 'Accept mobile money and card payments. Get paid in GHS.',
+    body: 'One integration for MTN, Telecel and AirtelTigo mobile money plus cards — with a transparent platform fee, payouts straight to your bank account or wallet, and bulk SMS from the same dashboard.',
+    image: heroMerchant,
+    imageAlt: 'Shop owner in Ghana confirming a mobile money payment on a phone at the counter',
+    overlay: heroPaymentCard,
+    overlayClass: 'right-[6%] top-[22%] w-[320px]',
+    facts: ['MTN · Telecel · AirtelTigo', 'GHS settlement', 'Bank or wallet payouts', 'Developer API'],
+    primary: { label: 'Start accepting payments', to: '/auth' },
+    secondary: { label: 'Read the docs', to: '/docs' },
+  },
+  {
+    id: 'ussd',
+    eyebrow: 'USSD payment apps',
+    title: 'Collect from any phone. No smartphone, no internet.',
+    body: 'Custom USSD short codes and payment apps let your customers pay by dialling a menu — perfect for markets, agents, schools and field collections across Ghana.',
+    image: heroUssd,
+    imageAlt: 'Market vendor in Ghana dialling a USSD short code on a feature phone',
+    overlay: heroUssdCard,
+    overlayClass: 'right-[6%] top-[24%] w-[300px]',
+    facts: ['Works on feature phones', 'Custom short codes', 'Agent & field collections', 'Instant confirmation'],
+    primary: { label: 'Talk to us', href: 'mailto:hello@webrabbitmedia.com' },
+    secondary: { label: 'See how it works', anchor: '#services' },
+  },
+  {
+    id: 'developers',
+    eyebrow: 'Developer solutions',
+    title: 'Backends, automation and bots — built with you.',
+    body: 'Stuck integrating payments, webhooks or a backend? We work alongside your team with real code, sandbox keys and architecture support until it ships.',
+    image: heroDeveloper,
+    imageAlt: 'Developer working on an API dashboard and code editor at a dark desk',
+    overlay: heroApiCard,
+    overlayClass: 'right-[6%] top-[24%] w-[330px]',
+    facts: ['REST API & webhooks', 'Sandbox keys', 'Automation & bots', 'Ship in days, not months'],
+    primary: { label: 'Talk to a developer', href: 'mailto:hello@webrabbitmedia.com' },
+    secondary: { label: 'Read the docs', to: '/docs' },
+  },
+]
+
+function HeroCta({ cta, variant }) {
+  const cls =
+    variant === 'primary'
+      ? 'inline-flex items-center gap-2 font-display font-medium text-surface-dark bg-white px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors duration-150'
+      : 'inline-flex items-center font-display font-medium text-white/80 border border-white/20 px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/5 hover:border-white/30 transition-all duration-150'
+  if (cta.to) return <Link to={cta.to} className={cls}>{cta.label}</Link>
+  return <a href={cta.href || cta.anchor} className={cls}>{cta.label}</a>
+}
+
+function HeroCarousel() {
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const regionRef = useRef(null)
+
+  const go = useCallback((n) => setIndex(((n % HERO_SLIDES.length) + HERO_SLIDES.length) % HERO_SLIDES.length), [])
+
+  useEffect(() => {
+    if (paused) return undefined
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined
+    const t = setInterval(() => setIndex((i) => (i + 1) % HERO_SLIDES.length), 6500)
+    return () => clearInterval(t)
+  }, [paused])
+
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1) }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1) }
+  }
+
   return (
-    <>
-      {/* ═══ HERO — photographic payments hero ═══ */}
-      <section className="relative bg-surface-dark overflow-hidden">
-        {/* Background photo */}
+    <section
+      ref={regionRef}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Web Rabbit services"
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+      className="relative bg-surface-dark overflow-hidden outline-none"
+    >
+      {/* Backgrounds */}
+      {HERO_SLIDES.map((s, i) => (
         <img
-          src={heroMerchant}
-          alt="Shop owner in Ghana confirming a mobile money payment on a phone at the counter"
+          key={s.id}
+          src={s.image}
+          alt={i === index ? s.imageAlt : ''}
+          aria-hidden={i !== index}
           width={1920}
           height={1088}
-          fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-90"
+          {...(i === 0 ? { fetchPriority: 'high' } : { loading: 'lazy' })}
+          className={`absolute inset-0 w-full h-full object-cover object-[70%_center] transition-opacity duration-700 ${i === index ? 'opacity-90' : 'opacity-0'}`}
         />
-        {/* Scrim + texture */}
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-surface-dark via-surface-dark/90 to-surface-dark/20"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-transparent to-surface-dark/40" aria-hidden="true" />
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-            <defs>
-              <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="0.3" opacity="0.06" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+      ))}
 
-        <div className="relative max-w-[1200px] mx-auto px-6 pt-28 pb-24 md:pt-44 md:pb-40">
-          <div className="max-w-[640px]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[0.72rem] uppercase tracking-[0.12em] text-white/70 mb-6 animate-fade-up">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-bright" />
-              Payments &amp; messaging for Ghana
-            </span>
-            <h1 className="font-display font-bold text-[clamp(2.5rem,5.6vw,4.3rem)] leading-[1.05] tracking-[-0.04em] text-white mb-6 animate-fade-up">
-              Accept mobile money and card payments. Get paid in GHS.
-            </h1>
-            <p className="text-white/65 text-[1.08rem] leading-relaxed max-w-[540px] mb-8 animate-fade-up-delay-1">
-              One integration for MTN, Telecel and AirtelTigo mobile money plus cards — with a
-              transparent platform fee, payouts straight to your bank account or wallet, and bulk
-              SMS from the same dashboard.
-            </p>
-            <div className="flex flex-wrap gap-3 animate-fade-up-delay-2">
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-2 font-display font-medium text-surface-dark bg-white px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors duration-150"
-              >
-                Start accepting payments
-              </Link>
-              <Link
-                to="/docs"
-                className="inline-flex items-center font-display font-medium text-white/80 border border-white/20 px-7 py-3.5 text-sm rounded-full no-underline hover:bg-white/5 hover:border-white/30 transition-all duration-150"
-              >
-                Read the docs
-              </Link>
+      {/* Scrim + texture */}
+      <div className="absolute inset-0 bg-gradient-to-r from-surface-dark via-surface-dark/90 to-surface-dark/20" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-transparent to-surface-dark/40" aria-hidden="true" />
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+          <defs>
+            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="0.3" opacity="0.06" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+      </div>
+
+      {/* Slides */}
+      <div className="relative max-w-[1200px] mx-auto px-6 pt-28 pb-24 md:pt-44 md:pb-40">
+        <div className="grid">
+          {HERO_SLIDES.map((s, i) => (
+            <div
+              key={s.id}
+              aria-hidden={i !== index}
+              inert={i !== index ? true : undefined}
+              className={`col-start-1 row-start-1 max-w-[640px] transition-all duration-500 ${
+                i === index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
+              }`}
+            >
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[0.72rem] uppercase tracking-[0.12em] text-white/70 mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-bright" />
+                {s.eyebrow}
+              </span>
+              {i === 0 ? (
+                <h1 className="font-display font-bold text-[clamp(2.5rem,5.6vw,4.3rem)] leading-[1.05] tracking-[-0.04em] text-white mb-6">
+                  {s.title}
+                </h1>
+              ) : (
+                <p className="font-display font-bold text-[clamp(2.5rem,5.6vw,4.3rem)] leading-[1.05] tracking-[-0.04em] text-white mb-6">
+                  {s.title}
+                </p>
+              )}
+              <p className="text-white/65 text-[1.08rem] leading-relaxed max-w-[540px] mb-8">{s.body}</p>
+              <div className="flex flex-wrap gap-3">
+                <HeroCta cta={s.primary} variant="primary" />
+                <HeroCta cta={s.secondary} variant="secondary" />
+              </div>
+              <ul className="flex flex-wrap gap-x-6 gap-y-2 mt-10 text-[0.8rem] text-white/45 list-none p-0">
+                {s.facts.map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-accent-bright/70" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 mt-10 text-[0.8rem] text-white/45 animate-fade-up-delay-2 list-none p-0">
-              {['MTN · Telecel · AirtelTigo', 'GHS settlement', 'Bank or wallet payouts', 'Developer API'].map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-accent-bright/70" />
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
+          ))}
         </div>
 
-        {/* Floating overlays */}
+        {/* Dots */}
+        <div className="flex items-center gap-2.5 mt-10">
+          {HERO_SLIDES.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => go(i)}
+              aria-label={`Show ${s.eyebrow}`}
+              aria-current={i === index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === index ? 'w-8 bg-accent-bright' : 'w-3 bg-white/25 hover:bg-white/45'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Floating overlays */}
+      {HERO_SLIDES.map((s, i) => (
         <img
-          src={heroPaymentCard}
+          key={s.id}
+          src={s.overlay}
           alt=""
           aria-hidden="true"
           loading="lazy"
           width={928}
           height={720}
-          className="hidden lg:block absolute right-[6%] top-[22%] w-[320px] drop-shadow-2xl animate-fade-up-delay-1 pointer-events-none"
+          className={`hidden lg:block absolute ${s.overlayClass} drop-shadow-2xl pointer-events-none transition-all duration-700 ${
+            i === index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}
         />
-        <img
-          src={heroPayoutGlyph}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          width={700}
-          height={700}
-          className="hidden lg:block absolute right-[3%] bottom-[16%] w-[120px] drop-shadow-2xl animate-fade-up-delay-2 pointer-events-none"
-        />
-      </section>
+      ))}
+      <img
+        src={heroPayoutGlyph}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        width={700}
+        height={700}
+        className={`hidden lg:block absolute right-[3%] bottom-[16%] w-[120px] drop-shadow-2xl pointer-events-none transition-opacity duration-700 ${
+          index === 0 ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+    </section>
+  )
+}
+
+export default function Home() {
+  return (
+    <>
+      {/* ═══ HERO — rotating service carousel ═══ */}
+      <HeroCarousel />
+
 
       {/* ═══ WHAT WE PROVIDE — horizontal service strip ═══ */}
-      <section className="border-b border-border bg-surface">
+      <section id="services" className="border-b border-border bg-surface scroll-mt-20">
         <div className="max-w-[1200px] mx-auto px-6 py-10">
           <ScrollReveal>
             <h2 className="font-display font-bold text-[1.25rem] tracking-[-0.02em] text-text-primary text-center mb-6">
@@ -263,12 +387,67 @@ export default function Home() {
               <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-5">
                 Stuck on a backend? We help you implement it.
               </h2>
-              <p className="text-text-secondary text-[1rem] leading-relaxed mb-6">
-                From auth and payments to webhooks and databases, we work alongside developers to ship production-ready backends. Whether you're integrating our payment gateway or building something entirely new, we connect you with the right tools, code, and architecture.
+              <p className="text-text-secondary text-[1rem] leading-relaxed mb-7">
+                From auth and payments to webhooks, databases, automation and bots, we work alongside
+                developers to ship production-ready backends — faster, and without guesswork.
               </p>
+
+              <ol className="list-none p-0 m-0 mb-7 space-y-5">
+                {[
+                  {
+                    t: 'Tell us what\u2019s blocking you',
+                    d: 'Payments, auth, webhooks, data models or a bot — share the problem and the stack you\u2019re on.',
+                  },
+                  {
+                    t: 'Architecture call',
+                    d: 'We map the endpoints, schema and integration path, then agree on scope and timeline.',
+                  },
+                  {
+                    t: 'We implement with you',
+                    d: 'Working code, sandbox API keys and real test transactions — reviewed together as we go.',
+                  },
+                  {
+                    t: 'Ship and monitor',
+                    d: 'Go live with verified webhooks, dashboards and alerts so you know it keeps working.',
+                  },
+                ].map((s, i, arr) => (
+                  <li key={s.t} className="relative flex gap-4">
+                    <div className="relative flex flex-col items-center">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-light text-accent font-display font-semibold text-[0.85rem] flex items-center justify-center">
+                        {i + 1}
+                      </span>
+                      {i < arr.length - 1 && (
+                        <span className="flex-1 w-px bg-border mt-2" aria-hidden="true" />
+                      )}
+                    </div>
+                    <div className="pb-1">
+                      <p className="font-display font-semibold text-text-primary text-[0.98rem] mb-1">{s.t}</p>
+                      <p className="text-text-secondary text-[0.9rem] leading-relaxed m-0">{s.d}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <ul className="flex flex-wrap gap-2 list-none p-0 mb-7">
+                {[
+                  'Backend integration',
+                  'Automation & workflows',
+                  'Bots (WhatsApp, Telegram, SMS)',
+                  'API & webhook debugging',
+                  'Faster time-to-live',
+                ].map((c) => (
+                  <li
+                    key={c}
+                    className="rounded-full border border-border bg-surface px-3 py-1.5 text-[0.78rem] text-text-secondary"
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+
               <div className="flex flex-wrap gap-3">
                 <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-display font-medium text-white bg-accent px-5 py-2.5 text-sm rounded-full no-underline hover:bg-accent-dim transition-colors">
-                  Talk to us
+                  Talk to a developer
                 </a>
                 <Link to="/docs" className="inline-flex items-center font-display font-medium text-text-primary border border-border px-5 py-2.5 text-sm rounded-full no-underline hover:bg-surface-raised transition-colors">
                   Read the docs
@@ -377,28 +556,18 @@ export default function Home() {
       <section>
         <div className="max-w-[1200px] mx-auto px-6 py-5">
           <ScrollReveal>
-            <div className="relative bg-[#0e1520] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
-              <div className="absolute inset-0" aria-hidden="true">
-                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-                  {/* Phone frames */}
-                  <rect x="180" y="50" width="160" height="320" rx="28" fill="white" opacity="0.04" stroke="white" strokeWidth="1" />
-                  <rect x="198" y="75" width="124" height="250" rx="6" fill="white" opacity="0.03" />
-                  <rect x="230" y="62" width="60" height="6" rx="3" fill="white" opacity="0.08" />
-                  {/* USSD menu lines */}
-                  <rect x="210" y="100" width="60" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
-                  <rect x="210" y="120" width="90" height="5" rx="2.5" fill="white" opacity="0.08" />
-                  <rect x="210" y="140" width="80" height="5" rx="2.5" fill="white" opacity="0.06" />
-                  <rect x="210" y="160" width="85" height="5" rx="2.5" fill="white" opacity="0.06" />
-                  <rect x="210" y="180" width="70" height="5" rx="2.5" fill="white" opacity="0.06" />
-                  <rect x="210" y="210" width="100" height="32" rx="8" fill="var(--color-accent)" opacity="0.15" />
-                  <rect x="420" y="80" width="420" height="280" rx="16" fill="white" opacity="0.04" />
-                  <rect x="440" y="110" width="180" height="18" rx="6" fill="var(--color-accent-bright)" opacity="0.2" />
-                  <rect x="440" y="145" width="300" height="10" rx="5" fill="white" opacity="0.06" />
-                  <rect x="440" y="165" width="240" height="10" rx="5" fill="white" opacity="0.04" />
-                  <rect x="440" y="210" width="120" height="40" rx="10" fill="var(--color-accent)" opacity="0.25" />
-                  <rect x="580" y="210" width="120" height="40" rx="10" fill="white" opacity="0.06" />
-                </svg>
-              </div>
+            <div className="relative bg-surface-dark rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
+              <img
+                src={showcaseUssd}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                width={1280}
+                height={720}
+                className="absolute inset-0 w-full h-full object-cover object-[75%_center] opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/80 to-transparent" aria-hidden="true" />
               <div className="relative p-8 md:p-12 max-w-[500px]">
                 <span className="text-white/50 text-sm font-medium mb-2 block">Payments everywhere</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
@@ -466,39 +635,27 @@ export default function Home() {
 
             {/* Automation & Bots */}
             <ScrollReveal delay={100}>
-              <div className="relative bg-surface-raised rounded-2xl overflow-hidden min-h-[400px] md:min-h-[480px] flex items-end border border-border-light">
-                <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                  <svg viewBox="0 0 400 480" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                    {/* Flow nodes */}
-                    <rect x="60" y="120" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.1" />
-                    <rect x="75" y="138" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
-                    <rect x="75" y="152" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
-                    <rect x="240" y="120" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.1" />
-                    <rect x="255" y="138" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
-                    <rect x="255" y="152" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
-                    <rect x="150" y="240" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.12" />
-                    <rect x="165" y="258" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.3" />
-                    <rect x="165" y="272" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
-                    {/* Connecting lines */}
-                    <path d="M160 150h80" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 4" />
-                    <path d="M200 180v60" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 4" />
-                    {/* Chat bubbles */}
-                    <rect x="80" y="330" width="120" height="42" rx="21" fill="white" opacity="0.06" />
-                    <rect x="110" y="345" width="60" height="5" rx="2.5" fill="white" opacity="0.1" />
-                    <rect x="200" y="380" width="120" height="42" rx="21" fill="var(--color-accent)" opacity="0.15" />
-                    <rect x="230" y="395" width="60" height="5" rx="2.5" fill="var(--color-accent-bright)" opacity="0.3" />
-                  </svg>
-                </div>
+              <div className="relative bg-surface-dark rounded-2xl overflow-hidden min-h-[400px] md:min-h-[480px] flex items-end">
+                <img
+                  src={showcaseAutomation}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  width={1280}
+                  height={720}
+                  className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-90"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
                 <div className="relative p-7 md:p-10">
-                  <span className="text-text-muted text-sm font-medium mb-1.5 block">Put it on autopilot</span>
-                  <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-text-primary mb-4">
+                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Put it on autopilot</span>
+                  <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
                     Automation & Bots
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
-                    <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors border border-border">
+                    <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                       Get started
                     </a>
-                    <Link to="/about" className="inline-flex items-center font-medium text-text-primary border border-border px-4 py-2 text-sm rounded-full no-underline hover:bg-surface transition-colors">
+                    <Link to="/about" className="inline-flex items-center font-medium text-white bg-white/10 px-4 py-2 text-sm rounded-full no-underline hover:bg-white/15 transition-colors">
                       Learn more
                     </Link>
                   </div>
