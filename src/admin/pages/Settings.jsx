@@ -9,6 +9,11 @@ import { useAdminQuery, useAdminRole, logAdminAction } from '../useAdmin'
 import { fmtDate } from '../lib'
 
 const DEFAULT_BPS = 1500
+const DEFAULT_GATEWAY = 'liberte'
+const GATEWAYS = [
+  { value: 'liberte', label: '360Pay' },
+  { value: 'junipay', label: 'JuniPay' },
+]
 
 async function loadSettings() {
   const [biz, settings] = await Promise.all([
@@ -20,6 +25,7 @@ async function loadSettings() {
     ...b,
     setting: byBiz[b.id] || null,
     bps: byBiz[b.id]?.commission_bps ?? DEFAULT_BPS,
+    gateway: byBiz[b.id]?.gateway ?? DEFAULT_GATEWAY,
   }))
 }
 
@@ -43,7 +49,7 @@ export default function Settings() {
     setBusy(row.id)
     const { error: err } = await supabase
       .from('platform_settings')
-      .upsert({ business_id: row.id, commission_bps: bps }, { onConflict: 'business_id' })
+      .upsert({ business_id: row.id, commission_bps: bps, gateway: row.gateway }, { onConflict: 'business_id' })
     setBusy('')
     if (err) return toast.error(err.message)
     await logAdminAction('commission.updated', 'business', row.id, { commission_bps: bps })
@@ -51,6 +57,20 @@ export default function Settings() {
     setEdits((e) => ({ ...e, [row.id]: undefined }))
     refresh()
   }
+
+  async function saveGateway(row, gateway) {
+    if (gateway === row.gateway) return
+    setBusy(row.id)
+    const { error: err } = await supabase
+      .from('platform_settings')
+      .upsert({ business_id: row.id, commission_bps: row.bps, gateway }, { onConflict: 'business_id' })
+    setBusy('')
+    if (err) return toast.error(err.message)
+    await logAdminAction('gateway.updated', 'business', row.id, { gateway })
+    toast.success(`${row.name} now routes through ${GATEWAYS.find((g) => g.value === gateway)?.label}`)
+    refresh()
+  }
+
 
   if (loading) return <PageLoader label="Loading settings…" />
   if (error) {
