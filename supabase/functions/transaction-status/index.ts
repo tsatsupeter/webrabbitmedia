@@ -1,10 +1,11 @@
 // Transaction status for the public API. Pending rows are checked live against
-// 360Pay's synchronous status-check endpoint before we answer, so merchants
-// polling /v1/transactions/:id are never blocked waiting on a callback.
-// Unknown ids MUST 404 rather than return a synthetic "failed" verdict.
+// the assigned gateway's synchronous status endpoint before we answer, so
+// merchants polling /v1/transactions/:id are never blocked waiting on a
+// callback. Unknown ids MUST 404 rather than return a synthetic verdict.
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
-import { statusCheck } from '../_shared/liberte.ts'
+import { statusCheck } from '../_shared/gateway.ts'
 import { settleCollection } from '../_shared/settlement.ts'
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
