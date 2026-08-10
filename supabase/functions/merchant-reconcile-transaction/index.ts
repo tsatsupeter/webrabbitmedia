@@ -46,12 +46,16 @@ Deno.serve(async (req) => {
       })
     }
 
-    const check = await statusCheck(existing.mode as 'test' | 'live', transaction_id)
+    const gw = await gatewayFor(db, existing.business_id)
+    const check = await statusCheck(gw, existing.mode as 'test' | 'live', {
+      reference: transaction_id,
+      providerRef: existing.provider_reference,
+    })
     const result = await settleCollection(db, existing, {
       status: check.status,
       code: check.code,
       reason: check.message,
-      providerTransactionId: check.data?.data?.transaction_id ?? null,
+      providerTransactionId: check.providerTransactionId,
       raw: check.data,
     })
 
@@ -61,9 +65,10 @@ Deno.serve(async (req) => {
       changed: result.changed,
       code: check.code,
       reason: result.status === 'pending'
-        ? (check.message || 'Still processing at 360Pay — awaiting settlement')
+        ? (check.message || `Still processing at ${gatewayLabel(gw)} — awaiting settlement`)
         : check.message,
     })
+
   } catch (e) {
     return handleError(e)
   }
