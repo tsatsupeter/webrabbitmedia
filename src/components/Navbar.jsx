@@ -434,10 +434,12 @@ export default function Navbar() {
           </div>
         </div>
       )}
+    </header>
 
-      {/* Mobile sheet */}
+    {/* Mobile sheet — portalled so the header's backdrop-blur doesn't trap it */}
+    {createPortal(
       <div
-        className={`lg:hidden fixed inset-0 top-0 z-40 transition-opacity duration-200 ${
+        className={`lg:hidden fixed inset-0 top-0 z-[60] transition-opacity duration-200 ${
           mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden={!mobileOpen}
