@@ -169,19 +169,28 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
     }
     case 'business_approved':
       return {
-        subject: `${businessName} is approved for live payments`,
-        preheader: 'Live payments and payouts are now enabled.',
-        headline: "You're approved for live mode",
-        intro: `Good news — ${businessName} has been approved. You can now switch to Live mode and start accepting real payments and withdrawing to your bank.`,
+        subject: `Congratulations! Live Payments Are Now Enabled on Your ${BRAND.name} Account`,
+        preheader: `You're live — ${businessName} can now accept real payments.`,
+        headline: 'Congratulations! Live Payments Are Now Enabled',
+        intro: `You're live! Live payments have been successfully enabled for your business ${businessName}. You can now start accepting live customer payments and process transactions from your dashboard.`,
         pill: { label: 'Approved', tone: 'success' },
+        bullets: {
+          title: 'What you can do now',
+          items: [
+            'Accept live payments from customers',
+            'Collect payments via mobile money and card, and pay out to your bank or wallet',
+            'Track transactions, customers and revenue from your dashboard',
+          ],
+        },
         rows: [
           { label: 'Business', value: businessName },
-          { label: 'Status', value: 'Approved for live mode' },
-          { label: 'Date', value: fmtDate() },
+          { label: 'Status', value: 'Live payments enabled' },
+          { label: 'Date approved', value: fmtDate() },
         ],
-        cta: { label: 'Open dashboard', href: BRAND.dashboard },
-        outro: 'Your test-mode data stays untouched — the two environments are fully isolated.',
+        cta: { label: 'Go to Dashboard', href: BRAND.dashboard },
+        outro: `If you have questions or need help going live smoothly, our team is here for you at ${BRAND.replyTo}. Your test-mode data stays untouched — the two environments are fully isolated.`,
       }
+
     case 'verification_submitted': {
       const step = String(d.step || 'verification')
       const stepLabel = step.replace(/_/g, ' ')
