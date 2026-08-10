@@ -1,10 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import {
-  disburse, disbursementBalance, nameVerify, newReference,
-  normalizeMsisdn, normalizeNetwork, resolveInstitutionCode, mapStatusCode, respCode, respMessage,
-} from '../_shared/liberte.ts'
-import { bankInstitutionCode } from '../_shared/banks.ts'
+import { newReference, normalizeMsisdn, normalizeNetwork } from '../_shared/liberte.ts'
+import { disburse, disbursementBalance, gatewayFor, gatewayLabel, verifyBank, verifyMomo } from '../_shared/gateway.ts'
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
