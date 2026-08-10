@@ -381,7 +381,7 @@ export default function Home() {
               <div className="absolute inset-0" aria-hidden="true">
                 <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
                   {/* Phone frames */}
-                  <rect x="180" y="50" width="160" height="320" rx="28" fill="white" opacity="0.04" stroke="white" strokeWidth="1" opacity-stroke="0.08" />
+                  <rect x="180" y="50" width="160" height="320" rx="28" fill="white" opacity="0.04" stroke="white" strokeWidth="1" />
                   <rect x="198" y="75" width="124" height="250" rx="6" fill="white" opacity="0.03" />
                   <rect x="230" y="62" width="60" height="6" rx="3" fill="white" opacity="0.08" />
                   {/* USSD menu lines */}
