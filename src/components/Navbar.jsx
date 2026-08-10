@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import Icon from '../merchant/Icon'
 
-// Airwallex-style mega-menu nav. Items with `to` navigate; the rest are
-// placeholder rows until their pages exist.
+// Mega-menu nav for the public site. Every row links to a real destination.
 const menus = [
   {
     key: 'products',
@@ -12,71 +12,130 @@ const menus = [
       {
         heading: 'Payments',
         items: [
-          { label: 'Checkout', desc: 'Conversion-optimised prebuilt payment form' },
-          { label: 'Payment Links', desc: 'No-code payment acceptance' },
-          { label: 'Overlay Checkout', desc: 'Branded checkout inside your site' },
+          {
+            label: 'Payment Gateway',
+            desc: 'Collect mobile money from MTN, Telecel and AirtelTigo',
+            icon: 'cash',
+            to: '/docs/collect-momo',
+          },
+          {
+            label: 'Hosted Checkout',
+            desc: 'A prebuilt, branded payment page you can link to',
+            icon: 'link',
+            to: '/docs/hosted-checkout',
+          },
+          {
+            label: 'Collect in dashboard',
+            desc: 'Charge a customer manually, no code required',
+            icon: 'receipt',
+            to: '/auth',
+          },
         ],
       },
       {
-        heading: 'Billing',
+        heading: 'Money movement',
         items: [
-          { label: 'Subscriptions', desc: 'Recurring billing for SaaS and memberships' },
-          { label: 'Usage-Based Billing', desc: 'Bill customers by actual usage or API calls' },
-          { label: 'One-Time Products', desc: 'Single purchases and lifetime deals' },
+          {
+            label: 'Payouts & Settlement',
+            desc: 'Settle to your bank account or mobile money wallet',
+            icon: 'bank',
+            to: '/docs/fees',
+          },
+          {
+            label: 'Merchant Dashboard',
+            desc: 'Sales, analytics, transactions and payouts in one place',
+            icon: 'chart',
+            to: '/auth',
+          },
+          {
+            label: 'Fees & Pricing',
+            desc: 'Transparent platform fee on every transaction',
+            icon: 'scale',
+            to: '/docs/fees',
+          },
         ],
       },
       {
-        heading: 'Platform',
+        heading: 'Engagement',
         items: [
-          { label: 'Merchant Dashboard', desc: 'Sales, analytics and payouts in one place', to: '/auth' },
-          { label: 'Payouts', desc: 'Fast settlement to your bank account' },
-          { label: 'Storefront', desc: 'Hosted storefront for your products' },
+          {
+            label: 'Bulk SMS & Messaging',
+            desc: 'Campaigns, OTP and sender IDs from one wallet',
+            icon: 'mail',
+            to: '/auth',
+          },
+          {
+            label: 'USSD Payment Apps',
+            desc: 'Reach customers on any phone, no internet needed',
+            icon: 'mobile',
+            to: '/#services',
+          },
         ],
       },
     ],
+    feature: {
+      eyebrow: 'Get started',
+      title: 'Start accepting mobile money in a day',
+      body: 'Create an account, verify your business, and go live with real GHS collections.',
+      cta: { label: 'Create an account', to: '/auth' },
+    },
   },
   {
     key: 'solutions',
     label: 'Solutions',
     columns: [
       {
-        heading: 'Industries',
+        heading: 'By business',
         items: [
-          { label: 'SaaS Platforms', desc: 'Integrated SaaS offerings' },
-          { label: 'AI & Dev Tools', desc: 'Sell APIs, models and developer tools' },
-          { label: 'Digital & Creator', desc: 'Social, streaming, creator economy' },
+          { label: 'SaaS & Startups', desc: 'Monetise your product with recurring collections', icon: 'rocket', to: '/#services' },
+          { label: 'eCommerce & Retail', desc: 'Take payments online and in-store', icon: 'store', to: '/#services' },
+          { label: 'Creators & Digital', desc: 'Sell digital goods and services', icon: 'sparkles', to: '/#services' },
         ],
       },
       {
-        heading: 'Builders',
+        heading: 'Custom software',
         items: [
-          { label: 'Founders & Indie Hackers', desc: 'Ship and monetise fast', to: '/about' },
-          { label: 'Powered Startups', desc: 'Products built with Web Rabbit', to: '/powered' },
-          { label: 'eCommerce & Retail', desc: 'Online and in-store retail' },
+          { label: 'Custom Websites', desc: 'Bring your business online with a site built for you', icon: 'globe', to: '/#services' },
+          { label: 'Custom Software & Tools', desc: 'Internal tools, dashboards and web apps', icon: 'code', to: '/#services' },
+          { label: 'Automation & Integrations', desc: 'Connect the systems you already use', icon: 'refresh', to: '/#services' },
         ],
       },
     ],
+    feature: {
+      eyebrow: 'Custom builds',
+      title: 'Need something built?',
+      body: 'Websites, custom software, internal tools and automation — we design, build and launch it with you.',
+      cta: { label: 'Start your project', href: 'mailto:hello@webrabbitmedia.com' },
+    },
   },
   {
     key: 'developers',
     label: 'Developers',
     columns: [
       {
-        heading: 'Docs & API',
+        heading: 'Get started',
         items: [
-          { label: 'Product Documentation', desc: 'Get the most from your integration' },
-          { label: 'API Reference', desc: 'Explore the full Web Rabbit API' },
+          { label: 'Quickstart', desc: 'Your first charge in a few minutes', icon: 'bolt', to: '/docs/quickstart' },
+          { label: 'Authentication', desc: 'API keys, scopes and key rotation', icon: 'key', to: '/docs/authentication' },
+          { label: 'Test Data', desc: 'Sandbox numbers and scenarios', icon: 'brackets', to: '/docs/test-data' },
         ],
       },
       {
-        heading: 'Tools',
+        heading: 'API reference',
         items: [
-          { label: 'SDKs', desc: 'TypeScript, Python and Java' },
-          { label: 'Webhooks', desc: 'React to payment events in real time' },
-          { label: 'Sentra AI', desc: 'AI assistant for your integration', to: '/auth' },
+          { label: 'Collect Mobile Money', desc: 'Charge a customer from your backend', icon: 'swap', to: '/docs/collect-momo' },
+          { label: 'Transactions', desc: 'List and retrieve payment records', icon: 'layers', to: '/docs/transactions-list' },
+          { label: 'Webhooks', desc: 'React to payment events in real time', icon: 'share', to: '/docs/webhooks' },
+          { label: 'Errors & Status Codes', desc: 'Every error shape explained', icon: 'info', to: '/docs/errors' },
         ],
       },
     ],
+    feature: {
+      eyebrow: 'Documentation',
+      title: 'Full API reference',
+      body: 'Endpoints, idempotency, rate limits and provider codes — everything in one place.',
+      cta: { label: 'Read the docs', to: '/docs' },
+    },
   },
   {
     key: 'company',
@@ -85,65 +144,146 @@ const menus = [
       {
         heading: 'About Web Rabbit',
         items: [
-          { label: 'Who We Are', desc: 'A snapshot of Web Rabbit Media', to: '/about' },
-          { label: 'Powered By', desc: 'Badges, logos and verification', to: '/powered' },
+          { label: 'Who We Are', desc: 'A snapshot of Web Rabbit Media', icon: 'user', to: '/about' },
+          { label: 'Powered By', desc: 'Badges, logos and verification', icon: 'seal', to: '/powered' },
+          { label: 'Merchant Acceptance', desc: 'Who we can onboard today', icon: 'checkCircle', to: '/docs/merchant-acceptance' },
         ],
       },
       {
         heading: 'Resources',
         items: [
-          { label: 'Support', desc: 'hello@webrabbitmedia.com', href: 'mailto:hello@webrabbitmedia.com' },
-          { label: 'Privacy Policy', desc: 'How we handle your data', to: '/privacy' },
-          { label: 'Terms & Conditions', desc: 'The fine print', to: '/terms' },
+          { label: 'Support', desc: 'hello@webrabbitmedia.com', icon: 'life', href: 'mailto:hello@webrabbitmedia.com' },
+          { label: 'Privacy Policy', desc: 'How we handle your data', icon: 'shield', to: '/privacy' },
+          { label: 'Terms & Conditions', desc: 'The fine print', icon: 'file', to: '/terms' },
         ],
       },
     ],
+    feature: {
+      eyebrow: 'Talk to us',
+      title: 'Questions before you build?',
+      body: 'Tell us what you are shipping and we will point you at the fastest path.',
+      cta: { label: 'Email the team', href: 'mailto:hello@webrabbitmedia.com' },
+    },
   },
 ]
 
-function MenuItem({ item, onNavigate }) {
+function MenuRow({ item, onNavigate }) {
   const inner = (
     <>
-      <span className="flex items-center gap-1 font-display font-medium text-[0.9rem] text-text-primary group-hover/item:text-accent">
-        {item.label}
-        <Icon name="chevron" size={12} className="text-text-muted opacity-0 group-hover/item:opacity-100 transition-opacity" />
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-light text-accent transition-colors group-hover/item:bg-accent group-hover/item:text-white">
+        <Icon name={item.icon || 'box'} size={17} />
       </span>
-      <span className="block text-[0.8rem] text-text-secondary/80 mt-0.5">{item.desc}</span>
+      <span className="min-w-0">
+        <span className="flex items-center gap-1 font-display font-medium text-[0.9rem] text-text-primary group-hover/item:text-accent">
+          {item.label}
+          <Icon
+            name="chevron"
+            size={12}
+            className="text-accent opacity-0 -translate-x-1 transition-all duration-200 group-hover/item:opacity-100 group-hover/item:translate-x-0"
+          />
+        </span>
+        <span className="block text-[0.8rem] leading-snug text-text-secondary/85 mt-0.5">{item.desc}</span>
+      </span>
     </>
   )
-  const cls = 'group/item block px-3 py-2.5 rounded-lg no-underline hover:bg-accent-light hover:no-underline transition-colors'
-  if (item.to) {
-    return (
-      <Link to={item.to} onClick={onNavigate} className={cls}>
-        {inner}
-      </Link>
-    )
-  }
+  const cls =
+    'group/item flex gap-3 px-3 py-2.5 rounded-xl no-underline hover:bg-surface-raised hover:no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40'
   if (item.href) {
     return (
-      <a href={item.href} className={cls}>
+      <a href={item.href} onClick={onNavigate} className={cls}>
         {inner}
       </a>
     )
   }
-  return <div className={`${cls} cursor-default`}>{inner}</div>
+  return (
+    <Link to={item.to} onClick={onNavigate} className={cls}>
+      {inner}
+    </Link>
+  )
+}
+
+function FeatureCard({ feature, onNavigate }) {
+  const ctaCls =
+    'inline-flex items-center gap-1.5 font-display font-medium text-[0.85rem] text-white bg-accent px-4 py-2.5 rounded-full no-underline hover:no-underline hover:bg-accent-dim transition-colors'
+  return (
+    <div className="rounded-2xl bg-accent-light/70 border border-accent/15 p-5 flex flex-col">
+      <span className="text-[0.7rem] font-medium uppercase tracking-[0.1em] text-accent mb-2">{feature.eyebrow}</span>
+      <p className="font-display font-semibold text-[1rem] leading-snug text-text-primary m-0 mb-2">{feature.title}</p>
+      <p className="text-[0.83rem] leading-relaxed text-text-secondary m-0 mb-4">{feature.body}</p>
+      <div className="mt-auto">
+        {feature.cta.href ? (
+          <a href={feature.cta.href} className={ctaCls}>
+            {feature.cta.label}
+            <Icon name="chevron" size={13} />
+          </a>
+        ) : (
+          <Link to={feature.cta.to} onClick={onNavigate} className={ctaCls}>
+            {feature.cta.label}
+            <Icon name="chevron" size={13} />
+          </Link>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function Navbar() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   const [open, setOpen] = useState(null) // desktop mega menu key
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSection, setMobileSection] = useState(null)
+  const [scrolled, setScrolled] = useState(false)
   const closeTimer = useRef(null)
+  const headerRef = useRef(null)
+  const triggerRefs = useRef({})
 
   // Close everything on route change.
   useEffect(() => {
     setOpen(null)
     setMobileOpen(false)
     setMobileSection(null)
-  }, [pathname])
+  }, [pathname, hash])
 
   useEffect(() => () => clearTimeout(closeTimer.current), [])
+
+  // Solid/blurred header once scrolled.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Escape + click outside close the desktop panel.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      if (open) {
+        triggerRefs.current[open]?.focus()
+        setOpen(null)
+      }
+      setMobileOpen(false)
+    }
+    const onDown = (e) => {
+      if (headerRef.current && !headerRef.current.contains(e.target)) setOpen(null)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onDown)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onDown)
+    }
+  }, [open])
+
+  // Lock body scroll while the mobile sheet is open.
+  useEffect(() => {
+    if (!mobileOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [mobileOpen])
 
   const enter = (key) => {
     clearTimeout(closeTimer.current)
@@ -151,22 +291,40 @@ export default function Navbar() {
   }
   const scheduleClose = () => {
     clearTimeout(closeTimer.current)
-    closeTimer.current = setTimeout(() => setOpen(null), 120)
+    closeTimer.current = setTimeout(() => setOpen(null), 140)
   }
 
   const activeMenu = menus.find((m) => m.key === open)
+  const isRouteActive = (menu) =>
+    menu.columns.some((c) => c.items.some((i) => i.to && i.to !== '/' && pathname.startsWith(i.to.split('#')[0])))
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-border">
-      <nav className="max-w-[1280px] mx-auto px-6 h-[72px] flex items-center gap-8">
+    <>
+    <header
+      ref={headerRef}
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled || open || mobileOpen
+          ? 'bg-white/90 backdrop-blur-xl border-b border-border shadow-[0_6px_24px_-18px_rgba(14,26,18,0.5)]'
+          : 'bg-white border-b border-transparent'
+      }`}
+    >
+      <nav
+        className={`max-w-[1280px] mx-auto px-5 md:px-6 flex items-center gap-6 transition-[height] duration-300 ${
+          scrolled ? 'h-[64px]' : 'h-[76px]'
+        }`}
+        aria-label="Main"
+      >
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 no-underline hover:no-underline shrink-0">
+        <Link
+          to="/"
+          className="group flex items-center gap-2.5 no-underline hover:no-underline shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        >
           <img
             src="/webrabbitmedia-logo-green.jpeg"
             alt="Web Rabbit Media logo"
             width="34"
             height="34"
-            className="rounded-full"
+            className="rounded-full ring-1 ring-border transition-transform duration-300 group-hover:scale-105"
           />
           <span className="font-display font-bold text-[1.05rem] tracking-[-0.01em] text-text-primary">
             Web Rabbit
@@ -174,44 +332,65 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop menu triggers */}
-        <div className="hidden lg:flex items-center gap-1 h-full">
-          {menus.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onMouseEnter={() => enter(m.key)}
-              onMouseLeave={scheduleClose}
-              onClick={() => setOpen(open === m.key ? null : m.key)}
-              aria-expanded={open === m.key}
-              className={`relative h-full px-4 text-[0.95rem] font-medium transition-colors ${
-                open === m.key ? 'text-accent' : 'text-text-primary hover:text-accent'
-              }`}
-            >
-              {m.label}
-              <span
-                className={`absolute left-3 right-3 bottom-0 h-[3px] rounded-t bg-accent transition-opacity ${
-                  open === m.key ? 'opacity-100' : 'opacity-0'
+        <div className="hidden lg:flex items-center gap-0.5 h-full">
+          {menus.map((m) => {
+            const isOpen = open === m.key
+            const active = isOpen || isRouteActive(m)
+            return (
+              <button
+                key={m.key}
+                ref={(el) => {
+                  triggerRefs.current[m.key] = el
+                }}
+                type="button"
+                onMouseEnter={() => enter(m.key)}
+                onMouseLeave={scheduleClose}
+                onFocus={() => enter(m.key)}
+                onClick={() => setOpen(isOpen ? null : m.key)}
+                aria-expanded={isOpen}
+                aria-controls={`megamenu-${m.key}`}
+                className={`relative h-full px-3.5 inline-flex items-center gap-1 text-[0.94rem] font-medium transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                  active ? 'text-accent' : 'text-text-primary hover:text-accent'
                 }`}
-              />
-            </button>
-          ))}
+              >
+                {m.label}
+                <Icon
+                  name="chevron"
+                  size={12}
+                  className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : 'rotate-0 opacity-60'}`}
+                />
+                <span
+                  className={`absolute left-3 right-3 bottom-0 h-[3px] rounded-t bg-accent origin-left transition-transform duration-300 ${
+                    isOpen ? 'scale-x-100' : 'scale-x-0'
+                  }`}
+                />
+              </button>
+            )
+          })}
         </div>
 
         <div className="flex-1" />
 
         {/* Right side */}
-        <div className="hidden lg:flex items-center gap-5 shrink-0">
+        <div className="hidden lg:flex items-center gap-2 shrink-0">
+          <Link
+            to="/docs"
+            className="text-[0.92rem] font-medium text-text-secondary px-3 py-2 rounded-lg no-underline hover:no-underline hover:text-text-primary hover:bg-surface-raised transition-colors"
+          >
+            Docs
+          </Link>
           <Link
             to="/auth"
-            className="text-[0.95rem] font-medium text-accent no-underline hover:no-underline hover:text-accent-dim"
+            className="text-[0.92rem] font-medium text-text-primary px-3 py-2 rounded-lg no-underline hover:no-underline hover:text-accent transition-colors"
           >
             Log in
           </Link>
           <Link
             to="/auth"
-            className="text-[0.95rem] font-medium text-white bg-accent px-5 py-2.5 rounded-lg no-underline hover:no-underline hover:bg-accent-dim transition-colors"
+            className="group inline-flex items-center gap-1.5 text-[0.92rem] font-medium text-white bg-accent px-5 py-2.5 rounded-full no-underline hover:no-underline hover:bg-accent-dim transition-all duration-200 shadow-[0_8px_20px_-12px_rgba(14,26,18,0.8)] hover:-translate-y-0.5"
           >
             Get started
+            <Icon name="chevron" size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
         </div>
 
@@ -219,8 +398,9 @@ export default function Navbar() {
         <button
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-text-primary hover:bg-surface-raised"
+          className="lg:hidden ml-auto w-11 h-11 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-text-primary border border-border hover:bg-surface-raised transition-colors"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
         >
           <Icon name={mobileOpen ? 'x' : 'menu'} size={20} />
         </button>
@@ -229,74 +409,117 @@ export default function Navbar() {
       {/* Desktop mega panel */}
       {activeMenu && (
         <div
+          id={`megamenu-${activeMenu.key}`}
           onMouseEnter={() => enter(activeMenu.key)}
           onMouseLeave={scheduleClose}
-          className="hidden lg:block absolute inset-x-0 top-full bg-white border-b border-border shadow-[0_24px_48px_-24px_rgba(14,26,18,0.18)]"
+          className="hidden lg:block absolute inset-x-0 top-full pt-2 px-6 motion-safe:animate-nav-panel"
         >
-          <div className="max-w-[1280px] mx-auto px-6 py-8 grid grid-cols-3 gap-8">
-            {activeMenu.columns.map((col) => (
-              <div key={col.heading}>
-                <div className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted mb-3 px-3">
-                  {col.heading}
+          <div className="max-w-[1280px] mx-auto rounded-2xl border border-border bg-white shadow-[0_32px_64px_-28px_rgba(14,26,18,0.28)] overflow-hidden">
+            <div className="h-[3px] w-full bg-gradient-to-r from-accent via-accent/40 to-transparent" />
+            <div className="grid grid-cols-[repeat(3,minmax(0,1fr))_320px] gap-6 p-7">
+              {activeMenu.columns.map((col) => (
+                <div key={col.heading}>
+                  <div className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-text-muted mb-2.5 px-3">
+                    {col.heading}
+                  </div>
+                  <div className="space-y-0.5">
+                    {col.items.map((item) => (
+                      <MenuRow key={item.label} item={item} onNavigate={() => setOpen(null)} />
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  {col.items.map((item) => (
-                    <MenuItem key={item.label} item={item} onNavigate={() => setOpen(null)} />
-                  ))}
-                </div>
+              ))}
+              <div className="col-start-4">
+                <FeatureCard feature={activeMenu.feature} onNavigate={() => setOpen(null)} />
               </div>
-            ))}
+            </div>
           </div>
         </div>
       )}
+    </header>
 
-      {/* Mobile panel */}
+    {/* Mobile sheet — portalled so the header's backdrop-blur doesn't trap it */}
+    {createPortal(
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-out ${
-          mobileOpen ? 'max-h-[80vh] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0'
+        className={`lg:hidden fixed inset-0 top-0 z-[60] transition-opacity duration-200 ${
+          mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
+        aria-hidden={!mobileOpen}
       >
-        <div className="border-t border-border px-4 py-4 bg-white">
-          {menus.map((m) => (
-            <div key={m.key} className="border-b border-border-light last:border-0">
-              <button
-                type="button"
-                onClick={() => setMobileSection(mobileSection === m.key ? null : m.key)}
-                aria-expanded={mobileSection === m.key}
-                className="w-full flex items-center justify-between px-2 py-3.5 text-[0.95rem] font-medium text-text-primary"
-              >
-                {m.label}
-                <Icon
-                  name="chevron"
-                  size={14}
-                  className={`text-text-muted transition-transform ${mobileSection === m.key ? 'rotate-90' : ''}`}
-                />
-              </button>
-              {mobileSection === m.key && (
-                <div className="pb-3 space-y-0.5">
-                  {m.columns.flatMap((c) => c.items).map((item) => (
-                    <MenuItem key={item.label} item={item} onNavigate={() => setMobileOpen(false)} />
-                  ))}
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Close menu"
+          onClick={() => setMobileOpen(false)}
+          className="absolute inset-0 w-full bg-black/40"
+        />
+        <div
+          className={`absolute inset-x-0 top-[64px] bottom-0 bg-white flex flex-col transition-transform duration-300 ease-out ${
+            mobileOpen ? 'translate-y-0' : '-translate-y-3'
+          }`}
+        >
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            {menus.map((m) => {
+              const expanded = mobileSection === m.key
+              return (
+                <div key={m.key} className="border-b border-border-light last:border-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileSection(expanded ? null : m.key)}
+                    aria-expanded={expanded}
+                    className="w-full flex items-center justify-between px-2 py-4 min-h-11 text-[0.98rem] font-display font-medium text-text-primary"
+                  >
+                    {m.label}
+                    <Icon
+                      name="chevron"
+                      size={15}
+                      className={`text-text-muted transition-transform duration-200 ${expanded ? 'rotate-90 text-accent' : ''}`}
+                    />
+                  </button>
+                  {expanded && (
+                    <div className="pb-3 space-y-0.5 motion-safe:animate-nav-panel">
+                      {m.columns
+                        .flatMap((c) => c.items)
+                        .map((item) => (
+                          <MenuRow key={item.label} item={item} onNavigate={() => setMobileOpen(false)} />
+                        ))}
+                      <div className="pt-2">
+                        <FeatureCard feature={m.feature} onNavigate={() => setMobileOpen(false)} />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
-          <div className="flex items-center gap-3 px-2 pt-4">
+              )
+            })}
+            <Link
+              to="/docs"
+              onClick={() => setMobileOpen(false)}
+              className="block px-2 py-4 min-h-11 text-[0.98rem] font-display font-medium text-text-primary no-underline hover:no-underline"
+            >
+              Docs
+            </Link>
+          </div>
+
+          <div className="border-t border-border bg-white px-4 py-4 flex items-center gap-3">
             <Link
               to="/auth"
-              className="flex-1 text-center text-[0.95rem] font-medium text-accent border border-accent/40 px-4 py-2.5 rounded-lg no-underline hover:no-underline"
+              onClick={() => setMobileOpen(false)}
+              className="flex-1 text-center text-[0.95rem] font-medium text-accent border border-accent/40 px-4 py-3 rounded-full no-underline hover:no-underline"
             >
               Log in
             </Link>
             <Link
               to="/auth"
-              className="flex-1 text-center text-[0.95rem] font-medium text-white bg-accent px-4 py-2.5 rounded-lg no-underline hover:no-underline"
+              onClick={() => setMobileOpen(false)}
+              className="flex-1 text-center text-[0.95rem] font-medium text-white bg-accent px-4 py-3 rounded-full no-underline hover:no-underline"
             >
               Get started
             </Link>
           </div>
         </div>
-      </div>
-    </header>
+      </div>,
+      document.body
+    )}
+    </>
   )
 }
