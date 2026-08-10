@@ -50,8 +50,8 @@ const inputCls =
 export default function CreateBusiness() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const nextParam = searchParams.get('next') || '/merchant'
-  const nextPath = nextParam.startsWith('/') ? nextParam : '/merchant'
+  const nextParam = searchParams.get('next') || '/welcome?choose=1'
+  const nextPath = nextParam.startsWith('/') ? nextParam : '/welcome?choose=1'
   const { user } = useAuth()
   const [form, setForm] = useState({
     name: '',

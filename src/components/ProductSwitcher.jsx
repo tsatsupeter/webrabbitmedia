@@ -18,6 +18,10 @@ export default function ProductSwitcher() {
   const current = PRODUCTS.find((p) => p.id === currentId) || PRODUCTS[0]
 
   useEffect(() => {
+    if (currentId) setLastProduct(currentId)
+  }, [currentId])
+
+  useEffect(() => {
     function onDoc(e) {
       if (!ref.current?.contains(e.target)) setOpen(false)
     }

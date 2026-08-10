@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
+import ProductSwitcher from '../components/ProductSwitcher'
 import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
 import NotificationsPopover from './components/NotificationsPopover'
@@ -125,6 +126,10 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
       </button>
 
       <h1 className="font-display text-[1.05rem] font-medium text-white truncate">{title}</h1>
+
+      <div className="hidden md:block ml-2">
+        <ProductSwitcher />
+      </div>
 
       <div className="flex-1" />
 
