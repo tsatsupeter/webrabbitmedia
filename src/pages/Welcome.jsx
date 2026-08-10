@@ -1,62 +1,66 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import Icon from '../merchant/Icon'
 import { useAuth } from '../hooks/useAuth'
 import { useBusinesses, setActive } from '../hooks/useBusinesses'
 import { supabase } from '../integrations/supabase/client'
+import { getLastProduct, setLastProduct, PRODUCTS } from '../lib/product'
 
-const SERVICES = [
-  {
-    id: 'payments',
-    icon: 'cash',
-    title: 'Accept payments',
-    desc: 'Collect mobile money, settle payouts and integrate our payments API.',
-    action: 'Set up payments',
-    to: '/auth/create-business?next=/merchant',
-  },
-  {
-    id: 'messaging',
-    icon: 'mail',
-    title: 'Send messages',
-    desc: 'Bulk SMS, OTP, voice and USSD with one shared wallet.',
-    action: 'Set up messaging',
-    to: '/auth/create-business?next=/sms',
-  },
-  {
-    id: 'software',
-    icon: 'code',
-    title: 'Build custom software',
-    desc: 'Websites, internal tools, integrations and automation built by our team.',
-    action: 'Talk to our team',
-    href: 'mailto:hello@webrabbitmedia.com?subject=Custom%20software%20project',
-  },
-]
+function StatusPill({ tone = 'muted', children }) {
+  const tones = {
+    live: 'bg-accent/15 text-accent-bright ring-accent/25',
+    test: 'bg-amber-400/12 text-amber-300 ring-amber-400/25',
+    muted: 'bg-white/[0.06] text-white/50 ring-white/10',
+  }
+  return (
+    <span
+      className={`text-[0.7rem] px-2 py-0.5 rounded-full ring-1 ${tones[tone] || tones.muted}`}
+    >
+      {children}
+    </span>
+  )
+}
 
-function ServiceCard({ s }) {
-  const body = (
-    <>
-      <span className="w-10 h-10 rounded-lg bg-accent/12 ring-1 ring-accent/25 flex items-center justify-center text-accent-bright">
-        <Icon name={s.icon} size={18} />
+function ProductCard({ product, status, tone, action, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group text-left rounded-xl bg-merchant-panel border border-merchant-border p-5 hover:border-accent/40 hover:bg-white/[0.03] transition-colors"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="w-10 h-10 rounded-lg bg-accent/12 ring-1 ring-accent/25 flex items-center justify-center text-accent-bright">
+          <Icon name={product.icon} size={18} />
+        </span>
+        <StatusPill tone={tone}>{status}</StatusPill>
+      </div>
+      <span className="block mt-4 font-display text-[1rem] font-semibold text-white">
+        {product.title}
       </span>
-      <span className="block mt-4 font-display text-[1rem] font-semibold text-white">{s.title}</span>
-      <span className="block mt-1.5 text-[0.85rem] text-white/45 leading-relaxed">{s.desc}</span>
+      <span className="block mt-1.5 text-[0.85rem] text-white/45 leading-relaxed">
+        {product.desc}
+      </span>
       <span className="mt-5 inline-flex items-center gap-1.5 text-[0.83rem] font-medium text-accent-bright">
-        {s.action}
+        {action}
         <Icon name="chevron" size={13} />
       </span>
-    </>
+    </button>
   )
-  const cls =
-    'group block text-left no-underline rounded-xl bg-merchant-panel border border-merchant-border p-5 hover:border-accent/40 hover:bg-white/[0.03] transition-colors'
-  return s.href ? (
-    <a href={s.href} className={cls}>
-      {body}
-    </a>
-  ) : (
-    <Link to={s.to} className={cls}>
-      {body}
-    </Link>
-  )
+}
+
+const META = {
+  payments: {
+    title: 'Payments',
+    desc: 'Collect mobile money, settle payouts and integrate the payments API.',
+  },
+  messaging: {
+    title: 'Messaging',
+    desc: 'Bulk SMS, OTP, voice and USSD from one prepaid wallet.',
+  },
+  software: {
+    title: 'Custom software',
+    desc: 'Websites, internal tools, integrations and automation built by our team.',
+  },
 }
 
 export default function Welcome() {
@@ -64,7 +68,11 @@ export default function Welcome() {
   const [params] = useSearchParams()
   const choose = params.get('choose') === '1'
   const { user } = useAuth()
-  const { businesses, loading } = useBusinesses()
+  const { businesses, active, activeId, loading } = useBusinesses()
+
+  const [senderIds, setSenderIds] = useState([])
+  const [requests, setRequests] = useState([])
+  const [extrasLoading, setExtrasLoading] = useState(true)
 
   const firstName = useMemo(() => {
     const meta = user?.user_metadata || {}
@@ -73,10 +81,41 @@ export default function Welcome() {
     return user?.email ? user.email.split('@')[0] : ''
   }, [user])
 
-  // Returning users with a workspace go straight in unless they asked to choose.
+  // Per-product status for the active workspace.
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    ;(async () => {
+      const [sender, reqs] = await Promise.all([
+        activeId
+          ? supabase.from('sms_sender_ids').select('id, status').eq('business_id', activeId)
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from('software_requests')
+          .select('id, status, project_type')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1),
+      ])
+      if (cancelled) return
+      setSenderIds(sender.data || [])
+      setRequests(reqs.data || [])
+      setExtrasLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user, activeId])
+
+  // Returning users go to the product they last used — but only when they
+  // didn't explicitly ask to see all services, and only once they have a workspace.
   useEffect(() => {
     if (loading || choose) return
-    if (businesses.length > 0) navigate('/merchant', { replace: true })
+    if (businesses.length === 0) return
+    const last = getLastProduct()
+    if (!last) return
+    const target = PRODUCTS.find((p) => p.id === last)
+    if (target) navigate(target.to, { replace: true })
   }, [loading, choose, businesses.length, navigate])
 
   if (!user) return <Navigate to="/auth" replace />
@@ -88,18 +127,64 @@ export default function Welcome() {
 
   async function openWorkspace(id) {
     await setActive(id)
-    navigate('/merchant')
   }
 
-  const showLoader = loading || (!choose && businesses.length > 0)
+  function openProduct(id) {
+    setLastProduct(id)
+    if (id === 'software') return navigate('/welcome/software')
+    if (businesses.length === 0) {
+      return navigate(`/auth/create-business?next=${id === 'messaging' ? '/sms' : '/merchant'}`)
+    }
+    navigate(id === 'messaging' ? '/sms' : '/merchant')
+  }
 
-  if (showLoader) {
+  const hasWorkspace = businesses.length > 0
+  const autoForwarding = !choose && hasWorkspace && Boolean(getLastProduct())
+
+  if (loading || autoForwarding) {
     return (
       <div className="min-h-screen bg-merchant-bg flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-white/15 border-t-accent-bright animate-spin" />
       </div>
     )
   }
+
+  const approvedSender = senderIds.some((s) => s.status === 'approved')
+  const latestRequest = requests[0]
+
+  const cards = [
+    {
+      id: 'payments',
+      product: { ...META.payments, icon: 'cash' },
+      status: !hasWorkspace
+        ? 'Not set up'
+        : active?.status === 'approved'
+          ? 'Live'
+          : 'Test mode',
+      tone: !hasWorkspace ? 'muted' : active?.status === 'approved' ? 'live' : 'test',
+      action: hasWorkspace ? 'Open payments' : 'Set up payments',
+    },
+    {
+      id: 'messaging',
+      product: { ...META.messaging, icon: 'mail' },
+      status: !hasWorkspace
+        ? 'Not set up'
+        : extrasLoading
+          ? '...'
+          : approvedSender
+            ? 'Ready'
+            : 'Sender ID needed',
+      tone: hasWorkspace && approvedSender ? 'live' : hasWorkspace ? 'test' : 'muted',
+      action: hasWorkspace ? 'Open messaging' : 'Set up messaging',
+    },
+    {
+      id: 'software',
+      product: { ...META.software, icon: 'code' },
+      status: extrasLoading ? '...' : latestRequest ? `Request ${latestRequest.status}` : 'No request yet',
+      tone: latestRequest ? 'live' : 'muted',
+      action: latestRequest ? 'View request' : 'Send a brief',
+    },
+  ]
 
   return (
     <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex flex-col">
@@ -133,23 +218,35 @@ export default function Welcome() {
           <h1 className="font-display text-[1.7rem] font-semibold tracking-tight text-white">
             {firstName ? `Welcome, ${firstName}` : 'Welcome to Web Rabbit'}
           </h1>
-          <p className="text-[0.92rem] text-white/50 mt-2 max-w-[60ch] leading-relaxed">
-            Your account works across everything we offer. Choose what you want to start with — you
-            can add the others later from the same account.
+          <p className="text-[0.92rem] text-white/50 mt-2 max-w-[62ch] leading-relaxed">
+            One account, one workspace, every service. Payments and Messaging both run on the same
+            workspace — use one, or use all three at the same time.
           </p>
 
-          {businesses.length > 0 && (
+          {hasWorkspace && (
             <section className="mt-8">
-              <h2 className="text-[0.8rem] uppercase tracking-wider text-white/35 font-medium mb-3">
-                Your workspaces
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[0.8rem] uppercase tracking-wider text-white/35 font-medium">
+                  Your workspaces
+                </h2>
+                <Link
+                  to="/auth/create-business?next=/welcome%3Fchoose%3D1"
+                  className="text-[0.8rem] text-white/50 hover:text-white no-underline"
+                >
+                  + New workspace
+                </Link>
+              </div>
               <div className="space-y-2">
                 {businesses.map((b) => (
                   <button
                     key={b.id}
                     type="button"
                     onClick={() => openWorkspace(b.id)}
-                    className="w-full flex items-center justify-between gap-4 rounded-xl bg-merchant-panel border border-merchant-border px-4 py-3.5 text-left hover:border-accent/40 transition-colors"
+                    className={`w-full flex items-center justify-between gap-4 rounded-xl bg-merchant-panel border px-4 py-3.5 text-left transition-colors ${
+                      b.id === activeId
+                        ? 'border-accent/50'
+                        : 'border-merchant-border hover:border-accent/30'
+                    }`}
                   >
                     <span className="flex items-center gap-3 min-w-0">
                       <span className="w-8 h-8 rounded-lg bg-accent/12 ring-1 ring-accent/25 flex items-center justify-center text-accent-bright text-[0.8rem] font-semibold">
@@ -162,7 +259,11 @@ export default function Welcome() {
                         </span>
                       </span>
                     </span>
-                    <Icon name="chevron" size={14} className="text-white/30" />
+                    {b.id === activeId ? (
+                      <StatusPill tone="live">Selected</StatusPill>
+                    ) : (
+                      <span className="text-[0.78rem] text-white/40">Select</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -171,23 +272,34 @@ export default function Welcome() {
 
           <section className="mt-10">
             <h2 className="text-[0.8rem] uppercase tracking-wider text-white/35 font-medium mb-3">
-              {businesses.length > 0 ? 'Add another service' : 'What do you want to do first?'}
+              {hasWorkspace
+                ? `Services${active?.name ? ` for ${active.name}` : ''}`
+                : 'What do you want to do first?'}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {SERVICES.map((s) => (
-                <ServiceCard key={s.id} s={s} />
+              {cards.map((c) => (
+                <ProductCard
+                  key={c.id}
+                  product={c.product}
+                  status={c.status}
+                  tone={c.tone}
+                  action={c.action}
+                  onOpen={() => openProduct(c.id)}
+                />
               ))}
             </div>
+            {!hasWorkspace && (
+              <p className="text-[0.82rem] text-white/40 mt-4">
+                Payments and Messaging share one workspace — set it up once and both unlock.
+              </p>
+            )}
           </section>
 
           <p className="text-[0.83rem] text-white/40 mt-10">
             Not sure where to start?{' '}
-            <a
-              href="mailto:hello@webrabbitmedia.com"
-              className="text-white hover:text-accent-bright no-underline"
-            >
+            <Link to="/welcome/software" className="text-white hover:text-accent-bright no-underline">
               Talk to our team
-            </a>{' '}
+            </Link>{' '}
             or read the{' '}
             <Link to="/docs" className="text-white hover:text-accent-bright no-underline">
               documentation
