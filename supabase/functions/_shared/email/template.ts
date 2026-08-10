@@ -66,6 +66,7 @@ type Content = {
   pill: Pill
   hero?: { amount: string; caption: string }
   quote?: string
+  bullets?: { title: string; items: string[] }
   rows: Row[]
   lines?: LineItem[]
   cta?: { label: string; href: string }
@@ -168,19 +169,28 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
     }
     case 'business_approved':
       return {
-        subject: `${businessName} is approved for live payments`,
-        preheader: 'Live payments and payouts are now enabled.',
-        headline: "You're approved for live mode",
-        intro: `Good news — ${businessName} has been approved. You can now switch to Live mode and start accepting real payments and withdrawing to your bank.`,
+        subject: `Congratulations! Live Payments Are Now Enabled on Your ${BRAND.name} Account`,
+        preheader: `You're live — ${businessName} can now accept real payments.`,
+        headline: 'Congratulations! Live Payments Are Now Enabled',
+        intro: `You're live! Live payments have been successfully enabled for your business ${businessName}. You can now start accepting live customer payments and process transactions from your dashboard.`,
         pill: { label: 'Approved', tone: 'success' },
+        bullets: {
+          title: 'What you can do now',
+          items: [
+            'Accept live payments from customers',
+            'Collect payments via mobile money and card, and pay out to your bank or wallet',
+            'Track transactions, customers and revenue from your dashboard',
+          ],
+        },
         rows: [
           { label: 'Business', value: businessName },
-          { label: 'Status', value: 'Approved for live mode' },
-          { label: 'Date', value: fmtDate() },
+          { label: 'Status', value: 'Live payments enabled' },
+          { label: 'Date approved', value: fmtDate() },
         ],
-        cta: { label: 'Open dashboard', href: BRAND.dashboard },
-        outro: 'Your test-mode data stays untouched — the two environments are fully isolated.',
+        cta: { label: 'Go to Dashboard', href: BRAND.dashboard },
+        outro: `If you have questions or need help going live smoothly, our team is here for you at ${BRAND.replyTo}. Your test-mode data stays untouched — the two environments are fully isolated.`,
       }
+
     case 'verification_submitted': {
       const step = String(d.step || 'verification')
       const stepLabel = step.replace(/_/g, ' ')
@@ -291,6 +301,20 @@ function linesHtml(lines: LineItem[]): string {
   `
 }
 
+function bulletsHtml(b: { title: string; items: string[] }): string {
+  return `
+    <div style="background:#fafafa;border:1px solid ${BRAND.border};border-radius:10px;padding:16px 18px;margin:0 0 18px;">
+      <div style="font-size:12px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${esc(b.title)}</div>
+      ${b.items.map((i) => `
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 6px;"><tr>
+          <td style="vertical-align:top;padding-right:8px;color:${BRAND.success};font-size:14px;line-height:1.55;">&bull;</td>
+          <td style="font-size:14px;line-height:1.55;color:${BRAND.ink};">${esc(i)}</td>
+        </tr></table>
+      `).join('')}
+    </div>
+  `
+}
+
 function renderHtml(c: Content, recipient: { name?: string }): string {
   const greeting = recipient.name ? `Hi ${esc(recipient.name.split(' ')[0])},` : 'Hi there,'
   return `<!doctype html>
@@ -324,6 +348,7 @@ function renderHtml(c: Content, recipient: { name?: string }): string {
             <div style="font-size:14px;line-height:1.55;color:${BRAND.ink};">${esc(c.quote)}</div>
           </div>
         ` : ''}
+        ${c.bullets ? bulletsHtml(c.bullets) : ''}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.border};">
           ${rowsHtml(c.rows)}
         </table>
@@ -353,7 +378,8 @@ function renderText(c: Content, recipient: { name?: string }): string {
   const outro = c.outro ? `\n\n${c.outro}` : ''
   const hero = c.hero ? `\n${c.hero.amount} ${c.hero.caption}\n` : ''
   const quote = c.quote ? `\nReason: ${c.quote}\n` : ''
-  return `${greeting}\n\n${c.intro}\n${hero}${quote}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
+  const bullets = c.bullets ? `\n${c.bullets.title}\n${c.bullets.items.map((i) => `- ${i}`).join('\n')}\n` : ''
+  return `${greeting}\n\n${c.intro}\n${hero}${quote}${bullets}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
 }
 
 export type RenderedEmail = {
