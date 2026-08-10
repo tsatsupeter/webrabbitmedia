@@ -384,32 +384,31 @@ export default function Home() {
               </div>
             </ScrollReveal>
             <ScrollReveal delay={100}>
-              <span className="text-accent font-medium text-[0.8rem] uppercase tracking-[0.08em] mb-3 block">For developers</span>
+              <span className="text-accent font-medium text-[0.8rem] uppercase tracking-[0.08em] mb-3 block">Custom software solutions</span>
               <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-5">
-                Stuck on a backend? We help you implement it.
+                Bring your business online with software built for you
               </h2>
               <p className="text-text-secondary text-[1rem] leading-relaxed mb-7">
-                From auth and payments to webhooks, databases, automation and bots, we work alongside
-                developers to ship production-ready backends — faster, and without guesswork.
+                We build websites, custom tools, web apps, and automation that fit how you work. Tell us what you need — we design, build, and launch it with you.
               </p>
 
               <ol className="list-none p-0 m-0 mb-7 space-y-5">
                 {[
                   {
-                    t: 'Tell us what\u2019s blocking you',
-                    d: 'Payments, auth, webhooks, data models or a bot — share the problem and the stack you\u2019re on.',
+                    t: 'Tell us what you need',
+                    d: 'A website, custom software, internal tools, or automation — share your idea and the problem it solves.',
                   },
                   {
-                    t: 'Architecture call',
-                    d: 'We map the endpoints, schema and integration path, then agree on scope and timeline.',
+                    t: 'Design & scope',
+                    d: 'We plan the UI, architecture, and timeline together so the build matches your business.',
                   },
                   {
-                    t: 'We implement with you',
-                    d: 'Working code, sandbox API keys and real test transactions — reviewed together as we go.',
+                    t: 'Build & iterate',
+                    d: 'Working prototypes, real reviews, and steady progress — no surprises, no black boxes.',
                   },
                   {
-                    t: 'Ship and monitor',
-                    d: 'Go live with verified webhooks, dashboards and alerts so you know it keeps working.',
+                    t: 'Launch & support',
+                    d: 'We ship the final product and stay around for updates, hosting, and improvements.',
                   },
                 ].map((s, i, arr) => (
                   <li key={s.t} className="relative flex gap-4">
@@ -431,11 +430,12 @@ export default function Home() {
 
               <ul className="flex flex-wrap gap-2 list-none p-0 mb-7">
                 {[
-                  'Backend integration',
+                  'Website development',
+                  'Custom web apps',
+                  'Internal tools',
+                  'Mobile apps',
                   'Automation & workflows',
-                  'Bots (WhatsApp, Telegram, SMS)',
-                  'API & webhook debugging',
-                  'Faster time-to-live',
+                  'API integrations',
                 ].map((c) => (
                   <li
                     key={c}
@@ -448,13 +448,14 @@ export default function Home() {
 
               <div className="flex flex-wrap gap-3">
                 <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-display font-medium text-white bg-accent px-5 py-2.5 text-sm rounded-full no-underline hover:bg-accent-dim transition-colors">
-                  Talk to a developer
+                  Start your project
                 </a>
                 <Link to="/docs" className="inline-flex items-center font-display font-medium text-text-primary border border-border px-5 py-2.5 text-sm rounded-full no-underline hover:bg-surface-raised transition-colors">
                   Read the docs
                 </Link>
               </div>
             </ScrollReveal>
+
           </div>
         </div>
       </section>
