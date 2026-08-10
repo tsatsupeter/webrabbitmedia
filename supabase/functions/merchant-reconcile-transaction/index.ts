@@ -1,10 +1,12 @@
-// Merchant-side reconciliation. Pending rows are queried live against 360Pay's
-// synchronous status-check endpoint and settled through the same write path the
-// callback uses; rows the provider still reports as pending are left alone.
+// Merchant-side reconciliation. Pending rows are queried live against the
+// assigned gateway's synchronous status endpoint and settled through the same
+// write path the callback uses; rows the provider still reports as pending are
+// left alone.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
-import { statusCheck } from '../_shared/liberte.ts'
+import { gatewayFor, gatewayLabel, statusCheck } from '../_shared/gateway.ts'
 import { settleCollection } from '../_shared/settlement.ts'
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
