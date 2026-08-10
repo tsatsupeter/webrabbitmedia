@@ -301,6 +301,20 @@ function linesHtml(lines: LineItem[]): string {
   `
 }
 
+function bulletsHtml(b: { title: string; items: string[] }): string {
+  return `
+    <div style="background:#fafafa;border:1px solid ${BRAND.border};border-radius:10px;padding:16px 18px;margin:0 0 18px;">
+      <div style="font-size:12px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${esc(b.title)}</div>
+      ${b.items.map((i) => `
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 6px;"><tr>
+          <td style="vertical-align:top;padding-right:8px;color:${BRAND.success};font-size:14px;line-height:1.55;">&bull;</td>
+          <td style="font-size:14px;line-height:1.55;color:${BRAND.ink};">${esc(i)}</td>
+        </tr></table>
+      `).join('')}
+    </div>
+  `
+}
+
 function renderHtml(c: Content, recipient: { name?: string }): string {
   const greeting = recipient.name ? `Hi ${esc(recipient.name.split(' ')[0])},` : 'Hi there,'
   return `<!doctype html>
