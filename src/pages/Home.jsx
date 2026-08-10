@@ -622,10 +622,11 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="relative p-7 md:p-10">
-                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Full-stack engineering</span>
+                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Custom software & apps</span>
                   <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
-                    Software & Apps
+                    Web & Mobile Apps
                   </h3>
+
                   <div className="flex flex-wrap gap-2.5">
                     <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                       Get started
