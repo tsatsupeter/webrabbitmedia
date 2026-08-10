@@ -377,28 +377,18 @@ export default function Home() {
       <section>
         <div className="max-w-[1200px] mx-auto px-6 py-5">
           <ScrollReveal>
-            <div className="relative bg-[#0e1520] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
-              <div className="absolute inset-0" aria-hidden="true">
-                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-                  {/* Phone frames */}
-                  <rect x="180" y="50" width="160" height="320" rx="28" fill="white" opacity="0.04" stroke="white" strokeWidth="1" />
-                  <rect x="198" y="75" width="124" height="250" rx="6" fill="white" opacity="0.03" />
-                  <rect x="230" y="62" width="60" height="6" rx="3" fill="white" opacity="0.08" />
-                  {/* USSD menu lines */}
-                  <rect x="210" y="100" width="60" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
-                  <rect x="210" y="120" width="90" height="5" rx="2.5" fill="white" opacity="0.08" />
-                  <rect x="210" y="140" width="80" height="5" rx="2.5" fill="white" opacity="0.06" />
-                  <rect x="210" y="160" width="85" height="5" rx="2.5" fill="white" opacity="0.06" />
-                  <rect x="210" y="180" width="70" height="5" rx="2.5" fill="white" opacity="0.06" />
-                  <rect x="210" y="210" width="100" height="32" rx="8" fill="var(--color-accent)" opacity="0.15" />
-                  <rect x="420" y="80" width="420" height="280" rx="16" fill="white" opacity="0.04" />
-                  <rect x="440" y="110" width="180" height="18" rx="6" fill="var(--color-accent-bright)" opacity="0.2" />
-                  <rect x="440" y="145" width="300" height="10" rx="5" fill="white" opacity="0.06" />
-                  <rect x="440" y="165" width="240" height="10" rx="5" fill="white" opacity="0.04" />
-                  <rect x="440" y="210" width="120" height="40" rx="10" fill="var(--color-accent)" opacity="0.25" />
-                  <rect x="580" y="210" width="120" height="40" rx="10" fill="white" opacity="0.06" />
-                </svg>
-              </div>
+            <div className="relative bg-surface-dark rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
+              <img
+                src={showcaseUssd}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                width={1280}
+                height={720}
+                className="absolute inset-0 w-full h-full object-cover object-[75%_center] opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/80 to-transparent" aria-hidden="true" />
               <div className="relative p-8 md:p-12 max-w-[500px]">
                 <span className="text-white/50 text-sm font-medium mb-2 block">Payments everywhere</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
