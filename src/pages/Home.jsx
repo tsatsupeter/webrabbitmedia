@@ -220,7 +220,7 @@ export default function Home() {
 
 
       {/* ═══ WHAT WE PROVIDE — horizontal service strip ═══ */}
-      <section className="border-b border-border bg-surface">
+      <section id="services" className="border-b border-border bg-surface scroll-mt-20">
         <div className="max-w-[1200px] mx-auto px-6 py-10">
           <ScrollReveal>
             <h2 className="font-display font-bold text-[1.25rem] tracking-[-0.02em] text-text-primary text-center mb-6">
