@@ -100,14 +100,14 @@ export default function Settings() {
 
       <Card>
         <CardHeader
-          title="Commission per merchant"
+          title="Commission & gateway per merchant"
           subtitle={isAdmin ? 'Changes apply to new transactions only' : 'Read-only — admin role required to change rates'}
           action={<input className={`${inputClass} w-56`} placeholder="Search merchant" value={q} onChange={(e) => setQ(e.target.value)} />}
         />
         {rows.length === 0 ? (
           <EmptyState icon="store" title="No merchants" />
         ) : (
-          <Table head={['Merchant', 'Status', 'Commission %', 'Updated', '']}>
+          <Table head={['Merchant', 'Status', 'Commission %', 'Gateway', 'Updated', '']}>
             <tbody>
               {rows.map((r) => {
                 const value = edits[r.id] ?? String(r.bps / 100)
@@ -127,7 +127,18 @@ export default function Settings() {
                         onChange={(e) => setEdits((s) => ({ ...s, [r.id]: e.target.value }))}
                       />
                     </Cell>
+                    <Cell>
+                      <select
+                        className={`${inputClass} w-32 h-8`}
+                        disabled={!isAdmin || busy === r.id}
+                        value={r.gateway}
+                        onChange={(e) => saveGateway(r, e.target.value)}
+                      >
+                        {GATEWAYS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+                      </select>
+                    </Cell>
                     <Cell className="text-white/55">{r.setting ? fmtDate(r.setting.updated_at) : 'default'}</Cell>
+
                     <Cell className="text-right">
                       <Button size="sm" variant="ghost" disabled={!isAdmin || !dirty || busy === r.id} onClick={() => save(r)}>
                         <Icon name="check" size={14} /> Save
