@@ -348,6 +348,7 @@ function renderHtml(c: Content, recipient: { name?: string }): string {
             <div style="font-size:14px;line-height:1.55;color:${BRAND.ink};">${esc(c.quote)}</div>
           </div>
         ` : ''}
+        ${c.bullets ? bulletsHtml(c.bullets) : ''}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.border};">
           ${rowsHtml(c.rows)}
         </table>
