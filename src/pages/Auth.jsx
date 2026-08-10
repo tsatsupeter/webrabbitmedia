@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { toast } from 'sonner'
 import Icon from '../merchant/Icon'
+import AuthShell from '../components/auth/AuthShell'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
 
@@ -139,30 +140,48 @@ export default function Auth() {
   const isSignup = mode === 'signup'
 
   return (
-    <div className="min-h-screen w-full bg-merchant-bg text-white font-body flex flex-col">
-      <main className="flex-1 flex items-center justify-center px-5 py-12">
-        <div className="w-full max-w-[420px]">
-          <div className="flex justify-center mb-6">
-            <div className="w-14 h-14 rounded-full bg-accent/15 ring-1 ring-accent/40 flex items-center justify-center overflow-hidden">
-              <img src="/webrabbitmedia-logo-green.jpeg" alt="Web Rabbit" width="42" height="42" className="rounded-full" />
-            </div>
-          </div>
-
-          <h1 className="font-display text-[1.5rem] font-semibold text-white text-center tracking-tight">
-            {isSignup ? 'Get Started with Web Rabbit' : 'Sign in to Web Rabbit'}
-          </h1>
-          <p className="text-center text-[0.9rem] text-white/50 mt-2 mb-8">
-            {isSignup ? (
-              <>Already have an account?{' '}
-                <button type="button" onClick={() => switchMode('login')} className="text-white font-medium hover:text-accent-bright">Login</button>
-              </>
-            ) : (
-              <>Don't have an account?{' '}
-                <button type="button" onClick={() => switchMode('signup')} className="text-white font-medium hover:text-accent-bright">Sign up</button>
-              </>
-            )}
+    <AuthShell
+      title={isSignup ? 'Create your Web Rabbit account' : 'Sign in to Web Rabbit'}
+      subtitle={
+        isSignup ? (
+          <>
+            One account for payments, messaging and custom software.{' '}
+            <button
+              type="button"
+              onClick={() => switchMode('login')}
+              className="text-white font-medium hover:text-accent-bright"
+            >
+              Already have an account?
+            </button>
+          </>
+        ) : (
+          <>
+            Welcome back.{' '}
+            <button
+              type="button"
+              onClick={() => switchMode('signup')}
+              className="text-white font-medium hover:text-accent-bright"
+            >
+              Don't have an account?
+            </button>
+          </>
+        )
+      }
+      footer={
+        <>
+          <p className="text-[0.8rem] text-white/45 mt-8 leading-relaxed text-center lg:text-left">
+            By {isSignup ? 'signing up' : 'signing in'}, you agree to our{' '}
+            <Link to="/terms" className="underline hover:text-white/80">Terms &amp; Conditions</Link> and{' '}
+            <Link to="/privacy" className="underline hover:text-white/80">Privacy Policy</Link>
           </p>
-
+          <p className="text-[0.85rem] text-white/50 mt-5 text-center lg:text-left">
+            Need help?{' '}
+            <a href="mailto:hello@webrabbitmedia.com" className="text-white font-medium hover:text-accent-bright no-underline">Contact support</a>
+          </p>
+        </>
+      }
+    >
+      <>
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               type="button"
@@ -189,6 +208,7 @@ export default function Auth() {
             <span className="text-[0.8rem] text-white/40">Or</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
+
 
           {step === 'email' && (
             <form
