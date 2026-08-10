@@ -466,32 +466,20 @@ export default function Home() {
 
             {/* Automation & Bots */}
             <ScrollReveal delay={100}>
-              <div className="relative bg-surface-raised rounded-2xl overflow-hidden min-h-[400px] md:min-h-[480px] flex items-end border border-border-light">
-                <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                  <svg viewBox="0 0 400 480" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                    {/* Flow nodes */}
-                    <rect x="60" y="120" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.1" />
-                    <rect x="75" y="138" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
-                    <rect x="75" y="152" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
-                    <rect x="240" y="120" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.1" />
-                    <rect x="255" y="138" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
-                    <rect x="255" y="152" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
-                    <rect x="150" y="240" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.12" />
-                    <rect x="165" y="258" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.3" />
-                    <rect x="165" y="272" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
-                    {/* Connecting lines */}
-                    <path d="M160 150h80" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 4" />
-                    <path d="M200 180v60" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 4" />
-                    {/* Chat bubbles */}
-                    <rect x="80" y="330" width="120" height="42" rx="21" fill="white" opacity="0.06" />
-                    <rect x="110" y="345" width="60" height="5" rx="2.5" fill="white" opacity="0.1" />
-                    <rect x="200" y="380" width="120" height="42" rx="21" fill="var(--color-accent)" opacity="0.15" />
-                    <rect x="230" y="395" width="60" height="5" rx="2.5" fill="var(--color-accent-bright)" opacity="0.3" />
-                  </svg>
-                </div>
+              <div className="relative bg-surface-dark rounded-2xl overflow-hidden min-h-[400px] md:min-h-[480px] flex items-end">
+                <img
+                  src={showcaseAutomation}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  width={1280}
+                  height={720}
+                  className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-90"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
                 <div className="relative p-7 md:p-10">
-                  <span className="text-text-muted text-sm font-medium mb-1.5 block">Put it on autopilot</span>
-                  <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-text-primary mb-4">
+                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Put it on autopilot</span>
+                  <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
                     Automation & Bots
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
