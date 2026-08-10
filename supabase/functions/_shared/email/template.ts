@@ -378,7 +378,8 @@ function renderText(c: Content, recipient: { name?: string }): string {
   const outro = c.outro ? `\n\n${c.outro}` : ''
   const hero = c.hero ? `\n${c.hero.amount} ${c.hero.caption}\n` : ''
   const quote = c.quote ? `\nReason: ${c.quote}\n` : ''
-  return `${greeting}\n\n${c.intro}\n${hero}${quote}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
+  const bullets = c.bullets ? `\n${c.bullets.title}\n${c.bullets.items.map((i) => `- ${i}`).join('\n')}\n` : ''
+  return `${greeting}\n\n${c.intro}\n${hero}${quote}${bullets}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
 }
 
 export type RenderedEmail = {
