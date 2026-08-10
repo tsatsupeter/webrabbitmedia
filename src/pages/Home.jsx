@@ -40,17 +40,18 @@ const HERO_SLIDES = [
   },
   {
     id: 'developers',
-    eyebrow: 'Developer solutions',
-    title: 'Backends, automation and bots — built with you.',
-    body: 'Stuck integrating payments, webhooks or a backend? We work alongside your team with real code, sandbox keys and architecture support until it ships.',
+    eyebrow: 'Custom software solutions',
+    title: 'Need a website, custom software, or business tools? We build it.',
+    body: 'From landing pages and online stores to full-stack apps and internal tools, we build custom software that brings your business online.',
     image: heroDeveloper,
-    imageAlt: 'Developer working on an API dashboard and code editor at a dark desk',
+    imageAlt: 'Team building a custom website and software app on a dark desk',
     overlay: heroApiCard,
     overlayClass: 'right-[6%] top-[24%] w-[330px]',
-    facts: ['REST API & webhooks', 'Sandbox keys', 'Automation & bots', 'Ship in days, not months'],
-    primary: { label: 'Talk to a developer', href: 'mailto:hello@webrabbitmedia.com' },
+    facts: ['Custom websites', 'Web & mobile apps', 'Internal tools', 'Automation & integrations'],
+    primary: { label: 'Start your project', href: 'mailto:hello@webrabbitmedia.com' },
     secondary: { label: 'Read the docs', to: '/docs' },
   },
+
 ]
 
 function HeroCta({ cta, variant }) {
