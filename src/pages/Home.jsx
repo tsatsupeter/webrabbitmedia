@@ -263,12 +263,67 @@ export default function Home() {
               <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-5">
                 Stuck on a backend? We help you implement it.
               </h2>
-              <p className="text-text-secondary text-[1rem] leading-relaxed mb-6">
-                From auth and payments to webhooks and databases, we work alongside developers to ship production-ready backends. Whether you're integrating our payment gateway or building something entirely new, we connect you with the right tools, code, and architecture.
+              <p className="text-text-secondary text-[1rem] leading-relaxed mb-7">
+                From auth and payments to webhooks, databases, automation and bots, we work alongside
+                developers to ship production-ready backends — faster, and without guesswork.
               </p>
+
+              <ol className="list-none p-0 m-0 mb-7 space-y-5">
+                {[
+                  {
+                    t: 'Tell us what\u2019s blocking you',
+                    d: 'Payments, auth, webhooks, data models or a bot — share the problem and the stack you\u2019re on.',
+                  },
+                  {
+                    t: 'Architecture call',
+                    d: 'We map the endpoints, schema and integration path, then agree on scope and timeline.',
+                  },
+                  {
+                    t: 'We implement with you',
+                    d: 'Working code, sandbox API keys and real test transactions — reviewed together as we go.',
+                  },
+                  {
+                    t: 'Ship and monitor',
+                    d: 'Go live with verified webhooks, dashboards and alerts so you know it keeps working.',
+                  },
+                ].map((s, i, arr) => (
+                  <li key={s.t} className="relative flex gap-4">
+                    <div className="relative flex flex-col items-center">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-light text-accent font-display font-semibold text-[0.85rem] flex items-center justify-center">
+                        {i + 1}
+                      </span>
+                      {i < arr.length - 1 && (
+                        <span className="flex-1 w-px bg-border mt-2" aria-hidden="true" />
+                      )}
+                    </div>
+                    <div className="pb-1">
+                      <p className="font-display font-semibold text-text-primary text-[0.98rem] mb-1">{s.t}</p>
+                      <p className="text-text-secondary text-[0.9rem] leading-relaxed m-0">{s.d}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <ul className="flex flex-wrap gap-2 list-none p-0 mb-7">
+                {[
+                  'Backend integration',
+                  'Automation & workflows',
+                  'Bots (WhatsApp, Telegram, SMS)',
+                  'API & webhook debugging',
+                  'Faster time-to-live',
+                ].map((c) => (
+                  <li
+                    key={c}
+                    className="rounded-full border border-border bg-surface px-3 py-1.5 text-[0.78rem] text-text-secondary"
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+
               <div className="flex flex-wrap gap-3">
                 <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-display font-medium text-white bg-accent px-5 py-2.5 text-sm rounded-full no-underline hover:bg-accent-dim transition-colors">
-                  Talk to us
+                  Talk to a developer
                 </a>
                 <Link to="/docs" className="inline-flex items-center font-display font-medium text-text-primary border border-border px-5 py-2.5 text-sm rounded-full no-underline hover:bg-surface-raised transition-colors">
                   Read the docs
