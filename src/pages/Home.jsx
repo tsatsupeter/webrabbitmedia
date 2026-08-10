@@ -334,7 +334,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ FOR DEVELOPERS — we help you ship backends ═══ */}
+      {/* ═══ CUSTOM SOFTWARE SOLUTIONS — we build websites, apps & tools ═══ */}
       <section className="bg-surface-raised border-b border-border">
         <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-24">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
