@@ -66,6 +66,7 @@ type Content = {
   pill: Pill
   hero?: { amount: string; caption: string }
   quote?: string
+  bullets?: { title: string; items: string[] }
   rows: Row[]
   lines?: LineItem[]
   cta?: { label: string; href: string }
