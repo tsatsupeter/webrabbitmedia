@@ -95,68 +95,191 @@ export default function Home() {
         />
       </section>
 
-
-      {/* ═══ SERVICE CATEGORY CARDS — icon row like Meta Store categories ═══ */}
-      <section className="border-b border-border">
-        <div className="max-w-[1200px] mx-auto px-6 py-12">
-          <h2 className="font-display font-bold text-[1.25rem] tracking-[-0.02em] text-text-primary text-center mb-8">
-            What we're into
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              {
-                label: "SaaS & Startups",
-                icon: (
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="7" width="30" height="22" rx="3" />
-                    <line x1="5" y1="13" x2="35" y2="13" />
-                    <line x1="15" y1="33" x2="25" y2="33" />
-                    <line x1="20" y1="29" x2="20" y2="33" />
-                  </svg>
-                ),
-              },
-              {
-                label: "AI & Dev Tools",
-                icon: (
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="12,13 5,20 12,27" />
-                    <polyline points="28,13 35,20 28,27" />
-                    <line x1="22" y1="10" x2="18" y2="30" />
-                  </svg>
-                ),
-              },
-              {
-                label: "Full-Stack",
-                icon: (
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="11" y="4" width="18" height="32" rx="4" />
-                    <line x1="11" y1="9" x2="29" y2="9" />
-                    <line x1="11" y1="31" x2="29" y2="31" />
-                    <circle cx="20" cy="34" r="1" fill="var(--color-accent)" />
-                  </svg>
-                ),
-              },
-              {
-                label: "Growth",
-                icon: (
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 20V32H14V20" />
-                    <path d="M17 14V32H23V14" />
-                    <path d="M26 8V32H32V8" />
-                  </svg>
-                ),
-              },
-            ].map((s, i) => (
-              <div key={i} className="bg-surface-raised rounded-xl p-6 flex flex-col items-center gap-3 border border-transparent hover:border-border transition-colors duration-150">
-                {s.icon}
-                <span className="font-display font-medium text-text-primary text-[0.9rem]">{s.label}</span>
-              </div>
-            ))}
+      {/* ═══ WHAT WE PROVIDE — horizontal service strip ═══ */}
+      <section className="border-b border-border bg-surface">
+        <div className="max-w-[1200px] mx-auto px-6 py-10">
+          <ScrollReveal>
+            <h2 className="font-display font-bold text-[1.25rem] tracking-[-0.02em] text-text-primary text-center mb-6">
+              What we provide
+            </h2>
+          </ScrollReveal>
+          <div className="relative">
+            <div
+              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {[
+                {
+                  label: 'Payment Gateway',
+                  desc: 'Mobile money + cards, GHS settlement',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="6" width="22" height="16" rx="3" />
+                      <line x1="3" y1="11" x2="25" y2="11" />
+                      <circle cx="7" cy="17" r="1" fill="currentColor" />
+                      <circle cx="11" cy="17" r="1" fill="currentColor" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'USSD Payment Apps',
+                  desc: 'No-internet collection for feature phones',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="7" y="3" width="14" height="22" rx="3" />
+                      <line x1="7" y1="8" x2="21" y2="8" />
+                      <circle cx="14" cy="20" r="1" fill="currentColor" />
+                      <path d="M10 13h2M16 13h2M10 17h8" opacity="0.6" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'SaaS & Startups',
+                  desc: 'MVPs, platforms, recurring billing',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="4" y="5" width="20" height="15" rx="3" />
+                      <line x1="4" y1="10" x2="24" y2="10" />
+                      <line x1="11" y1="23" x2="17" y2="23" />
+                      <line x1="14" y1="20" x2="14" y2="23" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'AI & Dev Tools',
+                  desc: 'AI agents, APIs, vibe coding',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9,9 4,14 9,19" />
+                      <polyline points="19,9 24,14 19,19" />
+                      <line x1="16" y1="6" x2="12" y2="22" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Full-Stack Software',
+                  desc: 'Web apps, backends, databases',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="7" y="3" width="14" height="22" rx="3" />
+                      <line x1="7" y1="8" x2="21" y2="8" />
+                      <line x1="7" y1="22" x2="21" y2="22" />
+                      <circle cx="14" cy="24" r="1" fill="currentColor" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Automation & Bots',
+                  desc: 'Workflows, chatbots, integrations',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="4" y="6" width="20" height="16" rx="4" />
+                      <circle cx="10" cy="13" r="1.5" fill="currentColor" />
+                      <circle cx="18" cy="13" r="1.5" fill="currentColor" />
+                      <path d="M10 18h8" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Growth & Marketing',
+                  desc: 'Bulk SMS, campaigns, analytics',
+                  icon: (
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 18v6h4v-6" />
+                      <path d="M12 12v12h4V12" />
+                      <path d="M19 6v18h4V6" />
+                    </svg>
+                  ),
+                },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className="snap-start shrink-0 w-[260px] bg-surface-raised rounded-xl p-5 border border-border-light hover:border-border transition-colors duration-150"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-accent-light flex items-center justify-center text-accent mb-3">
+                    {s.icon}
+                  </div>
+                  <h3 className="font-display font-medium text-text-primary text-[0.95rem] mb-1">{s.label}</h3>
+                  <p className="text-text-secondary text-[0.8rem] leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ═══ SHOWCASE CARD 1 — full-width like Meta product hero ═══ */}
+      {/* ═══ FOR DEVELOPERS — we help you ship backends ═══ */}
+      <section className="bg-surface-raised border-b border-border">
+        <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            <ScrollReveal>
+              <div className="relative bg-surface-dark rounded-2xl overflow-hidden min-h-[320px] md:min-h-[400px] flex items-center justify-center">
+                <div className="absolute inset-0" aria-hidden="true">
+                  <svg viewBox="0 0 600 400" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                    <rect x="60" y="40" width="480" height="300" rx="16" fill="white" opacity="0.04" />
+                    <rect x="60" y="40" width="480" height="32" rx="16" fill="white" opacity="0.05" />
+                    <circle cx="85" cy="56" r="5" fill="#ff5f57" opacity="0.3" />
+                    <circle cx="103" cy="56" r="5" fill="#febc2e" opacity="0.3" />
+                    <circle cx="121" cy="56" r="5" fill="var(--color-accent-bright)" opacity="0.3" />
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+                      <g key={n}>
+                        <text x="80" y={95 + n * 30} fill="white" opacity="0.1" fontSize="12" fontFamily="monospace">
+                          {n + 1}
+                        </text>
+                        <rect
+                          x={105}
+                          y={86 + n * 30}
+                          width={[60, 140, 80, 110, 160, 90, 70, 130][n]}
+                          height="10"
+                          rx="3"
+                          fill="var(--color-accent-bright)"
+                          opacity={[0.2, 0.1, 0.15, 0.08, 0.12, 0.18, 0.25, 0.1][n]}
+                        />
+                      </g>
+                    ))}
+                    <rect x="105" y={86 + 8 * 30} width="8" height="14" rx="1" fill="var(--color-accent-bright)" opacity="0.4">
+                      <animate attributeName="opacity" values="0.4;0;0.4" dur="1.2s" repeatCount="indefinite" />
+                    </rect>
+                    <rect x="420" y="200" width="140" height="100" rx="12" fill="var(--color-accent)" opacity="0.12" />
+                    <rect x="435" y="220" width="90" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.3" />
+                    <rect x="435" y="235" width="70" height="5" rx="2.5" fill="white" opacity="0.1" />
+                    <rect x="435" y="250" width="50" height="8" rx="4" fill="white" opacity="0.08" />
+                  </svg>
+                </div>
+                <div className="relative text-center px-8">
+                  <div className="w-14 h-14 rounded-2xl bg-accent-light flex items-center justify-center mx-auto mb-3">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9,9 4,14 9,19" />
+                      <polyline points="19,9 24,14 19,19" />
+                      <line x1="16" y1="6" x2="12" y2="22" />
+                    </svg>
+                  </div>
+                  <p className="font-display font-medium text-white text-[1rem]">Backend shouldn't be a blocker.</p>
+                </div>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={100}>
+              <span className="text-accent font-medium text-[0.8rem] uppercase tracking-[0.08em] mb-3 block">For developers</span>
+              <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.1] tracking-[-0.03em] text-text-primary mb-5">
+                Stuck on a backend? We help you implement it.
+              </h2>
+              <p className="text-text-secondary text-[1rem] leading-relaxed mb-6">
+                From auth and payments to webhooks and databases, we work alongside developers to ship production-ready backends. Whether you're integrating our payment gateway or building something entirely new, we connect you with the right tools, code, and architecture.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-display font-medium text-white bg-accent px-5 py-2.5 text-sm rounded-full no-underline hover:bg-accent-dim transition-colors">
+                  Talk to us
+                </a>
+                <Link to="/docs" className="inline-flex items-center font-display font-medium text-text-primary border border-border px-5 py-2.5 text-sm rounded-full no-underline hover:bg-surface-raised transition-colors">
+                  Read the docs
+                </Link>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SHOWCASE CARDS — full-width like Meta product hero ═══ */}
       <section>
         <div className="max-w-[1200px] mx-auto px-6 pt-10 pb-5">
           <ScrollReveal>
@@ -250,6 +373,51 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══ SHOWCASE CARD 3 — USSD & Payment Apps ═══ */}
+      <section>
+        <div className="max-w-[1200px] mx-auto px-6 py-5">
+          <ScrollReveal>
+            <div className="relative bg-[#0e1520] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
+              <div className="absolute inset-0" aria-hidden="true">
+                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+                  {/* Phone frames */}
+                  <rect x="180" y="50" width="160" height="320" rx="28" fill="white" opacity="0.04" stroke="white" strokeWidth="1" />
+                  <rect x="198" y="75" width="124" height="250" rx="6" fill="white" opacity="0.03" />
+                  <rect x="230" y="62" width="60" height="6" rx="3" fill="white" opacity="0.08" />
+                  {/* USSD menu lines */}
+                  <rect x="210" y="100" width="60" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
+                  <rect x="210" y="120" width="90" height="5" rx="2.5" fill="white" opacity="0.08" />
+                  <rect x="210" y="140" width="80" height="5" rx="2.5" fill="white" opacity="0.06" />
+                  <rect x="210" y="160" width="85" height="5" rx="2.5" fill="white" opacity="0.06" />
+                  <rect x="210" y="180" width="70" height="5" rx="2.5" fill="white" opacity="0.06" />
+                  <rect x="210" y="210" width="100" height="32" rx="8" fill="var(--color-accent)" opacity="0.15" />
+                  <rect x="420" y="80" width="420" height="280" rx="16" fill="white" opacity="0.04" />
+                  <rect x="440" y="110" width="180" height="18" rx="6" fill="var(--color-accent-bright)" opacity="0.2" />
+                  <rect x="440" y="145" width="300" height="10" rx="5" fill="white" opacity="0.06" />
+                  <rect x="440" y="165" width="240" height="10" rx="5" fill="white" opacity="0.04" />
+                  <rect x="440" y="210" width="120" height="40" rx="10" fill="var(--color-accent)" opacity="0.25" />
+                  <rect x="580" y="210" width="120" height="40" rx="10" fill="white" opacity="0.06" />
+                </svg>
+              </div>
+              <div className="relative p-8 md:p-12 max-w-[500px]">
+                <span className="text-white/50 text-sm font-medium mb-2 block">Payments everywhere</span>
+                <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
+                  USSD & Payment Apps
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
+                    Get started
+                  </a>
+                  <Link to="/about" className="inline-flex items-center font-medium text-white bg-white/10 px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/15 transition-colors">
+                    Learn more
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ═══ SIDE-BY-SIDE CARDS — like Meta's dual product cards ═══ */}
       <section>
         <div className="max-w-[1200px] mx-auto px-6 py-5">
@@ -296,41 +464,41 @@ export default function Home() {
               </div>
             </ScrollReveal>
 
-            {/* Marketing */}
+            {/* Automation & Bots */}
             <ScrollReveal delay={100}>
-              <div className="relative bg-[#1a180e] rounded-2xl overflow-hidden min-h-[400px] md:min-h-[480px] flex items-end">
+              <div className="relative bg-surface-raised rounded-2xl overflow-hidden min-h-[400px] md:min-h-[480px] flex items-end border border-border-light">
                 <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
                   <svg viewBox="0 0 400 480" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                    {/* Dashboard */}
-                    <rect x="50" y="50" width="300" height="220" rx="14" fill="white" opacity="0.04" />
-                    {/* Stats cards */}
-                    <rect x="66" y="66" width="130" height="60" rx="8" fill="white" opacity="0.04" />
-                    <rect x="78" y="78" width="50" height="6" rx="3" fill="white" opacity="0.08" />
-                    <rect x="78" y="92" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
-                    <rect x="78" y="112" width="40" height="5" rx="2.5" fill="var(--color-accent-bright)" opacity="0.15" />
-                    <rect x="206" y="66" width="130" height="60" rx="8" fill="white" opacity="0.04" />
-                    <rect x="218" y="78" width="50" height="6" rx="3" fill="white" opacity="0.08" />
-                    <rect x="218" y="92" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
-                    <rect x="218" y="112" width="30" height="5" rx="2.5" fill="var(--color-accent-bright)" opacity="0.15" />
-                    {/* Chart */}
-                    <polyline points="80,230 120,210 160,218 200,190 240,200 280,175 320,185" stroke="var(--color-accent-bright)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25" fill="none" />
-                    <polygon points="80,230 120,210 160,218 200,190 240,200 280,175 320,185 320,250 80,250" fill="var(--color-accent)" opacity="0.04" />
-                    {/* Donut chart */}
-                    <circle cx="200" cy="370" r="50" fill="none" stroke="white" strokeWidth="12" opacity="0.05" />
-                    <circle cx="200" cy="370" r="50" fill="none" stroke="var(--color-accent-bright)" strokeWidth="12" opacity="0.2" strokeDasharray="110 204" strokeLinecap="round" />
-                    <circle cx="200" cy="370" r="50" fill="none" stroke="white" strokeWidth="12" opacity="0.08" strokeDasharray="60 254" strokeDashoffset="-120" strokeLinecap="round" />
+                    {/* Flow nodes */}
+                    <rect x="60" y="120" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.1" />
+                    <rect x="75" y="138" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
+                    <rect x="75" y="152" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
+                    <rect x="240" y="120" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.1" />
+                    <rect x="255" y="138" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.25" />
+                    <rect x="255" y="152" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
+                    <rect x="150" y="240" width="100" height="60" rx="10" fill="var(--color-accent)" opacity="0.12" />
+                    <rect x="165" y="258" width="55" height="6" rx="3" fill="var(--color-accent-bright)" opacity="0.3" />
+                    <rect x="165" y="272" width="40" height="5" rx="2.5" fill="white" opacity="0.08" />
+                    {/* Connecting lines */}
+                    <path d="M160 150h80" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 4" />
+                    <path d="M200 180v60" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 4" />
+                    {/* Chat bubbles */}
+                    <rect x="80" y="330" width="120" height="42" rx="21" fill="white" opacity="0.06" />
+                    <rect x="110" y="345" width="60" height="5" rx="2.5" fill="white" opacity="0.1" />
+                    <rect x="200" y="380" width="120" height="42" rx="21" fill="var(--color-accent)" opacity="0.15" />
+                    <rect x="230" y="395" width="60" height="5" rx="2.5" fill="var(--color-accent-bright)" opacity="0.3" />
                   </svg>
                 </div>
                 <div className="relative p-7 md:p-10">
-                  <span className="text-white/45 text-sm font-medium mb-1.5 block">Scale what works</span>
-                  <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
-                    Growth & Marketing
+                  <span className="text-text-muted text-sm font-medium mb-1.5 block">Put it on autopilot</span>
+                  <h3 className="font-display font-bold text-[clamp(1.4rem,3vw,2rem)] leading-[1.1] tracking-[-0.02em] text-text-primary mb-4">
+                    Automation & Bots
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
-                    <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
+                    <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-4 py-2 text-sm rounded-full no-underline hover:bg-white/90 transition-colors border border-border">
                       Get started
                     </a>
-                    <Link to="/about" className="inline-flex items-center font-medium text-white bg-white/10 px-4 py-2 text-sm rounded-full no-underline hover:bg-white/15 transition-colors">
+                    <Link to="/about" className="inline-flex items-center font-medium text-text-primary border border-border px-4 py-2 text-sm rounded-full no-underline hover:bg-surface transition-colors">
                       Learn more
                     </Link>
                   </div>
@@ -338,6 +506,54 @@ export default function Home() {
               </div>
             </ScrollReveal>
           </div>
+        </div>
+      </section>
+
+      {/* ═══ SHOWCASE CARD 4 — Growth & Marketing ═══ */}
+      <section>
+        <div className="max-w-[1200px] mx-auto px-6 py-5">
+          <ScrollReveal>
+            <div className="relative bg-[#1a180e] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
+              <div className="absolute inset-0" aria-hidden="true">
+                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+                  {/* Dashboard */}
+                  <rect x="420" y="50" width="500" height="340" rx="16" fill="white" opacity="0.04" />
+                  <rect x="440" y="80" width="130" height="70" rx="10" fill="white" opacity="0.05" />
+                  <rect x="455" y="100" width="50" height="6" rx="3" fill="white" opacity="0.08" />
+                  <rect x="455" y="115" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
+                  <rect x="590" y="80" width="130" height="70" rx="10" fill="white" opacity="0.05" />
+                  <rect x="605" y="100" width="50" height="6" rx="3" fill="white" opacity="0.08" />
+                  <rect x="605" y="115" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
+                  <rect x="740" y="80" width="130" height="70" rx="10" fill="white" opacity="0.05" />
+                  <rect x="755" y="100" width="50" height="6" rx="3" fill="white" opacity="0.08" />
+                  <rect x="755" y="115" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
+                  {/* Chart */}
+                  <polyline points="470,240 530,220 590,225 650,205 710,210 770,195 830,200 890,190" stroke="var(--color-accent-bright)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25" fill="none" />
+                  <polygon points="470,240 530,220 590,225 650,205 710,210 770,195 830,200 890,190 890,280 470,280" fill="var(--color-accent)" opacity="0.04" />
+                  {/* SMS burst */}
+                  <rect x="100" y="120" width="160" height="100" rx="16" fill="var(--color-accent)" opacity="0.1" />
+                  <circle cx="130" cy="155" r="10" fill="var(--color-accent-bright)" opacity="0.25" />
+                  <rect x="150" y="150" width="80" height="6" rx="3" fill="white" opacity="0.2" />
+                  <rect x="150" y="165" width="60" height="5" rx="2.5" fill="white" opacity="0.1" />
+                  <rect x="120" y="190" width="90" height="8" rx="4" fill="white" opacity="0.08" />
+                </svg>
+              </div>
+              <div className="relative p-8 md:p-12 max-w-[500px]">
+                <span className="text-white/50 text-sm font-medium mb-2 block">Scale what works</span>
+                <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
+                  Growth & Marketing
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
+                    Get started
+                  </a>
+                  <Link to="/about" className="inline-flex items-center font-medium text-white bg-white/10 px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/15 transition-colors">
+                    Learn more
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
