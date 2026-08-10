@@ -11,6 +11,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import CreateBusiness from './pages/CreateBusiness'
 import Welcome from './pages/Welcome'
+import SoftwareRequest from './pages/SoftwareRequest'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
 import Verification from './merchant/pages/Verification'
@@ -86,6 +87,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Welcome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/welcome/software"
+          element={
+            <ProtectedRoute>
+              <SoftwareRequest />
             </ProtectedRoute>
           }
         />
