@@ -410,7 +410,7 @@ export default function Navbar() {
           id={`megamenu-${activeMenu.key}`}
           onMouseEnter={() => enter(activeMenu.key)}
           onMouseLeave={scheduleClose}
-          className="hidden lg:block absolute inset-x-0 top-full pt-2 px-6 motion-safe:animate-fade-in"
+          className="hidden lg:block absolute inset-x-0 top-full pt-2 px-6 motion-safe:animate-nav-panel"
         >
           <div className="max-w-[1280px] mx-auto rounded-2xl border border-border bg-white shadow-[0_32px_64px_-28px_rgba(14,26,18,0.28)] overflow-hidden">
             <div className="h-[3px] w-full bg-gradient-to-r from-accent via-accent/40 to-transparent" />
@@ -473,7 +473,7 @@ export default function Navbar() {
                     />
                   </button>
                   {expanded && (
-                    <div className="pb-3 space-y-0.5 motion-safe:animate-fade-in">
+                    <div className="pb-3 space-y-0.5 motion-safe:animate-nav-panel">
                       {m.columns
                         .flatMap((c) => c.items)
                         .map((item) => (
