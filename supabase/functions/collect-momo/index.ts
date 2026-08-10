@@ -1,11 +1,10 @@
-// MoMo collection via 360Pay (LibertePay). Name Verify runs first (mandatory
-// and synchronous), then the asynchronous collection call. The terminal
-// outcome arrives on the liberte-callback webhook.
+// MoMo collection via the business's assigned gateway (360Pay or JuniPay).
+// Name verification runs first (mandatory and synchronous), then the
+// asynchronous collection call. The terminal outcome arrives on the gateway's
+// callback webhook (liberte-callback / junipay-callback).
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError, requireScope } from '../_shared/auth.ts'
-import {
-  collect, resolveInstitutionCode, localMsisdn, mapStatusCode, nameVerify, newReference,
-  normalizeMsisdn, normalizeNetwork, respCode, respMessage,
-} from '../_shared/liberte.ts'
+import { localMsisdn, newReference, normalizeMsisdn, normalizeNetwork } from '../_shared/liberte.ts'
+import { collect, gatewayLabel, verifyMomo } from '../_shared/gateway.ts'
 import { tryClaimIdempotency, completeIdempotency } from '../_shared/idempotency.ts'
 
 Deno.serve(async (req) => {
@@ -14,6 +13,7 @@ Deno.serve(async (req) => {
   try {
     const auth = await authenticateKey(req)
     requireScope(auth, 'write')
+    const gw = auth.gateway
     const meta = {
       'x-wr-mode': auth.key.mode,
       'x-wr-business-id': auth.business.id,
@@ -46,11 +46,10 @@ Deno.serve(async (req) => {
     }
 
     const mode = auth.key.mode
-    const inst = await resolveInstitutionCode(mode, network)
 
     // 1. Name Verify — mandatory before a debit. No transaction is recorded if
     //    the wallet cannot be resolved.
-    const verify = await nameVerify(mode, { account_number: msisdn, institution_code: inst })
+    const verify = await verifyMomo(gw, mode, { msisdn, network })
     if (!verify.ok) {
       const failBody = {
         error: 'account_not_found',
@@ -79,7 +78,7 @@ Deno.serve(async (req) => {
       user_id: auth.business.user_id,
       api_key_id: auth.key.id,
       mode,
-      provider: 'liberte',
+      provider: gw,
       type: 'collection',
       channel: 'momo',
       provider_transaction_id: reference,
@@ -93,35 +92,28 @@ Deno.serve(async (req) => {
       status: 'pending',
     })
 
-    let json: any = null
+    let result: Awaited<ReturnType<typeof collect>> | null = null
     let upstreamErr: Error | null = null
-
     try {
-      const res = await collect(mode, {
-        account_name,
-        account_number: msisdn,
+      result = await collect(gw, mode, {
+        reference,
         amount,
-        institution_code: inst,
-        transaction_id: reference,
-        reference: desc,
-        metadata: { business_id: auth.business.id, reference },
+        msisdn,
+        network,
+        account_name,
+        description: desc,
+        customer_email,
+        businessId: auth.business.id,
       })
-      json = res.json
-      const code = respCode(json)
-      if (!res.ok && res.status !== 202) {
-        upstreamErr = new Error(respMessage(json) || `360Pay error ${res.status}`)
-      } else if (code === '01') {
-        // Provider rejected the debit outright.
-        upstreamErr = null
-      }
+      if (!result.ok) upstreamErr = new Error(result.message || `${gatewayLabel(gw)} error ${result.httpStatus}`)
     } catch (e) {
       upstreamErr = e instanceof Error ? e : new Error(String(e))
     }
 
-    const status = upstreamErr ? 'failed' : mapStatusCode(respCode(json), json?.status)
+    const status = upstreamErr ? 'failed' : (result?.status ?? 'pending')
     const fee = status === 'approved' ? Math.round(amount * (auth.commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
-    const providerTxn = json?.data?.transaction_id ?? null
+    const providerTxn = result?.providerRef ?? null
 
     await db.from('transactions')
       .update({
@@ -129,9 +121,9 @@ Deno.serve(async (req) => {
         fee_amount: fee,
         net_amount: net,
         provider_reference: providerTxn,
-        provider_code: upstreamErr ? 'upstream_error' : respCode(json),
-        provider_reason: upstreamErr ? upstreamErr.message : respMessage(json),
-        raw_response: upstreamErr ? { error: upstreamErr.message, response: json } : json,
+        provider_code: upstreamErr ? 'upstream_error' : result?.code ?? null,
+        provider_reason: upstreamErr ? upstreamErr.message : result?.message ?? null,
+        raw_response: upstreamErr ? { error: upstreamErr.message, response: result?.raw ?? null } : result?.raw ?? null,
       })
       .eq('provider_transaction_id', reference)
       .eq('business_id', auth.business.id)
@@ -151,8 +143,8 @@ Deno.serve(async (req) => {
           transaction_id: reference,
           provider_transaction_id: providerTxn,
           status,
-          code: respCode(json),
-          reason: respMessage(json),
+          code: result?.code ?? null,
+          reason: result?.message ?? null,
           account_name,
           subscriber_number: localMsisdn(msisdn),
           gross_amount: amount,

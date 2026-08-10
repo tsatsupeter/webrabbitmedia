@@ -9,6 +9,11 @@ import { useAdminQuery, useAdminRole, logAdminAction } from '../useAdmin'
 import { fmtDate } from '../lib'
 
 const DEFAULT_BPS = 1500
+const DEFAULT_GATEWAY = 'liberte'
+const GATEWAYS = [
+  { value: 'liberte', label: '360Pay' },
+  { value: 'junipay', label: 'JuniPay' },
+]
 
 async function loadSettings() {
   const [biz, settings] = await Promise.all([
@@ -20,6 +25,7 @@ async function loadSettings() {
     ...b,
     setting: byBiz[b.id] || null,
     bps: byBiz[b.id]?.commission_bps ?? DEFAULT_BPS,
+    gateway: byBiz[b.id]?.gateway ?? DEFAULT_GATEWAY,
   }))
 }
 
@@ -43,7 +49,7 @@ export default function Settings() {
     setBusy(row.id)
     const { error: err } = await supabase
       .from('platform_settings')
-      .upsert({ business_id: row.id, commission_bps: bps }, { onConflict: 'business_id' })
+      .upsert({ business_id: row.id, commission_bps: bps, gateway: row.gateway }, { onConflict: 'business_id' })
     setBusy('')
     if (err) return toast.error(err.message)
     await logAdminAction('commission.updated', 'business', row.id, { commission_bps: bps })
@@ -51,6 +57,20 @@ export default function Settings() {
     setEdits((e) => ({ ...e, [row.id]: undefined }))
     refresh()
   }
+
+  async function saveGateway(row, gateway) {
+    if (gateway === row.gateway) return
+    setBusy(row.id)
+    const { error: err } = await supabase
+      .from('platform_settings')
+      .upsert({ business_id: row.id, commission_bps: row.bps, gateway }, { onConflict: 'business_id' })
+    setBusy('')
+    if (err) return toast.error(err.message)
+    await logAdminAction('gateway.updated', 'business', row.id, { gateway })
+    toast.success(`${row.name} now routes through ${GATEWAYS.find((g) => g.value === gateway)?.label}`)
+    refresh()
+  }
+
 
   if (loading) return <PageLoader label="Loading settings…" />
   if (error) {
@@ -80,14 +100,14 @@ export default function Settings() {
 
       <Card>
         <CardHeader
-          title="Commission per merchant"
+          title="Commission & gateway per merchant"
           subtitle={isAdmin ? 'Changes apply to new transactions only' : 'Read-only — admin role required to change rates'}
           action={<input className={`${inputClass} w-56`} placeholder="Search merchant" value={q} onChange={(e) => setQ(e.target.value)} />}
         />
         {rows.length === 0 ? (
           <EmptyState icon="store" title="No merchants" />
         ) : (
-          <Table head={['Merchant', 'Status', 'Commission %', 'Updated', '']}>
+          <Table head={['Merchant', 'Status', 'Commission %', 'Gateway', 'Updated', '']}>
             <tbody>
               {rows.map((r) => {
                 const value = edits[r.id] ?? String(r.bps / 100)
@@ -107,7 +127,18 @@ export default function Settings() {
                         onChange={(e) => setEdits((s) => ({ ...s, [r.id]: e.target.value }))}
                       />
                     </Cell>
+                    <Cell>
+                      <select
+                        className={`${inputClass} w-32 h-8`}
+                        disabled={!isAdmin || busy === r.id}
+                        value={r.gateway}
+                        onChange={(e) => saveGateway(r, e.target.value)}
+                      >
+                        {GATEWAYS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+                      </select>
+                    </Cell>
                     <Cell className="text-white/55">{r.setting ? fmtDate(r.setting.updated_at) : 'default'}</Cell>
+
                     <Cell className="text-right">
                       <Button size="sm" variant="ghost" disabled={!isAdmin || !dirty || busy === r.id} onClick={() => save(r)}>
                         <Icon name="check" size={14} /> Save

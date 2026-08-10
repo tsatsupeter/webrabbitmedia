@@ -1,10 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import {
-  disburse, disbursementBalance, nameVerify, newReference,
-  normalizeMsisdn, normalizeNetwork, resolveInstitutionCode, mapStatusCode, respCode, respMessage,
-} from '../_shared/liberte.ts'
-import { bankInstitutionCode } from '../_shared/banks.ts'
+import { newReference, normalizeMsisdn, normalizeNetwork } from '../_shared/liberte.ts'
+import { disburse, disbursementBalance, gatewayFor, gatewayLabel, verifyBank, verifyMomo } from '../_shared/gateway.ts'
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -63,9 +61,10 @@ Deno.serve(async (req) => {
   }
 })
 
-// Name-verify -> float check -> disbursement. The terminal outcome arrives on
-// the liberte-callback webhook (or a status-check), so we park the payout in
-// `processing` and store the transaction id we sent as provider_reference.
+// Name-verify -> float check -> disbursement, through the gateway assigned to
+// the business. The terminal outcome arrives on that gateway's callback webhook
+// (or a status-check), so we park the payout in `processing` and store the
+// reference we sent as provider_reference.
 async function runDisbursement(admin: any, payout: any) {
   const mode = payout.mode === 'live' ? 'live' : 'test'
   const amount = Number(payout.net_amount ?? payout.gross_amount)
@@ -80,28 +79,28 @@ async function runDisbursement(admin: any, payout: any) {
     return { ok: false as const, error: 'Payout has no linked bank/wallet account', httpStatus: 400 }
   }
 
-  // MoMo wallets route by network institution code, banks by their routing code.
+  const gw = await gatewayFor(admin, payout.business_id)
+  const label = gatewayLabel(gw)
+
+  // MoMo wallets route by network, banks by their routing (bank) code.
   const network = normalizeNetwork(bank.routing_code || '')
-  let institution_code: string | null
-  let account_number: string
+  let msisdn: string | null = null
+  let account_number: string | null = null
   if (network) {
-    institution_code = await resolveInstitutionCode(mode, network)
-    account_number = normalizeMsisdn(bank.account_number) ?? ''
-    if (!account_number) return { ok: false as const, error: 'Wallet number is not a valid Ghana MSISDN', httpStatus: 400 }
+    msisdn = normalizeMsisdn(bank.account_number)
+    if (!msisdn) return { ok: false as const, error: 'Wallet number is not a valid Ghana MSISDN', httpStatus: 400 }
   } else {
-    institution_code = bankInstitutionCode(bank.routing_code || '')
     account_number = String(bank.account_number).replace(/\s/g, '')
-    if (!institution_code) {
-      return { ok: false as const, error: `No 360Pay institution code for bank "${bank.routing_code}"`, httpStatus: 400 }
-    }
   }
 
-  const verify = await nameVerify(mode, { account_number, institution_code })
+  const verify = network
+    ? await verifyMomo(gw, mode, { msisdn: msisdn!, network })
+    : await verifyBank(gw, mode, { account_number: account_number!, bank_code: bank.routing_code || '' })
   if (!verify.ok) {
     return { ok: false as const, error: `account_not_found: ${verify.reason}`, httpStatus: 422 }
   }
 
-  const balance = await disbursementBalance(mode)
+  const balance = await disbursementBalance(gw, mode)
   if (balance.ok && balance.available != null && balance.available < amount) {
     return {
       ok: false as const,
@@ -111,44 +110,52 @@ async function runDisbursement(admin: any, payout: any) {
   }
 
   const transaction_id = newReference()
-  const res = await disburse(mode, {
-    account_name: verify.account_name,
-    account_number,
+  const res = await disburse(gw, mode, {
+    reference: transaction_id,
     amount,
-    institution_code,
-    transaction_id,
-    reference: payout.name,
-    meta_data: { payout_id: payout.id, business_id: payout.business_id },
+    account_name: verify.account_name,
+    narration: payout.name,
+    network,
+    msisdn,
+    bank_code: network ? null : (bank.routing_code || ''),
+    account_number,
   })
 
-  const code = respCode(res.json)
-  const mapped = mapStatusCode(code, res.json?.status)
-  const message = respMessage(res.json)
+  const { code, message } = res
 
-  if (!res.ok || mapped === 'failed') {
+  if (!res.ok || res.status === 'failed') {
     await admin.from('payouts').update({
       status: 'failed',
       provider_reference: transaction_id,
-      notes: message || 'Disbursement rejected by 360Pay',
+      notes: message || `Disbursement rejected by ${label}`,
     }).eq('id', payout.id)
     await admin.from('transactions').update({ payout_id: null }).eq('payout_id', payout.id)
-    return { ok: false as const, error: `disbursement_failed: ${message || res.status}`, httpStatus: 502 }
+    return { ok: false as const, error: `disbursement_failed: ${message || res.httpStatus}`, httpStatus: 502 }
   }
 
   const patch: Record<string, unknown> = {
     provider_reference: transaction_id,
-    notes: message || 'Disbursement submitted to 360Pay',
-    status: mapped === 'approved' ? 'success' : 'processing',
+    notes: message || `Disbursement submitted to ${label}`,
+    status: res.status === 'approved' ? 'success' : 'processing',
   }
-  if (mapped === 'approved') patch.completed_at = new Date().toISOString()
+  if (res.status === 'approved') patch.completed_at = new Date().toISOString()
 
   const { data: updated } = await admin.from('payouts').update(patch).eq('id', payout.id).select('*').single()
   return {
     ok: true as const,
     payout: updated,
-    detail: { transaction_id, account_name: verify.account_name, code, message, status: patch.status },
+    detail: {
+      transaction_id,
+      gateway: gw,
+      provider_transaction_id: res.providerRef,
+      account_name: verify.account_name,
+      code,
+      message,
+      status: patch.status,
+    },
   }
 }
+
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

@@ -15,6 +15,10 @@ verify_jwt = false
 [functions.liberte-callback]
 verify_jwt = false
 
+[functions.junipay-callback]
+verify_jwt = false
+
+
 [functions.send-email]
 verify_jwt = false
 

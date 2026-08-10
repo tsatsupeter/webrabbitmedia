@@ -1,10 +1,11 @@
 // Transaction status for the public API. Pending rows are checked live against
-// 360Pay's synchronous status-check endpoint before we answer, so merchants
-// polling /v1/transactions/:id are never blocked waiting on a callback.
-// Unknown ids MUST 404 rather than return a synthetic "failed" verdict.
+// the assigned gateway's synchronous status endpoint before we answer, so
+// merchants polling /v1/transactions/:id are never blocked waiting on a
+// callback. Unknown ids MUST 404 rather than return a synthetic verdict.
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
-import { statusCheck } from '../_shared/liberte.ts'
+import { statusCheck } from '../_shared/gateway.ts'
 import { settleCollection } from '../_shared/settlement.ts'
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -30,15 +31,19 @@ Deno.serve(async (req) => {
     let row = existing
     if (row.status === 'pending') {
       try {
-        const check = await statusCheck(auth.key.mode, id)
+        const check = await statusCheck(auth.gateway, auth.key.mode, {
+          reference: id,
+          providerRef: row.provider_reference,
+        })
         if (check.status !== 'pending') {
           await settleCollection(db, row, {
             status: check.status,
             code: check.code,
             reason: check.message,
-            providerTransactionId: check.data?.data?.transaction_id ?? null,
+            providerTransactionId: check.providerTransactionId,
             raw: check.data,
           })
+
           const { data: fresh } = await db.from('transactions').select(cols).eq('id', row.id).maybeSingle()
           if (fresh) row = fresh
         }

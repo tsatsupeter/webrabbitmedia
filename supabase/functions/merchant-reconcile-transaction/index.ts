@@ -1,10 +1,12 @@
-// Merchant-side reconciliation. Pending rows are queried live against 360Pay's
-// synchronous status-check endpoint and settled through the same write path the
-// callback uses; rows the provider still reports as pending are left alone.
+// Merchant-side reconciliation. Pending rows are queried live against the
+// assigned gateway's synchronous status endpoint and settled through the same
+// write path the callback uses; rows the provider still reports as pending are
+// left alone.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
-import { statusCheck } from '../_shared/liberte.ts'
+import { gatewayFor, gatewayLabel, statusCheck } from '../_shared/gateway.ts'
 import { settleCollection } from '../_shared/settlement.ts'
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -44,12 +46,16 @@ Deno.serve(async (req) => {
       })
     }
 
-    const check = await statusCheck(existing.mode as 'test' | 'live', transaction_id)
+    const gw = await gatewayFor(db, existing.business_id)
+    const check = await statusCheck(gw, existing.mode as 'test' | 'live', {
+      reference: transaction_id,
+      providerRef: existing.provider_reference,
+    })
     const result = await settleCollection(db, existing, {
       status: check.status,
       code: check.code,
       reason: check.message,
-      providerTransactionId: check.data?.data?.transaction_id ?? null,
+      providerTransactionId: check.providerTransactionId,
       raw: check.data,
     })
 
@@ -59,9 +65,10 @@ Deno.serve(async (req) => {
       changed: result.changed,
       code: check.code,
       reason: result.status === 'pending'
-        ? (check.message || 'Still processing at 360Pay — awaiting settlement')
+        ? (check.message || `Still processing at ${gatewayLabel(gw)} — awaiting settlement`)
         : check.message,
     })
+
   } catch (e) {
     return handleError(e)
   }
