@@ -130,7 +130,7 @@ function HeroCarousel() {
             <div
               key={s.id}
               aria-hidden={i !== index}
-              inert={i !== index ? '' : undefined}
+              inert={i !== index ? true : undefined}
               className={`col-start-1 row-start-1 max-w-[640px] transition-all duration-500 ${
                 i === index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
               }`}
