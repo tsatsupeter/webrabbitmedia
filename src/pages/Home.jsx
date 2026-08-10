@@ -538,10 +538,11 @@ export default function Home() {
                 </svg>
               </div>
               <div className="relative p-8 md:p-12 max-w-[500px]">
-                <span className="text-white/50 text-sm font-medium mb-2 block">Ship faster with AI</span>
+                <span className="text-white/50 text-sm font-medium mb-2 block">Built to fit your workflow</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                  AI Tools & Vibe Coding
+                  Custom Tools & Integrations
                 </h2>
+
                 <div className="flex flex-wrap gap-3">
                   <a href="mailto:hello@webrabbitmedia.com" className="inline-flex items-center font-medium text-surface-dark bg-white px-5 py-2.5 text-sm rounded-full no-underline hover:bg-white/90 transition-colors">
                     Get started
