@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
@@ -49,6 +49,9 @@ const inputCls =
 
 export default function CreateBusiness() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const nextParam = searchParams.get('next') || '/merchant'
+  const nextPath = nextParam.startsWith('/') ? nextParam : '/merchant'
   const { user } = useAuth()
   const [form, setForm] = useState({
     name: '',
