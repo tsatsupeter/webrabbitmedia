@@ -344,30 +344,7 @@ export default function Auth() {
               </button>
             </form>
           )}
-
-          <p className="text-center text-[0.8rem] text-white/45 mt-8 leading-relaxed">
-            By {isSignup ? 'signing up' : 'signing in'}, you agree to our{' '}
-            <Link to="/terms" className="underline hover:text-white/80">Terms &amp; Conditions</Link> and{' '}
-            <Link to="/privacy" className="underline hover:text-white/80">Privacy Policy</Link>
-          </p>
-
-          <p className="text-center text-[0.85rem] text-white/50 mt-6">
-            Need help?{' '}
-            <a href="mailto:hello@webrabbitmedia.com" className="text-white font-medium hover:text-accent-bright no-underline">Contact support</a>
-          </p>
-        </div>
-      </main>
-
-      <div className="p-5">
-        <button
-          type="button"
-          className="flex items-center gap-2 h-9 px-3 rounded-lg bg-merchant-panel border border-merchant-border text-[0.8rem] text-white/70 hover:bg-white/[0.06]"
-        >
-          <span aria-hidden="true">🇺🇸</span>
-          English
-          <Icon name="chevron" size={12} className="rotate-90 text-white/40" />
-        </button>
-      </div>
-    </div>
+      </>
+    </AuthShell>
   )
 }
