@@ -15,7 +15,7 @@ export default function Home() {
           alt="Shop owner in Ghana confirming a mobile money payment on a phone at the counter"
           width={1920}
           height={1088}
-          fetchpriority="high"
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-90"
         />
         {/* Scrim + texture */}
@@ -91,7 +91,7 @@ export default function Home() {
           loading="lazy"
           width={700}
           height={700}
-          className="hidden lg:block absolute right-[3%] bottom-[12%] w-[120px] drop-shadow-2xl animate-fade-up-delay-2 pointer-events-none"
+          className="hidden lg:block absolute right-[3%] bottom-[16%] w-[120px] drop-shadow-2xl animate-fade-up-delay-2 pointer-events-none"
         />
       </section>
 
