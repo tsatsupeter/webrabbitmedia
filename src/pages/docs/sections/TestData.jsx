@@ -18,6 +18,13 @@ export default function TestData() {
         no artificial delay or amount-based outcome.
       </Callout>
 
+      <Callout type="warn" title="Sandbox wallets are provider-specific">
+        The wallets below are the 360Pay UAT wallets. If your business is routed to JuniPay, its sandbox
+        resolves a different set of numbers — email{' '}
+        <a href="mailto:support@webrabbitmedia.com" className="text-primary hover:underline">support@webrabbitmedia.com</a>{' '}
+        with your business id and we'll confirm which sandbox you're on and which numbers resolve.
+      </Callout>
+
       <h2 id="momo">Sandbox wallets</h2>
       <p className="text-sm text-white/60 mb-3">
         Accepted phone formats: local <code>0240000000</code> or international <code>233240000000</code>.
