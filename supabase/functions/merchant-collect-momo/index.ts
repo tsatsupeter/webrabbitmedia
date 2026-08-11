@@ -53,15 +53,17 @@ Deno.serve(async (req) => {
 
     const { gateway: gw, commission_bps } = await gatewaySettings(db, business.id)
 
-    const verify = await verifyMomo(gw, mode, { msisdn, network })
+    // Name enquiry is best-effort: some gateways (JuniPay sandbox in particular)
+    // fail lookups for numbers that can still be charged. Fall back to the name
+    // the merchant typed instead of blocking the charge.
+    const verify = await verifyMomo(gw, mode, { msisdn, network }).catch((e) => ({
+      ok: false as const, status: 0, reason: String(e?.message || e), raw: null,
+    }))
     if (!verify.ok) {
-      return jsonResponse({
-        error: 'account_not_found',
-        code: 'account_not_found',
-        reason: verify.reason,
-      }, 422)
+      console.warn(`[${gatewayLabel(gw)}] name enquiry failed for ${msisdn}: ${verify.reason}`)
     }
-    const account_name = verify.account_name
+    const account_name = verify.ok ? verify.account_name : (customer_name || localMsisdn(msisdn) || msisdn)
+
 
     const reference = newReference()
 
