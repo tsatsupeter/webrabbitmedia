@@ -9,6 +9,9 @@ import heroPayoutGlyph from '../assets/hero-payout-glyph.png'
 import heroUssdCard from '../assets/hero-ussd-card.png'
 import heroApiCard from '../assets/hero-api-card.png'
 import showcaseUssd from '../assets/showcase-ussd.jpg'
+import showcaseSoftware from '../assets/showcase-software.jpg'
+import showcasePayments from '../assets/showcase-payments.jpg'
+import showcaseGrowth from '../assets/showcase-growth.jpg'
 import showcaseAutomation from '../assets/showcase-automation.jpg'
 
 const HERO_SLIDES = [
@@ -467,28 +470,17 @@ export default function Home() {
           <ScrollReveal>
             <div className="relative bg-surface-dark rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
               {/* Background graphic */}
-              <div className="absolute inset-0" aria-hidden="true">
-                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-                  {/* Browser windows */}
-                  <rect x="420" y="40" width="500" height="340" rx="16" fill="white" opacity="0.05" />
-                  <rect x="420" y="40" width="500" height="35" rx="16" fill="white" opacity="0.06" />
-                  <circle cx="445" cy="57" r="5" fill="white" opacity="0.15" />
-                  <circle cx="463" cy="57" r="5" fill="white" opacity="0.1" />
-                  <circle cx="481" cy="57" r="5" fill="white" opacity="0.08" />
-                  <rect x="440" y="95" width="180" height="18" rx="6" fill="var(--color-accent-bright)" opacity="0.2" />
-                  <rect x="440" y="125" width="300" height="10" rx="5" fill="white" opacity="0.06" />
-                  <rect x="440" y="145" width="240" height="10" rx="5" fill="white" opacity="0.04" />
-                  <rect x="440" y="165" width="280" height="10" rx="5" fill="white" opacity="0.03" />
-                  <rect x="440" y="200" width="120" height="40" rx="10" fill="var(--color-accent)" opacity="0.25" />
-                  <rect x="580" y="200" width="120" height="40" rx="10" fill="white" opacity="0.06" />
-                  <rect x="440" y="270" width="140" height="90" rx="10" fill="white" opacity="0.04" />
-                  <rect x="600" y="270" width="140" height="90" rx="10" fill="white" opacity="0.04" />
-                  <rect x="760" y="270" width="140" height="90" rx="10" fill="white" opacity="0.04" />
-                  {/* Decorative elements */}
-                  <circle cx="300" cy="420" r="100" fill="var(--color-accent)" opacity="0.04" />
-                  <circle cx="300" cy="420" r="150" stroke="var(--color-accent)" strokeWidth="0.5" opacity="0.06" fill="none" />
-                </svg>
-              </div>
+              <img
+                src={showcaseSoftware}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                width={1280}
+                height={864}
+                className="absolute inset-0 w-full h-full object-cover object-[65%_center] opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/85 to-transparent" aria-hidden="true" />
               {/* Text overlay */}
               <div className="relative p-8 md:p-12 max-w-[500px]">
                 <span className="text-white/50 text-sm font-medium mb-2 block">Built for your business</span>
@@ -515,28 +507,17 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto px-6 py-5">
           <ScrollReveal>
             <div className="relative bg-[#0c1f0e] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
-              <div className="absolute inset-0" aria-hidden="true">
-                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-                  {/* Terminal */}
-                  <rect x="350" y="30" width="580" height="420" rx="14" fill="white" opacity="0.04" />
-                  <rect x="350" y="30" width="580" height="32" rx="14" fill="white" opacity="0.05" />
-                  <circle cx="375" cy="46" r="5" fill="#ff5f57" opacity="0.3" />
-                  <circle cx="393" cy="46" r="5" fill="#febc2e" opacity="0.3" />
-                  <circle cx="411" cy="46" r="5" fill="var(--color-accent-bright)" opacity="0.3" />
-                  {/* Code lines */}
-                  {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
-                    <g key={n}>
-                      <text x="370" y={85 + n * 26} fill="white" opacity="0.1" fontSize="12" fontFamily="monospace">{n + 1}</text>
-                      <rect x={395} y={76 + n * 26} width={[80,140,60,120,160,90,50,130,100,70,110,140,80][n]} height="10" rx="3" fill="var(--color-accent-bright)" opacity={[0.2,0.1,0.15,0.08,0.12,0.18,0.25,0.1,0.06,0.15,0.08,0.12,0.2][n]} />
-                      {n % 3 === 0 && <rect x={395 + [80,140,60,120,160,90,50,130,100,70,110,140,80][n] + 10} y={76 + n * 26} width={60} height="10" rx="3" fill="white" opacity="0.04" />}
-                    </g>
-                  ))}
-                  {/* Cursor blink */}
-                  <rect x="395" y={76 + 13 * 26} width="8" height="14" rx="1" fill="var(--color-accent-bright)" opacity="0.4">
-                    <animate attributeName="opacity" values="0.4;0;0.4" dur="1.2s" repeatCount="indefinite" />
-                  </rect>
-                </svg>
-              </div>
+              <img
+                src={showcasePayments}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                width={1280}
+                height={864}
+                className="absolute inset-0 w-full h-full object-cover object-[60%_center] opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/85 to-transparent" aria-hidden="true" />
               <div className="relative p-8 md:p-12 max-w-[500px]">
                 <span className="text-white/50 text-sm font-medium mb-2 block">Built to fit your workflow</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
@@ -677,30 +658,17 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto px-6 py-5">
           <ScrollReveal>
             <div className="relative bg-[#1a180e] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[520px] flex items-end">
-              <div className="absolute inset-0" aria-hidden="true">
-                <svg viewBox="0 0 1000 520" fill="none" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-                  {/* Dashboard */}
-                  <rect x="420" y="50" width="500" height="340" rx="16" fill="white" opacity="0.04" />
-                  <rect x="440" y="80" width="130" height="70" rx="10" fill="white" opacity="0.05" />
-                  <rect x="455" y="100" width="50" height="6" rx="3" fill="white" opacity="0.08" />
-                  <rect x="455" y="115" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
-                  <rect x="590" y="80" width="130" height="70" rx="10" fill="white" opacity="0.05" />
-                  <rect x="605" y="100" width="50" height="6" rx="3" fill="white" opacity="0.08" />
-                  <rect x="605" y="115" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
-                  <rect x="740" y="80" width="130" height="70" rx="10" fill="white" opacity="0.05" />
-                  <rect x="755" y="100" width="50" height="6" rx="3" fill="white" opacity="0.08" />
-                  <rect x="755" y="115" width="70" height="14" rx="4" fill="var(--color-accent-bright)" opacity="0.2" />
-                  {/* Chart */}
-                  <polyline points="470,240 530,220 590,225 650,205 710,210 770,195 830,200 890,190" stroke="var(--color-accent-bright)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25" fill="none" />
-                  <polygon points="470,240 530,220 590,225 650,205 710,210 770,195 830,200 890,190 890,280 470,280" fill="var(--color-accent)" opacity="0.04" />
-                  {/* SMS burst */}
-                  <rect x="100" y="120" width="160" height="100" rx="16" fill="var(--color-accent)" opacity="0.1" />
-                  <circle cx="130" cy="155" r="10" fill="var(--color-accent-bright)" opacity="0.25" />
-                  <rect x="150" y="150" width="80" height="6" rx="3" fill="white" opacity="0.2" />
-                  <rect x="150" y="165" width="60" height="5" rx="2.5" fill="white" opacity="0.1" />
-                  <rect x="120" y="190" width="90" height="8" rx="4" fill="white" opacity="0.08" />
-                </svg>
-              </div>
+              <img
+                src={showcaseGrowth}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                width={1280}
+                height={864}
+                className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-surface-dark/70 to-transparent" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/85 to-transparent" aria-hidden="true" />
               <div className="relative p-8 md:p-12 max-w-[500px]">
                 <span className="text-white/50 text-sm font-medium mb-2 block">Scale what works</span>
                 <h2 className="font-display font-bold text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
