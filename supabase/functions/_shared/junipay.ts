@@ -258,10 +258,13 @@ export function foreignId(reference: string): string {
   return r.length >= 13 ? r : r.padStart(13, '0')
 }
 
-// JuniPay rejects a senderEmail that is not a real address.
-export function safeEmail(value?: string | null): string | undefined {
+// JuniPay requires senderEmail and rejects anything that is not a real address,
+// so fall back to a platform address when the caller has no customer email.
+export const FALLBACK_EMAIL = 'payments@webrabbit.app'
+
+export function safeEmail(value?: string | null): string {
   const v = String(value || '').trim()
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : undefined
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : FALLBACK_EMAIL
 }
 
 export async function collect(mode: Mode, params: {
