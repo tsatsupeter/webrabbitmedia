@@ -280,6 +280,9 @@ export async function collect(mode: Mode, params: {
     provider: params.provider,
     phoneNumber: params.phoneNumber,
     amount: Number(params.amount.toFixed(2)),
+    // JuniPay's live validator requires tot_amnt in addition to amount even
+    // though the public schema does not consistently document it.
+    tot_amnt: Number(params.amount.toFixed(2)),
     description: params.description ?? 'Payment',
     senderEmail: safeEmail(params.senderEmail),
     foreignID: foreignId(params.foreignID),

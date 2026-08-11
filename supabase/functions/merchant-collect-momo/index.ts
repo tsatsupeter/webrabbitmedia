@@ -108,6 +108,8 @@ Deno.serve(async (req) => {
     const fee = status === 'approved' ? Math.round(amount * (commission_bps / 10000) * 100) / 100 : 0
     const net = Math.round((amount - fee) * 100) / 100
     const providerTxn = result?.providerRef ?? null
+    const failureCode = result?.code ?? 'upstream_error'
+    const failureReason = result?.message ?? upstreamErr?.message ?? 'Upstream provider unavailable'
 
     await db.from('transactions')
       .update({
@@ -115,8 +117,8 @@ Deno.serve(async (req) => {
         fee_amount: fee,
         net_amount: net,
         provider_reference: providerTxn,
-        provider_code: upstreamErr ? 'upstream_error' : result?.code ?? null,
-        provider_reason: upstreamErr ? upstreamErr.message : result?.message ?? null,
+        provider_code: upstreamErr ? failureCode : result?.code ?? null,
+        provider_reason: upstreamErr ? failureReason : result?.message ?? null,
         raw_response: upstreamErr ? { error: upstreamErr.message, response: result?.raw ?? null } : result?.raw ?? null,
       })
       .eq('provider_transaction_id', reference)
@@ -126,8 +128,8 @@ Deno.serve(async (req) => {
       transaction_id: reference,
       provider_transaction_id: providerTxn,
       status,
-      code: upstreamErr ? 'upstream_error' : result?.code ?? null,
-      reason: upstreamErr ? 'Upstream provider unavailable' : result?.message ?? null,
+      code: upstreamErr ? failureCode : result?.code ?? null,
+      reason: upstreamErr ? failureReason : result?.message ?? null,
       account_name,
       gross_amount: amount,
       fee_amount: fee,
