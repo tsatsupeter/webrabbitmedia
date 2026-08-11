@@ -36,6 +36,13 @@ export default function CollectMomo() {
         Before any debit we run the provider's mandatory name lookup on the wallet. If the number cannot be
         resolved you get <code>422 account_not_found</code> and <strong>no transaction is created</strong>.
         On success the resolved <code>account_name</code> is returned and stored with the transaction.
+        This applies to both upstream providers; the lookup wording in <code>reason</code> differs between
+        360Pay and JuniPay.
+      </Callout>
+      <Callout type="warn" title="Upstream rejections return 502">
+        If the provider accepts the request shape but refuses the charge, the transaction is recorded as{' '}
+        <code>failed</code> and the endpoint answers <code>502</code> with the provider's own reason in{' '}
+        <code>reason</code>. Retry with the same <code>Idempotency-Key</code>.
       </Callout>
 
       <h2 id="request">Request</h2>

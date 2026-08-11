@@ -6,12 +6,20 @@ export default function ProviderCodes() {
     <>
       <p>
         Every collection response includes a <code>code</code> field forwarded from the upstream provider
-        (360Pay), plus a normalised <code>status</code> (<code>approved</code> · <code>pending</code> ·{' '}
+        (360Pay or JuniPay, depending on how your business is routed), plus a normalised <code>status</code> (<code>approved</code> · <code>pending</code> ·{' '}
         <code>failed</code>). The raw code is useful for support tickets and analytics.
       </p>
       <Callout type="info" title="Always a string">
         <code>code</code> is returned as a JSON string on every endpoint, e.g. <code>"02"</code>. Keep the
         leading zero — never parse it as a number.
+      </Callout>
+
+      <Callout type="note" title="Two upstream providers, one status">
+        On <strong>360Pay</strong> the raw <code>code</code> is a two-digit numeric string
+        (<code>"00"</code>, <code>"02"</code>…). On <strong>JuniPay</strong> it is a word
+        (<code>"success"</code>, <code>"pending"</code>, <code>"failed"</code>). Both are normalised onto
+        the same <code>status</code>, so integrate against <code>status</code> and treat{' '}
+        <code>code</code> as diagnostic metadata only.
       </Callout>
 
       <h2 id="approved">Transaction status codes</h2>
