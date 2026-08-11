@@ -301,7 +301,7 @@ export async function transfer(mode: Mode, params: {
   const body: Record<string, unknown> = {
     channel: params.channel,
     amount: Number(params.amount.toFixed(2)),
-    foreignID: params.foreignID,
+    foreignID: foreignId(params.foreignID),
     receiver: params.receiver,
     sender: params.sender ?? 'Web Rabbit Payments',
     narration: params.narration ?? 'Payout',
