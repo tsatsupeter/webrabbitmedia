@@ -61,20 +61,46 @@ async function importKey(mode: Mode): Promise<CryptoKey> {
 
 const tokenCache = new Map<string, { token: string; exp: number }>()
 
+function cacheKey(mode: Mode) {
+  return `${mode}:${clientId(mode)}`
+}
+
+export function clearToken(mode: Mode) {
+  tokenCache.delete(cacheKey(mode))
+}
+
+// Direct API access (collections, disbursements, remittance) authenticates with an
+// RS256 JWT we sign ourselves: payload { clientId }, 1h expiry. Same in sandbox and live.
 export async function bearerToken(mode: Mode): Promise<string> {
-  const cid = clientId(mode)
-  const cached = tokenCache.get(`${mode}:${cid}`)
+  const key = cacheKey(mode)
+  const cached = tokenCache.get(key)
   const now = Math.floor(Date.now() / 1000)
   if (cached && cached.exp - 60 > now) return cached.token
 
   const exp = now + 3600
   const head = encodeSegment({ alg: 'RS256', typ: 'JWT' })
-  const payload = encodeSegment({ clientId: cid, iat: now, exp })
+  const payload = encodeSegment({ clientId: clientId(mode), iat: now, exp })
   const data = new TextEncoder().encode(`${head}.${payload}`)
   const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', await importKey(mode), data))
   const token = `${head}.${payload}.${b64url(sig)}`
-  tokenCache.set(`${mode}:${cid}`, { token, exp })
+  tokenCache.set(key, { token, exp })
   return token
+}
+
+// Payment Form / Payment Link tokens come from the merchant token link instead:
+//   GET {token_url}  with header `xderd: {secret}`  ->  { token } | { access_token, expires_in }
+export async function formToken(mode: Mode): Promise<string | null> {
+  const url = envFor(mode, 'TOKEN_URL')
+  const secret = envFor(mode, 'SECRET')
+  if (!url || !secret) return null
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', 'xderd': secret },
+  })
+  if (!res.ok) return null
+  const json = await res.json().catch(() => null)
+  const token = json?.token ?? json?.access_token
+  return token ? String(token) : null
 }
 
 async function headers(mode: Mode) {
@@ -95,19 +121,28 @@ async function parse(res: Response): Promise<JuniResult> {
   return { ok: res.ok, status: res.status, json }
 }
 
-export async function juniPost(mode: Mode, path: string, body: unknown): Promise<JuniResult> {
-  return await parse(await fetch(`${baseUrl(mode)}${path}`, {
-    method: 'POST',
+// A 401 means our cached JWT went stale — drop it and retry once with a fresh one.
+async function request(mode: Mode, path: string, init: { method: 'GET' | 'POST'; body?: unknown }): Promise<JuniResult> {
+  const send = async () => await fetch(`${baseUrl(mode)}${path}`, {
+    method: init.method,
     headers: await headers(mode),
-    body: JSON.stringify(body),
-  }))
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  })
+  let res = await send()
+  if (res.status === 401) {
+    await res.body?.cancel().catch(() => {})
+    clearToken(mode)
+    res = await send()
+  }
+  return await parse(res)
+}
+
+export async function juniPost(mode: Mode, path: string, body: unknown): Promise<JuniResult> {
+  return await request(mode, path, { method: 'POST', body })
 }
 
 export async function juniGet(mode: Mode, path: string): Promise<JuniResult> {
-  return await parse(await fetch(`${baseUrl(mode)}${path}`, {
-    method: 'GET',
-    headers: await headers(mode),
-  }))
+  return await request(mode, path, { method: 'GET' })
 }
 
 // ---- mapping -------------------------------------------------------------------
