@@ -250,6 +250,20 @@ function toResolve(res: JuniResult): ResolveResult {
   }
 }
 
+// JuniPay requires foreignID to be at least 13 characters; our internal
+// reference is 12 digits, so pad it. Callbacks echo the padded value, which the
+// webhook un-pads before matching.
+export function foreignId(reference: string): string {
+  const r = String(reference || '')
+  return r.length >= 13 ? r : r.padStart(13, '0')
+}
+
+// JuniPay rejects a senderEmail that is not a real address.
+export function safeEmail(value?: string | null): string | undefined {
+  const v = String(value || '').trim()
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : undefined
+}
+
 export async function collect(mode: Mode, params: {
   amount: number
   phoneNumber: string
@@ -265,9 +279,9 @@ export async function collect(mode: Mode, params: {
     amount: Number(params.amount.toFixed(2)),
     tot_amnt: Number(params.amount.toFixed(2)),
     description: params.description ?? 'Payment',
-    senderEmail: params.senderEmail || undefined,
-    email: params.senderEmail || undefined,
-    foreignID: params.foreignID,
+    senderEmail: safeEmail(params.senderEmail),
+    email: safeEmail(params.senderEmail),
+    foreignID: foreignId(params.foreignID),
     callbackUrl: callbackUrl(),
   })
 }
@@ -287,7 +301,7 @@ export async function transfer(mode: Mode, params: {
   const body: Record<string, unknown> = {
     channel: params.channel,
     amount: Number(params.amount.toFixed(2)),
-    foreignID: params.foreignID,
+    foreignID: foreignId(params.foreignID),
     receiver: params.receiver,
     sender: params.sender ?? 'Web Rabbit Payments',
     narration: params.narration ?? 'Payout',

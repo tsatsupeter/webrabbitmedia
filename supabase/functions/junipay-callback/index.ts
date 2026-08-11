@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
 
   const ours = [payload?.foreignID, payload?.foreign_id, payload?.transaction_id]
     .map((v) => String(v ?? '').trim())
+    .map((v) => (/^\d{13,}$/.test(v) ? v.replace(/^0+(?=\d{12}$)/, '') : v))
     .filter((v) => /^\d{12}$/.test(v))
 
   const providerIds = [payload?.trans_id, payload?.transID, payload?.transactionId]

@@ -107,7 +107,7 @@ export async function collect(gw: GatewayId, mode: Mode, params: {
       phoneNumber: junipay.localNumber(params.msisdn)!,
       provider: p,
       description: params.description,
-      senderEmail: params.customer_email,
+      senderEmail: junipay.safeEmail(params.customer_email),
       foreignID: params.reference,
     })
     const status = res.ok ? junipay.mapStatus(res.json?.status) : 'failed'
