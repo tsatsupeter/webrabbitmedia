@@ -34,6 +34,22 @@ export default function Introduction() {
         rate limit.
       </p>
 
+      <h2 id="providers">Payment providers</h2>
+      <p>
+        Behind the API we settle through licensed Ghanaian payment providers — <strong>360Pay
+        (LibertePay)</strong> and <strong>JuniPay</strong>. Each business is routed to one of them; the
+        routing is managed by us and never changes your request or response shape. The normalised{' '}
+        <code>status</code> (<code>approved</code> · <code>pending</code> · <code>failed</code>) is
+        identical either way — only the raw <code>code</code> and <code>reason</code> passed through from
+        upstream differ. See{' '}
+        <Link to="/docs/provider-codes" className="text-primary hover:underline">Provider codes</Link>.
+      </p>
+      <Callout type="warn" title="Payouts are not part of the public API">
+        <code>POST /v1/payout/momo</code> and <code>/v1/payout/bank</code> are retired and return{' '}
+        <code>501 provider_unsupported</code>. Withdrawals are requested from{' '}
+        <strong>Payouts</strong> in the merchant dashboard and settled by our operations team.
+      </Callout>
+
       <h2 id="modes">Test mode & Live mode</h2>
       <p>
         Every business has two independent environments. <strong>Live mode</strong> unlocks after your
