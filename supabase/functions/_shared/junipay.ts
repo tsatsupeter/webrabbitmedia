@@ -280,13 +280,40 @@ export async function collect(mode: Mode, params: {
     provider: params.provider,
     phoneNumber: params.phoneNumber,
     amount: Number(params.amount.toFixed(2)),
-    tot_amnt: Number(params.amount.toFixed(2)),
     description: params.description ?? 'Payment',
     senderEmail: safeEmail(params.senderEmail),
-    email: safeEmail(params.senderEmail),
     foreignID: foreignId(params.foreignID),
     callbackUrl: callbackUrl(),
   })
+}
+
+// JuniPay can answer HTTP 200 while the body carries an error code (e.g.
+// { code: 401, message: '"email" is not allowed' }). A collection is only truly
+// pending when the body says so AND carries JuniPay's transID.
+export function collectionOutcome(res: JuniResult): {
+  ok: boolean
+  status: LedgerStatus
+  transId: string | null
+  message: string | null
+} {
+  const json = res.json ?? {}
+  const transId = providerTransactionId(json)
+  const rawCode = json?.code
+  const codeNum = typeof rawCode === 'number' ? rawCode : Number(rawCode)
+  const codeBad = Number.isFinite(codeNum) && (codeNum < 200 || codeNum > 299)
+  const bodyStatus = String(json?.status ?? '').trim().toLowerCase()
+  const message = respMessage(json)
+
+  if (!res.ok || codeBad) {
+    return { ok: false, status: 'failed', transId, message: message || `JuniPay rejected the request (${codeNum || res.status})` }
+  }
+  if (bodyStatus === 'failed' || bodyStatus === 'declined' || bodyStatus === 'cancelled') {
+    return { ok: false, status: 'failed', transId, message: message || 'Transaction declined' }
+  }
+  if (!transId) {
+    return { ok: false, status: 'failed', transId: null, message: message || 'JuniPay did not return a transaction id' }
+  }
+  return { ok: true, status: mapStatus(bodyStatus || 'pending'), transId, message }
 }
 
 export async function transfer(mode: Mode, params: {
