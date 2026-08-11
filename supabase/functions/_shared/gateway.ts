@@ -110,15 +110,15 @@ export async function collect(gw: GatewayId, mode: Mode, params: {
       senderEmail: junipay.safeEmail(params.customer_email),
       foreignID: params.reference,
     })
-    const status = res.ok ? junipay.mapStatus(res.json?.status) : 'failed'
+    const outcome = junipay.collectionOutcome(res)
     return {
-      ok: res.ok,
-      status,
+      ok: outcome.ok,
+      status: outcome.status,
       code: res.json?.status != null ? String(res.json.status) : (res.json?.code != null ? String(res.json.code) : null),
-      message: junipay.respMessage(res.json),
-      providerRef: junipay.providerTransactionId(res.json),
+      message: outcome.message,
+      providerRef: outcome.transId,
       raw: res.json,
-      httpStatus: res.status,
+      httpStatus: outcome.ok ? res.status : (res.ok ? 502 : res.status),
     }
   }
 
