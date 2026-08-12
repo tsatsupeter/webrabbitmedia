@@ -162,14 +162,7 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
       </form>
       )}
 
-      {/* Brand chip */}
-      <a
-        href="/"
-        className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright text-[0.8rem] font-medium hover:bg-accent/20 no-underline"
-      >
-        <span className="w-4 h-4 rounded bg-accent" />
-        Web Rabbit
-      </a>
+      {/* Brand chip removed */}
 
       {/* Compact sidebar toggle */}
       <button
