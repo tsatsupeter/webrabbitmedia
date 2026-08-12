@@ -4,9 +4,14 @@ import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSm
 import { PageLoader, Skeleton } from '../components/EmptyState'
 import Modal from '../components/Modal'
 import { Page, PageHeader, Card, CardHeader, Stat, Table, Row, Cell, Button, Field, inputClass } from '../components/ui'
-import { useSmsWallet, useSmsRates, money, walletEntry, useProviderBalance } from '../lib'
+import { useSmsWallet, useSmsRates, money, useProviderBalance, startTopup, pollTopup } from '../lib'
 
 const PRESETS = [20, 50, 100, 250, 500]
+const NETWORKS = [
+  { value: 'MTN', label: 'MTN Mobile Money' },
+  { value: 'TELECEL', label: 'Telecel Cash' },
+  { value: 'AT', label: 'AT Money' },
+]
 
 export default function Wallet() {
   const { business, mode, modeReady } = useMerchantMode()
@@ -15,7 +20,10 @@ export default function Wallet() {
   const provider = useProviderBalance(business?.id)
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('50')
+  const [network, setNetwork] = useState('MTN')
+  const [msisdn, setMsisdn] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pending, setPending] = useState(null)
   useModeDataLoading(loading)
 
   if (!modeReady) return <PageLoader label="Loading wallet…" />
