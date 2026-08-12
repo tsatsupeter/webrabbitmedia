@@ -291,9 +291,10 @@ export default function Messaging() {
             />
           </div>
 
-          </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Stat label="Total topped up" value={money(topups)} icon="arrow-up" />
             <Stat label="Messages sent" value={compact(sent.length)} icon="mail" />
+
             <Stat
               label="Delivery rate"
               value={settled ? `${Math.round((delivered / settled) * 100)}%` : '—'}
