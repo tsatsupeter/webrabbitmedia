@@ -119,7 +119,10 @@ export default function SenderIds() {
                     )}
                   </Cell>
                   <Cell className="text-white/50">{new Date(r.created_at).toLocaleDateString()}</Cell>
-                  <Cell className="text-right">
+                  <Cell className="text-right whitespace-nowrap">
+                    <Button variant="ghost" size="sm" onClick={() => sync(r.id)} disabled={syncing === r.id}>
+                      {syncing === r.id ? 'Checking…' : 'Check status'}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => remove(r.id)}>
                       Remove
                     </Button>
