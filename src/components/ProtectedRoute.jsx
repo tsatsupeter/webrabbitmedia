@@ -18,11 +18,18 @@ export default function ProtectedRoute({ children, requireBusiness = false }) {
     let cancelled = false
     ;(async () => {
       const check = async () => {
-        const { count } = await supabase
-          .from('businesses')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-        return count ?? 0
+        // Owned workspaces OR workspaces the user was invited to as a team member.
+        const [{ count: owned }, { count: member }] = await Promise.all([
+          supabase
+            .from('businesses')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('team_members')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+        ])
+        return (owned ?? 0) + (member ?? 0)
       }
       let count = await check()
       // Retry once after a short delay to absorb the race right after creation.
