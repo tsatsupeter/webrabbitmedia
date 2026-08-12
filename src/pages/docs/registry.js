@@ -17,6 +17,10 @@ import Me from './sections/Me'
 import AcceptedCountries from './sections/AcceptedCountries'
 import MerchantAcceptance from './sections/MerchantAcceptance'
 import MerchantCountries from './sections/MerchantCountries'
+import MessagingOverview from './sections/MessagingOverview'
+import MessagingSms from './sections/MessagingSms'
+import MessagingOtp from './sections/MessagingOtp'
+import MessagingVoice from './sections/MessagingVoice'
 
 // Single source of truth for sidebar, Cmd+K search, and prev/next pager.
 // `headings` is a flat list of {id, text, depth} for the on-this-page TOC / search.
@@ -213,6 +217,57 @@ export const groups = [
         headings: [
           { id: 'polling', text: 'Polling pattern (today)', depth: 2 },
           { id: 'notify-me', text: 'Get notified at launch', depth: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Messaging',
+    items: [
+      {
+        slug: 'messaging-overview',
+        title: 'Messaging overview',
+        summary: 'Base URL, messaging keys, credits and error shapes for SMS, OTP and voice.',
+        Component: MessagingOverview,
+        headings: [
+          { id: 'base-url', text: 'Base URL', depth: 2 },
+          { id: 'authentication', text: 'Authentication', depth: 2 },
+          { id: 'modes', text: 'Test mode & live mode', depth: 2 },
+          { id: 'credits', text: 'Credits & refunds', depth: 2 },
+          { id: 'errors', text: 'Errors', depth: 2 },
+        ],
+      },
+      {
+        slug: 'messaging-sms',
+        title: 'Send SMS',
+        summary: 'Create a bulk SMS campaign and pull per-recipient delivery reports.',
+        Component: MessagingSms,
+        headings: [
+          { id: 'endpoint', text: 'Endpoint', depth: 2 },
+          { id: 'request', text: 'Request', depth: 2 },
+          { id: 'response', text: 'Response', depth: 2 },
+          { id: 'delivery', text: 'Delivery reports', depth: 2 },
+        ],
+      },
+      {
+        slug: 'messaging-otp',
+        title: 'OTP',
+        summary: 'Send and verify one-time passcodes with hashed storage and expiry.',
+        Component: MessagingOtp,
+        headings: [
+          { id: 'send', text: 'Send a code', depth: 2 },
+          { id: 'verify', text: 'Verify a code', depth: 2 },
+        ],
+      },
+      {
+        slug: 'messaging-voice',
+        title: 'Voice & balances',
+        summary: 'Place outbound voice campaigns, pull call reports and read network balances.',
+        Component: MessagingVoice,
+        headings: [
+          { id: 'endpoint', text: 'Place a campaign', depth: 2 },
+          { id: 'status', text: 'Call reports', depth: 2 },
+          { id: 'balance', text: 'Network balance', depth: 2 },
         ],
       },
     ],
