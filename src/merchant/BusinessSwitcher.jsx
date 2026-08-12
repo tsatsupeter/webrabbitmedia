@@ -149,14 +149,17 @@ export default function BusinessSwitcher({ compact = false, next = '/merchant' }
             type="button"
             onClick={() => {
               setOpen(false)
-              setChooser(true)
+              if (directCreate) goCreateBusiness()
+              else setChooser(true)
             }}
             className="w-full flex items-center gap-3 px-3 py-3 border-t border-merchant-border hover:bg-white/[0.04] text-left"
           >
             <div className="shrink-0 w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/70">
               <Icon name="plus" size={14} />
             </div>
-            <span className="text-[0.85rem] text-white/85">Add new</span>
+            <span className="text-[0.85rem] text-white/85">
+              {directCreate ? 'Create your own business' : 'Add new'}
+            </span>
           </button>
         </div>
       )}
@@ -166,18 +169,13 @@ export default function BusinessSwitcher({ compact = false, next = '/merchant' }
         canAddBrand={canEdit}
         onClose={() => setChooser(false)}
         onPickBrand={() => { setChooser(false); setBrandOpen(true) }}
-        onPickBusiness={() => { setChooser(false); setBizOpen(true) }}
+        onPickBusiness={() => { setChooser(false); goCreateBusiness() }}
       />
       <NewBrandDrawer
         open={brandOpen}
         onClose={() => setBrandOpen(false)}
         businessId={activeId}
         onSaved={refresh}
-      />
-      <NewBusinessDrawer
-        open={bizOpen}
-        onClose={() => setBizOpen(false)}
-        onCreated={refresh}
       />
     </div>
 
