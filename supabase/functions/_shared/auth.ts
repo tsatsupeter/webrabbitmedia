@@ -65,6 +65,7 @@ export async function authenticateKey(req: Request): Promise<AuthedKey> {
   const { data: key, error } = await db
     .from('api_keys')
     .select('id, business_id, user_id, access, mode, revoked_at, expires_at')
+    .eq('product', 'payments')
     .in('key_hash', candidates)
     .maybeSingle()
   if (error) throw new HttpError(500, error.message)

@@ -72,6 +72,7 @@ export default function ApiKeys() {
       .select('*')
       .eq('business_id', active.id)
       .eq('mode', mode)
+      .eq('product', 'payments')
       .is('revoked_at', null)
       .order('created_at', { ascending: false })
     setRows(data ?? [])
@@ -103,6 +104,7 @@ export default function ApiKeys() {
         key_hash,
         access: enableWrite ? 'write' : 'read',
         mode,
+        product: 'payments',
       })
       if (error) throw error
       setCreateOpen(false)

@@ -2,7 +2,7 @@
 // Creates the campaign + per-recipient rows, debits the wallet, calls the provider,
 // and refunds the wallet if the provider rejects the send.
 import {
-  json, errorResponse, corsHeaders, admin, requireUser, requireMembership, requireMode,
+  json, errorResponse, corsHeaders, admin, requireUser, requireMembership, requireMode, enforceKeyScope,
   unitRate, walletEntry, walletBalance, countSegments, HttpError,
 } from '../_shared/messaging.ts'
 import { bmsPost, toLocalMsisdn, isValidMsisdn, bmsScheduleDate } from '../_shared/bms.ts'
@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
 
     businessId = String(body.business_id || '')
     mode = requireMode(body.mode)
-    await requireMembership(user.id, businessId)
+    await requireMembership(user, businessId)
+    enforceKeyScope(user, { mode, access: 'write' })
 
     const sender = String(body.sender || '').trim()
     if (!/^[A-Za-z0-9 ]{3,11}$/.test(sender)) {
