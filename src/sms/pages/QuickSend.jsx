@@ -9,7 +9,7 @@ import { useSmsWallet, useSmsRates, countSegments, parseRecipients, isValidMsisd
 
 export default function QuickSend() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+
   const { business, mode, modeReady } = useMerchantMode()
   const rates = useSmsRates()
   const { balance, refresh: refreshWallet } = useSmsWallet(business?.id, mode)
