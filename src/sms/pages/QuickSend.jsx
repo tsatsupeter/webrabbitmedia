@@ -2,15 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
-import { useAuth } from '../../hooks/useAuth'
 import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
 import { PageLoader } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Button, Field, inputClass, textareaClass } from '../components/ui'
-import { useSmsWallet, useSmsRates, countSegments, parseRecipients, isValidMsisdn, money, walletEntry } from '../lib'
+import { useSmsWallet, useSmsRates, countSegments, parseRecipients, isValidMsisdn, money, invokeMessaging } from '../lib'
 
 export default function QuickSend() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+
   const { business, mode, modeReady } = useMerchantMode()
   const rates = useSmsRates()
   const { balance, refresh: refreshWallet } = useSmsWallet(business?.id, mode)
@@ -74,59 +73,31 @@ export default function QuickSend() {
 
     setSaving(true)
     try {
-      const scheduled = scheduleAt ? new Date(scheduleAt).toISOString() : null
-      const { data: campaign, error } = await supabase
-        .from('sms_campaigns')
-        .insert({
-          business_id: business.id,
-          user_id: user.id,
-          mode,
-          name: name.trim() || `Quick send ${new Date().toLocaleString()}`,
-          sender_name: sender,
-          message: message.trim(),
-          segments,
-          recipients_count: recipients.length,
-          cost,
-          status: scheduled ? 'scheduled' : 'queued',
-          scheduled_at: scheduled,
-        })
-        .select()
-        .single()
-      if (error) throw error
-
-      const rows = recipients.map((to) => ({
-        campaign_id: campaign.id,
+      const res = await invokeMessaging('messaging-send', {
         business_id: business.id,
-        user_id: user.id,
         mode,
-        to_number: to,
-        sender_name: sender,
+        name: name.trim() || undefined,
+        sender,
         message: message.trim(),
-        segments,
-        cost: +(segments * rate).toFixed(4),
-        status: 'queued',
-      }))
-      const { error: msgErr } = await supabase.from('sms_messages').insert(rows)
-      if (msgErr) throw msgErr
-
-      await walletEntry({
-        businessId: business.id,
-        mode,
-        type: 'charge',
-        amount: cost,
-        channel: 'sms',
-        description: `Campaign: ${campaign.name}`,
-        reference: campaign.id,
+        recipients,
+        schedule_at: scheduleAt ? new Date(scheduleAt).toISOString() : null,
       })
       await refreshWallet()
-      toast.success(scheduled ? 'Campaign scheduled' : 'Campaign queued for delivery')
-      navigate(`/sms/campaigns/${campaign.id}`)
+      toast.success(
+        scheduleAt
+          ? 'Campaign scheduled with the network'
+          : res?.simulated
+            ? 'Test campaign delivered (no real SMS sent in test mode)'
+            : 'Campaign sent to the network',
+      )
+      navigate(`/sms/campaigns/${res.campaign_id}`)
     } catch (e) {
-      toast.error(e.message || 'Could not queue the campaign')
+      toast.error(e.message || 'Could not send the campaign')
     } finally {
       setSaving(false)
     }
   }
+
 
   return (
     <Page>

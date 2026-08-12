@@ -30,3 +30,21 @@ verify_jwt = true
 
 [functions.admin-verification-reminder]
 verify_jwt = false
+
+[functions.messaging-send]
+verify_jwt = true
+
+[functions.messaging-status]
+verify_jwt = true
+
+[functions.messaging-sender-id]
+verify_jwt = true
+
+[functions.messaging-voice]
+verify_jwt = true
+
+[functions.messaging-otp]
+verify_jwt = true
+
+[functions.messaging-balance]
+verify_jwt = true

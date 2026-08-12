@@ -108,3 +108,43 @@ export async function walletEntry({ businessId, mode, type, amount, channel, des
   if (error) throw error
   return Number(data)
 }
+
+/** Call a messaging edge function and surface the provider's error message. */
+export async function invokeMessaging(fn, body) {
+  const { data, error } = await supabase.functions.invoke(fn, { body })
+  if (error) {
+    let message = error.message || 'Request failed'
+    try {
+      const ctx = await error.context?.json?.()
+      if (ctx?.message) message = ctx.message
+      else if (ctx?.error) message = ctx.error
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new Error(message)
+  }
+  if (data?.error) throw new Error(data.message || data.error)
+  return data
+}
+
+/** Upstream BMS credit balance for the provider account. */
+export function useProviderBalance(businessId) {
+  const [state, setState] = useState({ loading: true, sms: null, voice: null, error: null })
+
+  const load = useCallback(async () => {
+    if (!businessId) return
+    setState((s) => ({ ...s, loading: true }))
+    try {
+      const data = await invokeMessaging('messaging-balance', { business_id: businessId })
+      setState({ loading: false, sms: data.sms, voice: data.voice, error: null })
+    } catch (e) {
+      setState({ loading: false, sms: null, voice: null, error: e.message })
+    }
+  }, [businessId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { ...state, refresh: load }
+}

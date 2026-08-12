@@ -4,7 +4,7 @@ import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSm
 import { PageLoader, Skeleton } from '../components/EmptyState'
 import Modal from '../components/Modal'
 import { Page, PageHeader, Card, CardHeader, Stat, Table, Row, Cell, Button, Field, inputClass } from '../components/ui'
-import { useSmsWallet, useSmsRates, money, walletEntry } from '../lib'
+import { useSmsWallet, useSmsRates, money, walletEntry, useProviderBalance } from '../lib'
 
 const PRESETS = [20, 50, 100, 250, 500]
 
@@ -12,6 +12,7 @@ export default function Wallet() {
   const { business, mode, modeReady } = useMerchantMode()
   const { balance, wallet, ledger, loading, refresh } = useSmsWallet(business?.id, mode)
   const rates = useSmsRates()
+  const provider = useProviderBalance(business?.id)
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('50')
   const [saving, setSaving] = useState(false)
@@ -77,6 +78,25 @@ export default function Wallet() {
           </>
         )}
       </div>
+
+      <Card>
+        <CardHeader
+          title="Network credits"
+          subtitle="Live balance on the upstream messaging network that carries your traffic."
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5">
+          <Stat
+            label="SMS credits"
+            value={provider.loading ? '…' : provider.sms?.error ? '—' : Number(provider.sms?.balance ?? 0).toLocaleString()}
+            hint={provider.sms?.error || 'Units available with the carrier'}
+          />
+          <Stat
+            label="Voice credits"
+            value={provider.loading ? '…' : provider.voice?.error ? '—' : (provider.voice?.h_m_s || `${Number(provider.voice?.balance ?? 0)}s`)}
+            hint={provider.voice?.error || 'Talk time available with the carrier'}
+          />
+        </div>
+      </Card>
 
       <Card>
         <CardHeader title="Transactions" subtitle="Top-ups, charges and refunds on this wallet" />

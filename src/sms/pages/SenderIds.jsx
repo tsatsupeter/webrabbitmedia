@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
-import { useAuth } from '../../hooks/useAuth'
 import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
 import { PageLoader } from '../components/EmptyState'
 import Modal from '../components/Modal'
+import { invokeMessaging } from '../lib'
 import {
   Page, PageHeader, Card, Table, Row, Cell, StatusPill, Button, Field, inputClass, textareaClass,
 } from '../components/ui'
 
 export default function SenderIds() {
-  const { user } = useAuth()
   const { business, modeReady } = useMerchantMode()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: '', use_case: '', sample_message: '' })
   const [saving, setSaving] = useState(false)
+  const [syncing, setSyncing] = useState(null)
 
   const load = async () => {
     if (!business?.id) return
@@ -44,20 +44,36 @@ export default function SenderIds() {
       return toast.error('Sender ID must be 3–11 letters or digits')
     }
     setSaving(true)
-    const { error } = await supabase.from('sms_sender_ids').insert({
-      business_id: business.id,
-      user_id: user.id,
-      name,
-      use_case: form.use_case.trim() || null,
-      sample_message: form.sample_message.trim() || null,
-      status: 'pending',
-    })
-    setSaving(false)
-    if (error) return toast.error(error.message)
-    toast.success('Sender ID submitted for approval')
-    setOpen(false)
-    setForm({ name: '', use_case: '', sample_message: '' })
-    load()
+    try {
+      await invokeMessaging('messaging-sender-id', {
+        action: 'register',
+        business_id: business.id,
+        name,
+        use_case: form.use_case.trim() || undefined,
+        sample_message: form.sample_message.trim() || undefined,
+      })
+      toast.success('Sender ID registered with the network — awaiting approval')
+      setOpen(false)
+      setForm({ name: '', use_case: '', sample_message: '' })
+    } catch (err) {
+      toast.error(err.message || 'Registration failed')
+    } finally {
+      setSaving(false)
+      load()
+    }
+  }
+
+  async function sync(id) {
+    setSyncing(id)
+    try {
+      const res = await invokeMessaging('messaging-sender-id', { action: 'status', sender_id: id })
+      toast.success(`Network status: ${res.provider_status || res.status}`)
+      load()
+    } catch (err) {
+      toast.error(err.message || 'Could not check the status')
+    } finally {
+      setSyncing(null)
+    }
   }
 
   async function remove(id) {
@@ -66,6 +82,7 @@ export default function SenderIds() {
     toast.success('Sender ID removed')
     load()
   }
+
 
   return (
     <Page>
@@ -102,7 +119,10 @@ export default function SenderIds() {
                     )}
                   </Cell>
                   <Cell className="text-white/50">{new Date(r.created_at).toLocaleDateString()}</Cell>
-                  <Cell className="text-right">
+                  <Cell className="text-right whitespace-nowrap">
+                    <Button variant="ghost" size="sm" onClick={() => sync(r.id)} disabled={syncing === r.id}>
+                      {syncing === r.id ? 'Checking…' : 'Check status'}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => remove(r.id)}>
                       Remove
                     </Button>

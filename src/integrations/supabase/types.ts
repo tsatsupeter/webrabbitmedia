@@ -931,10 +931,14 @@ export type Database = {
           cost: number
           created_at: string
           currency: string
+          failure_reason: string | null
           id: string
           message: string
           mode: string
           name: string
+          provider: string
+          provider_campaign_id: string | null
+          provider_response: Json | null
           recipients_count: number
           scheduled_at: string | null
           segments: number
@@ -949,10 +953,14 @@ export type Database = {
           cost?: number
           created_at?: string
           currency?: string
+          failure_reason?: string | null
           id?: string
           message: string
           mode: string
           name: string
+          provider?: string
+          provider_campaign_id?: string | null
+          provider_response?: Json | null
           recipients_count?: number
           scheduled_at?: string | null
           segments?: number
@@ -967,10 +975,14 @@ export type Database = {
           cost?: number
           created_at?: string
           currency?: string
+          failure_reason?: string | null
           id?: string
           message?: string
           mode?: string
           name?: string
+          provider?: string
+          provider_campaign_id?: string | null
+          provider_response?: Json | null
           recipients_count?: number
           scheduled_at?: string | null
           segments?: number
@@ -1123,10 +1135,13 @@ export type Database = {
           campaign_id: string | null
           cost: number
           created_at: string
+          delivered_at: string | null
           error_reason: string | null
           id: string
           message: string
           mode: string
+          provider_message_id: string | null
+          provider_status: string | null
           segments: number
           sender_name: string | null
           sent_at: string | null
@@ -1140,10 +1155,13 @@ export type Database = {
           campaign_id?: string | null
           cost?: number
           created_at?: string
+          delivered_at?: string | null
           error_reason?: string | null
           id?: string
           message: string
           mode: string
+          provider_message_id?: string | null
+          provider_status?: string | null
           segments?: number
           sender_name?: string | null
           sent_at?: string | null
@@ -1157,10 +1175,13 @@ export type Database = {
           campaign_id?: string | null
           cost?: number
           created_at?: string
+          delivered_at?: string | null
           error_reason?: string | null
           id?: string
           message?: string
           mode?: string
+          provider_message_id?: string | null
+          provider_status?: string | null
           segments?: number
           sender_name?: string | null
           sent_at?: string | null
@@ -1188,37 +1209,46 @@ export type Database = {
       }
       sms_otp_requests: {
         Row: {
+          attempts: number
           business_id: string
+          code_hash: string | null
           cost: number
           created_at: string
           expires_at: string | null
           id: string
           mode: string
           phone: string
+          provider_campaign_id: string | null
           status: string
           user_id: string
           verified_at: string | null
         }
         Insert: {
+          attempts?: number
           business_id: string
+          code_hash?: string | null
           cost?: number
           created_at?: string
           expires_at?: string | null
           id?: string
           mode: string
           phone: string
+          provider_campaign_id?: string | null
           status?: string
           user_id: string
           verified_at?: string | null
         }
         Update: {
+          attempts?: number
           business_id?: string
+          code_hash?: string | null
           cost?: number
           created_at?: string
           expires_at?: string | null
           id?: string
           mode?: string
           phone?: string
+          provider_campaign_id?: string | null
           status?: string
           user_id?: string
           verified_at?: string | null
@@ -1316,6 +1346,8 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          provider_status: string | null
+          provider_synced_at: string | null
           rejection_reason: string | null
           sample_message: string | null
           status: string
@@ -1328,6 +1360,8 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          provider_status?: string | null
+          provider_synced_at?: string | null
           rejection_reason?: string | null
           sample_message?: string | null
           status?: string
@@ -1340,6 +1374,8 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          provider_status?: string | null
+          provider_synced_at?: string | null
           rejection_reason?: string | null
           sample_message?: string | null
           status?: string
@@ -1929,6 +1965,8 @@ export type Database = {
           duration_seconds: number
           id: string
           mode: string
+          provider_call_id: string | null
+          provider_status: string | null
           status: string
           to_number: string
           updated_at: string
@@ -1942,6 +1980,8 @@ export type Database = {
           duration_seconds?: number
           id?: string
           mode: string
+          provider_call_id?: string | null
+          provider_status?: string | null
           status?: string
           to_number: string
           updated_at?: string
@@ -1955,6 +1995,8 @@ export type Database = {
           duration_seconds?: number
           id?: string
           mode?: string
+          provider_call_id?: string | null
+          provider_status?: string | null
           status?: string
           to_number?: string
           updated_at?: string
@@ -1984,9 +2026,11 @@ export type Database = {
           caller_id: string | null
           cost: number
           created_at: string
+          failure_reason: string | null
           id: string
           mode: string
           name: string
+          provider_campaign_id: string | null
           recipients_count: number
           scheduled_at: string | null
           script: string | null
@@ -2001,9 +2045,11 @@ export type Database = {
           caller_id?: string | null
           cost?: number
           created_at?: string
+          failure_reason?: string | null
           id?: string
           mode: string
           name: string
+          provider_campaign_id?: string | null
           recipients_count?: number
           scheduled_at?: string | null
           script?: string | null
@@ -2018,9 +2064,11 @@ export type Database = {
           caller_id?: string | null
           cost?: number
           created_at?: string
+          failure_reason?: string | null
           id?: string
           mode?: string
           name?: string
+          provider_campaign_id?: string | null
           recipients_count?: number
           scheduled_at?: string | null
           script?: string | null

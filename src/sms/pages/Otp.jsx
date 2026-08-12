@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSmsWorkspace'
 import { PageLoader } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Table, Row, Cell, StatusPill, Button, Field, inputClass, textareaClass, Stat } from '../components/ui'
-import { money, useSmsRates } from '../lib'
+import { money, useSmsRates, invokeMessaging } from '../lib'
 
 export default function Otp() {
   const { user } = useAuth()
@@ -15,6 +15,12 @@ export default function Otp() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [testPhone, setTestPhone] = useState('')
+  const [code, setCode] = useState('')
+  const [request, setRequest] = useState(null)
+  const [sending, setSending] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   useModeDataLoading(loading)
 
   useEffect(() => {
@@ -40,7 +46,7 @@ export default function Otp() {
     return () => {
       cancelled = true
     }
-  }, [business?.id, mode])
+  }, [business?.id, mode, reloadKey])
 
   if (!modeReady) return <PageLoader label="Loading OTP…" />
 
@@ -61,6 +67,43 @@ export default function Otp() {
     setSaving(false)
     if (error) return toast.error(error.message)
     toast.success('OTP settings saved')
+  }
+
+  async function sendTest() {
+    if (!testPhone.trim()) return toast.error('Enter a phone number')
+    setSending(true)
+    try {
+      const res = await invokeMessaging('messaging-otp', {
+        action: 'send',
+        business_id: business.id,
+        mode,
+        phone: testPhone.trim(),
+      })
+      setRequest(res)
+      setCode('')
+      toast.success(res.simulated ? 'Test OTP generated (no real SMS sent)' : 'OTP sent')
+      setReloadKey((k) => k + 1)
+    } catch (e) {
+      toast.error(e.message || 'Could not send the OTP')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  async function verifyTest() {
+    if (!code.trim()) return toast.error('Enter the code')
+    setVerifying(true)
+    try {
+      await invokeMessaging('messaging-otp', { action: 'verify', request_id: request.request_id, code: code.trim() })
+      toast.success('Code verified')
+      setRequest(null)
+      setCode('')
+      setReloadKey((k) => k + 1)
+    } catch (e) {
+      toast.error(e.message || 'Verification failed')
+    } finally {
+      setVerifying(false)
+    }
   }
 
   const verified = rows.filter((r) => r.status === 'verified').length
@@ -100,7 +143,30 @@ export default function Otp() {
           </form>
         </Card>
 
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-1 h-fit">
+          <CardHeader title="Send a test OTP" subtitle="Delivers a live code using your saved template." />
+          <div className="p-5 space-y-4">
+            <Field label="Phone number">
+              <input value={testPhone} onChange={(e) => setTestPhone(e.target.value)} className={inputClass} placeholder="0248980332" />
+            </Field>
+            <Button type="button" className="w-full" onClick={sendTest} disabled={sending}>
+              {sending ? 'Sending…' : 'Send OTP'}
+            </Button>
+            {request && (
+              <>
+                <Field label="Enter the code received" hint={request.test_code ? `Test mode code: ${request.test_code}` : undefined}>
+                  <input value={code} onChange={(e) => setCode(e.target.value)} className={inputClass} placeholder="123456" />
+                </Field>
+                <Button type="button" variant="ghost" className="w-full" onClick={verifyTest} disabled={verifying}>
+                  {verifying ? 'Verifying…' : 'Verify code'}
+                </Button>
+              </>
+            )}
+          </div>
+        </Card>
+
+
+        <Card className="lg:col-span-3">
           <CardHeader title="Recent OTP requests" />
           <Table head={['Number', 'Status', 'Cost', 'Expires', 'Requested']}>
             <tbody>

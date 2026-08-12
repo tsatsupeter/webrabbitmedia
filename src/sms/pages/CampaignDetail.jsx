@@ -5,7 +5,7 @@ import { supabase } from '../../integrations/supabase/client'
 import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
 import { PageLoader, TableSkeleton } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Table, Row, Cell, StatusPill, Button, Stat } from '../components/ui'
-import { money, walletEntry } from '../lib'
+import { money, walletEntry, invokeMessaging } from '../lib'
 import { useSmsWallet } from '../lib'
 
 export default function CampaignDetail() {
@@ -46,6 +46,22 @@ export default function CampaignDetail() {
   }
 
   const cancellable = ['scheduled', 'queued'].includes(campaign.status)
+
+  async function syncStatus() {
+    setBusy(true)
+    try {
+      const res = await invokeMessaging('messaging-status', { campaign_id: campaign.id })
+      toast.success(
+        res?.updated ? `${res.updated} recipient update${res.updated === 1 ? '' : 's'} pulled` : 'No new delivery updates yet',
+      )
+      load()
+    } catch (e) {
+      toast.error(e.message || 'Could not refresh delivery status')
+    } finally {
+      setBusy(false)
+    }
+  }
+
 
   async function cancel() {
     setBusy(true)
@@ -90,6 +106,9 @@ export default function CampaignDetail() {
             <Link to="/sms/campaigns" className="no-underline">
               <Button variant="ghost">Back</Button>
             </Link>
+            <Button variant="ghost" onClick={syncStatus} disabled={busy}>
+              {busy ? 'Refreshing…' : 'Refresh delivery status'}
+            </Button>
             {cancellable && (
               <Button variant="danger" onClick={cancel} disabled={busy}>
                 {busy ? 'Cancelling…' : 'Cancel & refund'}
