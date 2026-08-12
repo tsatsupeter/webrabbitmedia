@@ -1,11 +1,13 @@
 import { useSearchParams } from 'react-router-dom'
 import { Page, PageHeader } from '../components/ui'
-import { DefaultsTab, CallbacksTab, RatesTab } from './settings/tabs'
+import { DefaultsTab, CallbacksTab, RatesTab, TeamTab, WorkspaceTab } from './settings/tabs'
 
 const TABS = [
   { key: 'defaults', label: 'Defaults' },
   { key: 'callbacks', label: 'Callbacks' },
   { key: 'rates', label: 'Rate card' },
+  { key: 'team', label: 'Team' },
+  { key: 'workspace', label: 'Workspace' },
 ]
 
 export default function SmsSettings() {
