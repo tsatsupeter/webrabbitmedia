@@ -24,7 +24,7 @@ function OptionCard({ icon, iconWrap, title, bullets, cta, onClick }) {
   )
 }
 
-export default function AddBusinessOrBrandDrawer({ open, onClose, onPickBrand, onPickBusiness }) {
+export default function AddBusinessOrBrandDrawer({ open, onClose, onPickBrand, onPickBusiness, canAddBrand = true }) {
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && onClose?.()
