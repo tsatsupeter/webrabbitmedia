@@ -153,21 +153,38 @@ export default function TeamTab() {
         ) : (
 
           <div>
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-merchant-border last:border-0">
-              <div className="w-9 h-9 rounded-full bg-accent/20 text-accent-bright flex items-center justify-center text-[0.8rem] font-medium">
-                {(user?.email || '?')[0].toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <div className="text-[0.88rem] text-white">{user?.email}</div>
-                <div className="text-[0.72rem] text-white/45">Owner</div>
-              </div>
-              <span className="text-[0.7rem] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                Owner
-              </span>
-            </div>
+            {(() => {
+              const op = memberProfiles[active?.user_id]
+              const ownerLabel = op?.full_name || op?.email || 'Owner'
+              const isMe = user?.id === active?.user_id
+              return (
+                <div className="flex items-center gap-3 px-5 py-3.5 border-b border-merchant-border last:border-0">
+                  <div className="w-9 h-9 rounded-full bg-accent/20 text-accent-bright flex items-center justify-center text-[0.8rem] font-medium">
+                    {(ownerLabel || '?')[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[0.88rem] text-white flex items-center gap-2">
+                      {ownerLabel}
+                      {isMe && (
+                        <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                          You
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[0.72rem] text-white/45">
+                      {op?.full_name && op?.email ? op.email : 'Owner'}
+                    </div>
+                  </div>
+                  <span className="text-[0.7rem] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    Owner
+                  </span>
+                </div>
+              )
+            })()}
             {members.map((m) => {
               const p = memberProfiles[m.user_id]
               const label = p?.full_name || p?.email || 'Member'
+              const isMe = user?.id === m.user_id
               return (
                 <div
                   key={m.id}
@@ -177,7 +194,14 @@ export default function TeamTab() {
                     {(label || '?')[0].toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <div className="text-[0.88rem] text-white">{label}</div>
+                    <div className="text-[0.88rem] text-white flex items-center gap-2">
+                      {label}
+                      {isMe && (
+                        <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                          You
+                        </span>
+                      )}
+                    </div>
                     {p?.email && p?.full_name && (
                       <div className="text-[0.72rem] text-white/45">{p.email}</div>
                     )}
