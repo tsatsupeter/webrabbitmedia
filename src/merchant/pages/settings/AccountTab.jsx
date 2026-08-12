@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
 import Icon from '../../Icon'
+import Modal from '../../components/Modal'
 import { Card, SectionHeader } from './Section'
+import EmailCard from './EmailCard'
+import PasswordCard from './PasswordCard'
+import SessionsCard from './SessionsCard'
+import SecurityActivityCard from './SecurityActivityCard'
+import { formatWhen, logSecurityEvent, reauthenticate } from './security'
+
 
 const COUNTRIES = [
   { code: 'GH', dial: '+233', flag: '🇬🇭', label: 'Ghana' },
