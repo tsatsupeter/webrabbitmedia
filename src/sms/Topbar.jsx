@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
-import ProductSwitcher from '../components/ProductSwitcher'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
 import { useSmsWorkspace } from './useSmsWorkspace'
