@@ -63,10 +63,6 @@ export default function SmsTopbar({
 
       <h1 className="font-display text-[1.05rem] font-medium text-white truncate">{title}</h1>
 
-      <div className="hidden md:block ml-2">
-        <ProductSwitcher />
-      </div>
-
       <div className="flex-1" />
 
       {/* Credits chip */}
