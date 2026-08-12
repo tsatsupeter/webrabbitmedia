@@ -549,6 +549,28 @@ export default function Navbar() {
           }`}
         >
           <div className="flex-1 overflow-y-auto px-4 py-3">
+            {signedIn && (
+              <div className="flex items-center gap-3 px-2 py-3 mb-1 border-b border-border-light">
+                <span className="w-9 h-9 rounded-full bg-surface-raised border border-border flex items-center justify-center text-[0.82rem] font-semibold text-text-primary">
+                  {initial}
+                </span>
+                <span className="min-w-0 flex-1 text-[0.85rem] text-text-secondary truncate">{user?.email}</span>
+                {isAdmin && (
+                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-accent bg-accent/10 px-2 py-1 rounded-full">
+                    Admin
+                  </span>
+                )}
+              </div>
+            )}
+            {signedIn && isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="block px-2 py-4 min-h-11 text-[0.98rem] font-display font-medium text-text-primary no-underline hover:no-underline border-b border-border-light"
+              >
+                Admin Console
+              </Link>
+            )}
             {menus.map((m) => {
               const expanded = mobileSection === m.key
               return (
