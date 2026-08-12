@@ -1,11 +1,13 @@
 import { useSearchParams } from 'react-router-dom'
 import { Page, PageHeader } from '../components/ui'
-import { DefaultsTab, CallbacksTab, RatesTab } from './settings/tabs'
+import { DefaultsTab, CallbacksTab, RatesTab, TeamTab, WorkspaceTab } from './settings/tabs'
 
 const TABS = [
   { key: 'defaults', label: 'Defaults' },
   { key: 'callbacks', label: 'Callbacks' },
   { key: 'rates', label: 'Rate card' },
+  { key: 'team', label: 'Team' },
+  { key: 'workspace', label: 'Workspace' },
 ]
 
 export default function SmsSettings() {
@@ -22,7 +24,7 @@ export default function SmsSettings() {
     <Page>
       <PageHeader
         title="Messaging Settings"
-        description="Sender defaults, delivery callbacks and the credit rate card for this workspace."
+        description="Sender defaults, delivery callbacks, rate card, team access and workspace ownership."
       />
 
       <div className="border-b border-merchant-border">
@@ -48,6 +50,8 @@ export default function SmsSettings() {
         {active === 'defaults' && <DefaultsTab />}
         {active === 'callbacks' && <CallbacksTab />}
         {active === 'rates' && <RatesTab />}
+        {active === 'team' && <TeamTab />}
+        {active === 'workspace' && <WorkspaceTab />}
       </div>
     </Page>
   )

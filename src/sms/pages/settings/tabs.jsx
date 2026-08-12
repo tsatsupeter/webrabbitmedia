@@ -5,6 +5,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useSmsWorkspace } from '../../useSmsWorkspace'
 import { PageLoader } from '../../components/EmptyState'
 import { Card, CardHeader, Button, Field, inputClass } from '../../components/ui'
+import TransferOwnershipCard from '../../../merchant/pages/settings/TransferOwnershipCard'
 
 export function useSmsSettings() {
   const { business } = useSmsWorkspace()
@@ -206,4 +207,12 @@ export function RatesTab() {
       </div>
     </Card>
   )
+}
+
+// Team & ownership are workspace-level, shared with the merchant dashboard.
+// Reuse the exact same components so both products stay consistent.
+export { default as TeamTab } from '../../../merchant/pages/settings/TeamTab'
+
+export function WorkspaceTab() {
+  return <TransferOwnershipCard />
 }
