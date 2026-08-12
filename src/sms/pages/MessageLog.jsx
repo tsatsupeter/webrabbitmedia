@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../integrations/supabase/client'
 import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSmsWorkspace'
 import { PageLoader, TableSkeleton } from '../components/EmptyState'
@@ -10,7 +11,14 @@ export default function MessageLog() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
-  const [q, setQ] = useState('')
+  const [params, setParams] = useSearchParams()
+  const q = params.get('search') || ''
+  const setQ = (value) => {
+    const next = new URLSearchParams(params)
+    if (value) next.set('search', value)
+    else next.delete('search')
+    setParams(next, { replace: true })
+  }
   useModeDataLoading(loading)
 
   useEffect(() => {
@@ -38,7 +46,14 @@ export default function MessageLog() {
 
   if (!modeReady) return <PageLoader label="Loading messages…" />
 
-  const filtered = rows.filter((r) => r.to_number.includes(q.trim()))
+  const term = q.trim().toLowerCase()
+  const filtered = rows.filter(
+    (r) =>
+      !term ||
+      r.to_number.toLowerCase().includes(term) ||
+      (r.message || '').toLowerCase().includes(term) ||
+      (r.sender_name || '').toLowerCase().includes(term),
+  )
 
   return (
     <Page>
@@ -48,7 +63,7 @@ export default function MessageLog() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by number"
+            placeholder="Search number, sender or message"
             className={`${inputClass} max-w-xs`}
           />
           <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${inputClass} max-w-[180px]`}>
