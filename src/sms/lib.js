@@ -127,6 +127,32 @@ export async function invokeMessaging(fn, body) {
   return data
 }
 
+/** Start a real mobile money payment for messaging credits. */
+export async function startTopup({ businessId, amount, network, msisdn }) {
+  return invokeMessaging('messaging-topup', {
+    business_id: businessId,
+    amount: Number(amount),
+    network,
+    msisdn,
+  })
+}
+
+/** Poll a top-up until the gateway gives a final answer (or we time out). */
+export async function pollTopup(topupId, { attempts = 30, intervalMs = 4000, onTick } = {}) {
+  for (let i = 0; i < attempts; i++) {
+    await new Promise((r) => setTimeout(r, intervalMs))
+    let res
+    try {
+      res = await invokeMessaging('messaging-topup-status', { topup_id: topupId })
+    } catch {
+      continue
+    }
+    onTick?.(res)
+    if (res.status && res.status !== 'pending') return res
+  }
+  return { status: 'pending', credited: false }
+}
+
 /** Upstream BMS credit balance for the provider account. */
 export function useProviderBalance(businessId) {
   const [state, setState] = useState({ loading: true, sms: null, voice: null, error: null })
