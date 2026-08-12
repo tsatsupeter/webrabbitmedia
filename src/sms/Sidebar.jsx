@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { smsNavGroups } from './nav'
 import Icon from './Icon'
+import ProductSwitcher from '../components/ProductSwitcher'
 import { useSmsWorkspace } from './useSmsWorkspace'
 import { useSmsWallet, money } from './lib'
 
@@ -16,27 +17,11 @@ function Tooltip({ children, label }) {
   )
 }
 
-function BrandHeader({ compact }) {
+function ProductHeader({ compact }) {
   const { business } = useSmsWorkspace()
   return (
-    <div
-      className={`h-16 shrink-0 flex items-center gap-2.5 border-b border-merchant-border ${
-        compact ? 'justify-center px-2' : 'px-4'
-      }`}
-    >
-      <span className="w-8 h-8 shrink-0 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright flex items-center justify-center">
-        <Icon name="mail" size={17} />
-      </span>
-      {!compact && (
-        <div className="min-w-0">
-          <div className="font-display text-[0.95rem] font-medium text-white leading-tight">
-            Messaging
-          </div>
-          <div className="text-[0.7rem] text-white/40 truncate">
-            {business?.name || 'Web Rabbit'}
-          </div>
-        </div>
-      )}
+    <div className={`p-2 border-b border-merchant-border ${compact ? 'flex justify-center' : ''}`}>
+      <ProductSwitcher compact={compact} subtitle={business?.name} />
     </div>
   )
 }
@@ -149,7 +134,7 @@ export default function SmsSidebar({ onNavigate, compact = false, groups = smsNa
     <aside
       className={`${compact ? 'w-[80px]' : 'w-[260px]'} shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border transition-all duration-200`}
     >
-      <BrandHeader compact={compact} />
+      <ProductHeader compact={compact} />
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
         {groups.map((group, i) => (

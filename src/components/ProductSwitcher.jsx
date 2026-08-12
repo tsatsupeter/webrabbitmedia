@@ -8,7 +8,7 @@ import { PRODUCTS, productFromPath, setLastProduct } from '../lib/product'
  * Lets a user who signed up for everything move between Payments,
  * Messaging and Custom software without going back through /welcome.
  */
-export default function ProductSwitcher() {
+export default function ProductSwitcher({ compact = false, subtitle }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -44,23 +44,49 @@ export default function ProductSwitcher() {
     navigate(p.to)
   }
 
+  const trigger = compact ? (
+    <button
+      type="button"
+      onClick={() => setOpen((v) => !v)}
+      className="w-10 h-10 mx-auto flex items-center justify-center rounded-lg bg-white/[0.04] border border-merchant-border text-white/80 hover:bg-white/[0.08] transition-colors"
+      aria-haspopup="menu"
+      aria-expanded={open}
+      title="Switch product"
+    >
+      <Icon name={current.icon} size={16} className="text-accent-bright" />
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setOpen((v) => !v)}
+      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.04] border border-merchant-border text-white/80 text-[0.85rem] font-medium hover:bg-white/[0.08] transition-colors"
+      aria-haspopup="menu"
+      aria-expanded={open}
+      title="Switch product"
+    >
+      <span className="w-7 h-7 rounded-lg bg-accent/12 ring-1 ring-accent/25 flex items-center justify-center text-accent-bright">
+        <Icon name={current.icon} size={14} />
+      </span>
+      <span className="flex-1 text-left">
+        <span className="block leading-tight">{current.label}</span>
+        {subtitle && <span className="block text-[0.7rem] font-normal text-white/40 truncate">{subtitle}</span>}
+      </span>
+      <Icon name="chevron" size={13} className="rotate-90 text-white/40" />
+    </button>
+  )
+
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 h-9 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white/80 text-[0.8rem] font-medium hover:bg-white/[0.08] transition-colors"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title="Switch product"
-      >
-        <Icon name={current.icon} size={15} className="text-accent-bright" />
-        <span className="hidden sm:inline">{current.label}</span>
-        <Icon name="chevron" size={13} className="rotate-90 text-white/40" />
-      </button>
+      {trigger}
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 z-40 w-64 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden">
+        <div
+          className={`absolute z-40 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden ${
+            compact
+              ? 'left-full top-0 ml-2 w-60'
+              : 'left-0 right-0 top-full mt-2 w-full min-w-[220px]'
+          }`}
+        >
           <div className="px-3 pt-3 pb-2 text-[0.7rem] uppercase tracking-wider text-white/35">
             Your products
           </div>

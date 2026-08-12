@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { navGroups } from './nav'
 import Icon from './Icon'
 import BusinessSwitcher from './BusinessSwitcher'
+import ProductSwitcher from '../components/ProductSwitcher'
 import { useMerchantMode } from '../hooks/useMerchantMode'
 
 function Tooltip({ children, label }) {
@@ -169,6 +170,18 @@ export default function Sidebar({ onNavigate, compact = false, groups = navGroup
       className={`${compact ? 'w-[80px]' : 'w-[260px]'} shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border transition-all duration-200`}
     >
       <BusinessSwitcher compact={compact} />
+
+      <div className={`p-2 border-b border-merchant-border ${compact ? 'flex justify-center' : ''}`}>
+        {compact ? (
+          <Tooltip label="Your products">
+            <div>
+              <ProductSwitcher compact />
+            </div>
+          </Tooltip>
+        ) : (
+          <ProductSwitcher />
+        )}
+      </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
         {groups.map((group, i) => (
