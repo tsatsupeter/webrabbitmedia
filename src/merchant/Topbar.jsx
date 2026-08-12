@@ -5,11 +5,13 @@ import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
 import NotificationsBell from './../components/NotificationsBell'
 import RoleBadge from './components/RoleBadge'
+import { useAdminRole } from '../admin/useAdmin'
 
 export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick, showSearch = true }) {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const { user } = useAuth()
+  const { isAdmin } = useAdminRole()
 
   const [searchValue, setSearchValue] = useState('')
   const searchRef = useRef(null)
