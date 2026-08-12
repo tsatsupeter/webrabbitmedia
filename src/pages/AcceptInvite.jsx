@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
+import { refresh as refreshBusinesses, setActive } from '../hooks/useBusinesses'
 
 export default function AcceptInvite() {
   const [params] = useSearchParams()
