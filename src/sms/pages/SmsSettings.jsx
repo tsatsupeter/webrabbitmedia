@@ -24,7 +24,7 @@ export default function SmsSettings() {
     <Page>
       <PageHeader
         title="Messaging Settings"
-        description="Sender defaults, delivery callbacks and the credit rate card for this workspace."
+        description="Sender defaults, delivery callbacks, rate card, team access and workspace ownership."
       />
 
       <div className="border-b border-merchant-border">
