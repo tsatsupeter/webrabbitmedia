@@ -48,18 +48,25 @@ export default function AddBusinessOrBrandDrawer({ open, onClose, onPickBrand, o
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-          <OptionCard
-            iconWrap="bg-blue-500/15 text-blue-300 border border-blue-500/25"
-            icon={<Icon name="code" size={20} />}
-            title="Add a new brand"
-            bullets={[
-              'Separate identity with its own logo, statement descriptor, and URL',
-              'Organise products, payment links, and transactions by brand',
-              'Payouts and compliance stay shared with your business',
-            ]}
-            cta="Add new brand"
-            onClick={onPickBrand}
-          />
+          {canAddBrand ? (
+            <OptionCard
+              iconWrap="bg-blue-500/15 text-blue-300 border border-blue-500/25"
+              icon={<Icon name="code" size={20} />}
+              title="Add a new brand"
+              bullets={[
+                'Separate identity with its own logo, statement descriptor, and URL',
+                'Organise products, payment links, and transactions by brand',
+                'Payouts and compliance stay shared with your business',
+              ]}
+              cta="Add new brand"
+              onClick={onPickBrand}
+            />
+          ) : (
+            <div className="rounded-xl border border-merchant-border bg-white/[0.02] p-4 text-[0.82rem] text-white/50">
+              Adding a brand needs edit access on the current workspace. You have view-only access
+              here — you can still create your own business below.
+            </div>
+          )}
           <OptionCard
             iconWrap="bg-orange-500/15 text-orange-300 border border-orange-500/25"
             icon={<Icon name="store" size={20} />}
@@ -72,6 +79,10 @@ export default function AddBusinessOrBrandDrawer({ open, onClose, onPickBrand, o
             cta="Add new business"
             onClick={onPickBusiness}
           />
+          <p className="text-[0.8rem] text-white/40">
+            A new business is your own workspace — you&apos;ll be its owner.
+          </p>
+
         </div>
       </div>
     </div>
