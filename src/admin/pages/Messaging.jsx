@@ -275,7 +275,6 @@ export default function Messaging() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Stat label="Credits in circulation" value={money(totalCredits)} icon="wallet" />
-            <Stat label="Total topped up" value={money(topups)} icon="arrow-up" />
             <Stat label="Merchant spend" value={money(spend)} icon="chart" />
             <Stat
               label="Sender IDs pending"
@@ -283,6 +282,15 @@ export default function Messaging() {
               icon="seal"
               tone={pendingSenders.length ? 'warn' : 'default'}
             />
+            <Stat
+              label="Declined by network"
+              value={networkRejected.length}
+              icon="seal"
+              tone={networkRejected.length ? 'danger' : 'default'}
+              hint={networkRejected.length ? 'Needs a new sender name' : 'All clear'}
+            />
+          </div>
+
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Stat label="Messages sent" value={compact(sent.length)} icon="mail" />
