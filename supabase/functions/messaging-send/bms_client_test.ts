@@ -44,7 +44,8 @@ Deno.test('mapDeliveryStatus maps provider codes to internal statuses', async ()
   const { mapDeliveryStatus } = await loadClient('http://unused.local')
   assertEquals(mapDeliveryStatus('DELIVERED'), 'delivered')
   assertEquals(mapDeliveryStatus('FAILED'), 'failed')
-  assertEquals(mapDeliveryStatus('something-unknown'), 'sent')
+  assertEquals(mapDeliveryStatus('something-unknown'), 'submitted')
+  assertEquals(mapDeliveryStatus(''), 'submitted')
 })
 
 Deno.test('bmsScheduleDate formats an ISO timestamp for the provider', async () => {
