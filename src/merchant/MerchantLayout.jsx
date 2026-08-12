@@ -28,7 +28,7 @@ const titleByPath = {
 
 export default function MerchantLayout() {
   const { loading: authLoading, user } = useAuth()
-  const { loading: bizLoading } = useBusinesses()
+  const { loading: bizLoading, isViewer, active } = useBusinesses()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [compactSidebar, setCompactSidebar] = useState(() => {
     if (typeof window === 'undefined') return false
