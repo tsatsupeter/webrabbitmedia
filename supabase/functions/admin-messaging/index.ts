@@ -1,5 +1,15 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { bmsPost } from '../_shared/bms.ts'
+
+// Map an upstream BMS sender-ID status onto our internal status.
+function mapProviderStatus(raw: unknown) {
+  const s = String(raw ?? '').toLowerCase()
+  if (s.includes('approve') || s.includes('active') || s.includes('accept')) return 'approved'
+  if (s.includes('reject') || s.includes('declin') || s.includes('denied')) return 'rejected'
+  return 'pending'
+}
+
 
 // Admin-only messaging operations: sender ID decisions, wallet adjustments and
 // rate card updates. Every action is written to admin_audit_log.
