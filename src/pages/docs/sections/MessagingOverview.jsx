@@ -1,8 +1,9 @@
 import Callout from '../ui/Callout'
 import { CodeBlock } from '../ui/CodeBlock'
 import ParamTable from '../ui/ParamTable'
+import { MESSAGING_BASE } from '../../../lib/apiBase'
 
-export const MESSAGING_BASE = 'https://eydjkasswyygiycitnml.supabase.co/functions/v1'
+export { MESSAGING_BASE }
 
 export default function MessagingOverview() {
   return (

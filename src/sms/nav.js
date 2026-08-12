@@ -46,7 +46,6 @@ export const smsNavGroups = [
         icon: 'code',
         children: [
           { key: 'sms-dev-keys', label: 'API Keys', to: '/sms/developer/api-keys' },
-          { key: 'sms-dev-reference', label: 'API Reference', to: '/sms/developer' },
         ],
       },
       {
@@ -74,7 +73,7 @@ export const smsTitleByPath = {
   '/sms/voice': 'Voice & IVR',
   '/sms/ussd': 'USSD',
   '/sms/wallet': 'Messaging Wallet',
-  '/sms/developer': 'Developer',
+  
   '/sms/developer/api-keys': 'API Keys',
   '/sms/settings': 'Messaging Settings',
 }

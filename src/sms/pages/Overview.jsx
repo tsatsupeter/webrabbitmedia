@@ -11,7 +11,7 @@ import Icon from '../Icon'
 export default function Overview() {
   const { business, mode, modeReady } = useMerchantMode()
   const rates = useSmsRates()
-  const { balance, wallet, loading: walletLoading } = useSmsWallet(business?.id, mode)
+  const { balance, loading: walletLoading } = useSmsWallet(business?.id, mode)
   const [stats, setStats] = useState(null)
   const [campaigns, setCampaigns] = useState([])
   const [loading, setLoading] = useState(true)
@@ -83,14 +83,6 @@ export default function Overview() {
         }
       />
 
-      {wallet?.trial_granted && stats?.total === 0 && (
-        <div className="rounded-xl border border-accent/25 bg-accent/[0.07] px-5 py-4 flex items-center gap-3">
-          <Icon name="sparkles" size={18} className="text-accent-bright" />
-          <div className="text-[0.85rem] text-white/85">
-            Your 50 free trial SMS credits are ready — send your first campaign to try the platform.
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading || walletLoading ? (
