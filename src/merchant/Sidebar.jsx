@@ -171,6 +171,18 @@ export default function Sidebar({ onNavigate, compact = false, groups = navGroup
     >
       <BusinessSwitcher compact={compact} />
 
+      <div className={`p-2 border-b border-merchant-border ${compact ? 'flex justify-center' : ''}`}>
+        {compact ? (
+          <Tooltip label="Your products">
+            <div>
+              <ProductSwitcher compact />
+            </div>
+          </Tooltip>
+        ) : (
+          <ProductSwitcher />
+        )}
+      </div>
+
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
         {groups.map((group, i) => (
           <div key={i} className="space-y-0.5">
