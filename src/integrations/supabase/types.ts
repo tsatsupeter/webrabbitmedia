@@ -600,6 +600,7 @@ export type Database = {
       notification_preferences: {
         Row: {
           created_at: string
+          messaging_emails: boolean
           product_emails: boolean
           security_emails: boolean
           tx_emails: boolean
@@ -608,6 +609,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          messaging_emails?: boolean
           product_emails?: boolean
           security_emails?: boolean
           tx_emails?: boolean
@@ -616,6 +618,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          messaging_emails?: boolean
           product_emails?: boolean
           security_emails?: boolean
           tx_emails?: boolean
