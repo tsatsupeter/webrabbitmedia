@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const amount = Number(campaign.cost || 0)
     let balance: number | null = null
     if (amount > 0) {
-      balance = await walletEntry({
+      balance = await walletEntry(req, {
         businessId: campaign.business_id,
         mode: campaign.mode,
         type: 'refund',
