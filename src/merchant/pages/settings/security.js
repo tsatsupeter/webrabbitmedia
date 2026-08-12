@@ -61,15 +61,3 @@ export function formatWhen(iso) {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
-
-export function formatWhen(ts) {
-  if (!ts) return 'recently'
-  const d = new Date(ts)
-  if (Number.isNaN(d.getTime())) return 'recently'
-  const diff = (Date.now() - d.getTime()) / 1000
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-}
