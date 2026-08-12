@@ -11,7 +11,7 @@ import Icon from '../Icon'
 export default function Overview() {
   const { business, mode, modeReady } = useMerchantMode()
   const rates = useSmsRates()
-  const { balance, wallet, loading: walletLoading } = useSmsWallet(business?.id, mode)
+  const { balance, loading: walletLoading } = useSmsWallet(business?.id, mode)
   const [stats, setStats] = useState(null)
   const [campaigns, setCampaigns] = useState([])
   const [loading, setLoading] = useState(true)

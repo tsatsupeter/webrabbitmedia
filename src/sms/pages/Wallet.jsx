@@ -10,7 +10,7 @@ const PRESETS = [20, 50, 100, 250, 500]
 
 export default function Wallet() {
   const { business, mode, modeReady } = useMerchantMode()
-  const { balance, wallet, ledger, loading, refresh } = useSmsWallet(business?.id, mode)
+  const { balance, ledger, loading, refresh } = useSmsWallet(business?.id, mode)
   const rates = useSmsRates()
   const provider = useProviderBalance(business?.id)
   const [open, setOpen] = useState(false)
