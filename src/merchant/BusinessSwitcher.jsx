@@ -100,31 +100,47 @@ export default function BusinessSwitcher({ compact = false }) {
       {open && (
         <div className={`absolute z-40 top-full ${compact ? 'left-full ml-2' : 'left-3 right-3'} mt-2 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden min-w-[220px]`}>
           <div className="px-4 py-3 border-b border-merchant-border">
-            <div className="text-[0.8rem] font-semibold text-white">My Businesses</div>
+            <div className="text-[0.8rem] font-semibold text-white">Workspaces</div>
           </div>
-          <div className="max-h-[260px] overflow-y-auto py-1">
+          <div className="max-h-[300px] overflow-y-auto py-1">
             {businesses.length === 0 && (
               <div className="px-4 py-3 text-[0.8rem] text-white/40">No businesses yet</div>
             )}
-            {businesses.map((b) => {
-              const label = b.brand?.name || b.name
-              return (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => {
-                    setActive(b.id)
-                    setOpen(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/[0.04] text-left"
-                >
-                  <Avatar name={label} logoUrl={b.brand?.logoUrl} />
-                  <span className="flex-1 text-[0.85rem] text-white/80 truncate">{label}</span>
-                  {b.id === activeId && <Icon name="check" size={14} className="text-accent-bright" />}
-                </button>
-              )
-            })}
+            {[
+              { key: 'owned', label: 'My businesses', rows: owned },
+              { key: 'shared', label: 'Shared with me', rows: shared },
+            ].map((group) =>
+              group.rows.length === 0 ? null : (
+                <div key={group.key}>
+                  <div className="px-3 pt-2 pb-1 text-[0.65rem] uppercase tracking-wider text-white/35">
+                    {group.label}
+                  </div>
+                  {group.rows.map((b) => {
+                    const label = b.brand?.name || b.name
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => {
+                          setActive(b.id)
+                          setOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/[0.04] text-left"
+                      >
+                        <Avatar name={label} logoUrl={b.brand?.logoUrl} />
+                        <span className="flex-1 text-[0.85rem] text-white/80 truncate">{label}</span>
+                        <RoleChip role={b.role} />
+                        {b.id === activeId && (
+                          <Icon name="check" size={14} className="text-accent-bright" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ),
+            )}
           </div>
+
           <button
             type="button"
             onClick={() => {
