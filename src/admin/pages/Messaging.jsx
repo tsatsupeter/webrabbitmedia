@@ -64,6 +64,37 @@ async function adminAction(payload) {
   return data
 }
 
+/** Did the upstream network decline this sender name? */
+function isNetworkRejected(s) {
+  const p = String(s?.provider_status || '').toLowerCase()
+  return /reject|declin|denied/.test(p)
+}
+
+function NetworkStatus({ sender }) {
+  const raw = sender.provider_status
+  if (!raw) {
+    return <span className="text-[0.78rem] text-white/35">Not synced</span>
+  }
+  const p = raw.toLowerCase()
+  const tone = /reject|declin|denied|error/.test(p)
+    ? 'text-red-400'
+    : /approve|active|accept/.test(p)
+      ? 'text-accent-bright'
+      : /not\s*registered/.test(p)
+        ? 'text-amber-300'
+        : 'text-white/70'
+  return (
+    <div>
+      <div className={`text-[0.78rem] ${tone} max-w-[200px] truncate`} title={raw}>
+        {raw}
+      </div>
+      {sender.provider_synced_at && (
+        <div className="text-[0.7rem] text-white/35 mt-0.5">{fmtDate(sender.provider_synced_at)}</div>
+      )}
+    </div>
+  )
+}
+
 function Tabs({ active, onChange }) {
   return (
     <div className="flex flex-wrap gap-1 border-b border-merchant-border">
