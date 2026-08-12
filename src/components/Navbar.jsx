@@ -395,6 +395,19 @@ export default function Navbar() {
               </button>
             )
           })}
+          <Link
+            to="/docs"
+            className={`relative h-full px-3.5 inline-flex items-center text-[0.94rem] font-medium no-underline hover:no-underline transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+              pathname.startsWith('/docs') ? 'text-accent' : 'text-text-primary hover:text-accent'
+            }`}
+          >
+            Docs
+            <span
+              className={`absolute left-3 right-3 bottom-0 h-[3px] rounded-t bg-accent origin-left transition-transform duration-300 ${
+                pathname.startsWith('/docs') ? 'scale-x-100' : 'scale-x-0'
+              }`}
+            />
+          </Link>
         </div>
 
         <div className="flex-1" />
