@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
       'verification_on_hold', 'verification_reminder',
       'team_invite',
       'workspace_transfer_invite', 'workspace_transfer_completed',
+      'sender_id_approved', 'sender_id_rejected',
+      'wallet_topup', 'wallet_low_balance',
+      'campaign_sent', 'campaign_failed',
     ]
     if (!event || !validEvents.includes(event)) return json({ error: 'invalid_event' }, 400)
     if (!userId && !toEmailOverride) return json({ error: 'user_id_or_to_email_required' }, 400)
@@ -53,7 +56,7 @@ Deno.serve(async (req) => {
         ? db.from('profiles').select('email, full_name').eq('id', userId).maybeSingle()
         : Promise.resolve({ data: null as { email: string | null; full_name: string | null } | null }),
       userId
-        ? db.from('notification_preferences').select('tx_emails, security_emails').eq('user_id', userId).maybeSingle()
+        ? db.from('notification_preferences').select('tx_emails, security_emails, messaging_emails').eq('user_id', userId).maybeSingle()
         : Promise.resolve({ data: null }),
       businessId
         ? db.from('businesses').select('name').eq('id', businessId).maybeSingle()
@@ -72,9 +75,11 @@ Deno.serve(async (req) => {
     // Default toggles to true when the user hasn't saved preferences yet.
     // Skip preference gating when there's no user profile (external invitee).
     if (profile) {
-      const txOn = prefs?.tx_emails ?? true
-      const secOn = prefs?.security_emails ?? true
-      const allowed = rendered.category === 'security_emails' ? secOn : txOn
+      const allowed = rendered.category === 'security_emails'
+        ? (prefs?.security_emails ?? true)
+        : rendered.category === 'messaging_emails'
+          ? (prefs?.messaging_emails ?? true)
+          : (prefs?.tx_emails ?? true)
       if (!allowed) return json({ skipped: 'preference_off', category: rendered.category })
     }
 
