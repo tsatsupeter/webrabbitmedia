@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../../integrations/supabase/client'
 import { useAuth } from '../../../hooks/useAuth'
 import Icon from '../../Icon'
+import Modal from '../../components/Modal'
 import { Card, SectionHeader } from './Section'
+import EmailCard from './EmailCard'
+import PasswordCard from './PasswordCard'
+import SessionsCard from './SessionsCard'
+import SecurityActivityCard from './SecurityActivityCard'
+import { formatWhen, logSecurityEvent, reauthenticate } from './security'
+
 
 const COUNTRIES = [
   { code: 'GH', dial: '+233', flag: '🇬🇭', label: 'Ghana' },
@@ -304,14 +310,22 @@ export default function AccountTab() {
   const [profile, setProfile] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [editOpen, setEditOpen] = useState(false)
-  
+
   const [mfaOpen, setMfaOpen] = useState(false)
   const [mfaEnrolled, setMfaEnrolled] = useState(false)
+  const [mfaSince, setMfaSince] = useState(null)
+  const [disableOpen, setDisableOpen] = useState(false)
+  const [disablePw, setDisablePw] = useState('')
+  const [disabling, setDisabling] = useState(false)
+  const [activityKey, setActivityKey] = useState(0)
+
+  const bumpActivity = () => setActivityKey((k) => k + 1)
 
   const loadMfa = async () => {
     const { data } = await supabase.auth.mfa.listFactors()
     const totp = (data?.totp || []).find((f) => f.status === 'verified')
     setMfaEnrolled(!!totp)
+    setMfaSince(totp?.updated_at || totp?.created_at || null)
   }
 
   useEffect(() => {
@@ -324,14 +338,27 @@ export default function AccountTab() {
     loadMfa()
   }, [user?.id])
 
-  const disableMfa = async () => {
-    const { data } = await supabase.auth.mfa.listFactors()
-    const totp = (data?.totp || []).find((f) => f.status === 'verified')
-    if (!totp) return
-    const { error } = await supabase.auth.mfa.unenroll({ factorId: totp.id })
-    if (error) return toast.error(error.message)
-    toast.success('Two-factor disabled')
-    loadMfa()
+  const confirmDisableMfa = async (e) => {
+    e.preventDefault()
+    setDisabling(true)
+    try {
+      await reauthenticate(user.email, disablePw)
+      const { data } = await supabase.auth.mfa.listFactors()
+      const totp = (data?.totp || []).find((f) => f.status === 'verified')
+      if (!totp) throw new Error('No authenticator app enrolled')
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: totp.id })
+      if (error) throw error
+      await logSecurityEvent(user.id, 'mfa_disabled')
+      toast.success('Two-factor disabled')
+      setDisableOpen(false)
+      setDisablePw('')
+      bumpActivity()
+      loadMfa()
+    } catch (err) {
+      toast.error(err.message || 'Could not disable two-factor')
+    } finally {
+      setDisabling(false)
+    }
   }
 
   const handleSaved = async (patch) => {
@@ -370,32 +397,35 @@ export default function AccountTab() {
         </div>
       </Card>
 
+      <EmailCard user={user} onEvent={bumpActivity} />
+
       <SectionHeader title="Security" />
 
-      <Card className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-[0.9rem] font-medium text-white mb-1">Password</h3>
-            <p className="text-[0.8rem] text-white/55">Change your password to secure your account.</p>
-          </div>
-          <Link to={`/auth/forgot-password?email=${encodeURIComponent(user?.email || '')}`} className="h-9 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium inline-flex items-center no-underline">Change Password</Link>
-        </div>
-      </Card>
+      <PasswordCard user={user} onEvent={bumpActivity} />
 
       <Card className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-[0.9rem] font-medium text-white mb-1">Two-Factor Authentication</h3>
             <p className="text-[0.8rem] text-white/55">Enable two-factor authentication to secure your account.</p>
-            {mfaEnrolled && <span className="inline-block mt-2 text-[0.7rem] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Enabled</span>}
+            {mfaEnrolled && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-[0.7rem] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Enabled</span>
+                {mfaSince && <span className="text-[0.72rem] text-white/40">since {formatWhen(mfaSince)}</span>}
+              </div>
+            )}
           </div>
           {mfaEnrolled ? (
-            <button type="button" onClick={disableMfa} className="h-9 px-4 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-300 text-[0.82rem] font-medium">Disable</button>
+            <button type="button" onClick={() => setDisableOpen(true)} className="h-9 px-4 shrink-0 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-300 text-[0.82rem] font-medium">Disable</button>
           ) : (
-            <button type="button" onClick={() => setMfaOpen(true)} className="h-9 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium">Enable Authenticator App</button>
+            <button type="button" onClick={() => setMfaOpen(true)} className="h-9 px-4 shrink-0 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-[0.82rem] font-medium">Enable Authenticator App</button>
           )}
         </div>
       </Card>
+
+      <SessionsCard user={user} onEvent={bumpActivity} />
+
+      <SecurityActivityCard user={user} refreshKey={activityKey} />
 
       <EditPersonalDrawer
         open={editOpen}
@@ -405,8 +435,30 @@ export default function AccountTab() {
         avatarUrl={avatarUrl}
         onSaved={handleSaved}
       />
-      
-      <MfaModal open={mfaOpen} onClose={() => setMfaOpen(false)} onDone={loadMfa} />
+
+      <MfaModal open={mfaOpen} onClose={() => setMfaOpen(false)} onDone={async () => { await logSecurityEvent(user.id, 'mfa_enabled'); bumpActivity(); loadMfa() }} />
+
+      <Modal open={disableOpen} onClose={() => setDisableOpen(false)}>
+        <form onSubmit={confirmDisableMfa} className="p-6 space-y-4">
+          <h3 className="font-display text-[1.05rem] text-white">Disable Two-Factor Authentication</h3>
+          <p className="text-[0.8rem] text-white/55">Confirm your password to remove the authenticator app from this account.</p>
+          <input
+            type="password"
+            value={disablePw}
+            onChange={(e) => setDisablePw(e.target.value)}
+            autoComplete="current-password"
+            placeholder="Current password"
+            className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white text-[0.85rem] outline-none focus:border-accent"
+          />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setDisableOpen(false)} className="h-9 px-4 rounded-lg text-white/70 hover:text-white text-[0.82rem]">Cancel</button>
+            <button type="submit" disabled={disabling || !disablePw} className="h-9 px-4 rounded-lg bg-red-500/20 text-red-200 text-[0.82rem] font-medium disabled:opacity-60">
+              {disabling ? 'Disabling…' : 'Disable'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
+
