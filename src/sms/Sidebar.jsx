@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { smsNavGroups } from './nav'
 import Icon from './Icon'
 import ProductSwitcher from '../components/ProductSwitcher'
+import BusinessSwitcher from '../merchant/BusinessSwitcher'
 import { useSmsWorkspace } from './useSmsWorkspace'
 import { useSmsWallet, money } from './lib'
 
