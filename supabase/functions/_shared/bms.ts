@@ -98,7 +98,7 @@ export function mapDeliveryStatus(raw: unknown): string {
   if (s.includes('reject')) return 'rejected'
   if (s.includes('fail') || s.includes('expire')) return 'failed'
   if (s.includes('submit') || s.includes('sent') || s.includes('pending')) return 'submitted'
-  return s || 'submitted'
+  return 'submitted'
 }
 
 /** YYYY-MM-DD hh:mm as BMS expects for scheduling. */
