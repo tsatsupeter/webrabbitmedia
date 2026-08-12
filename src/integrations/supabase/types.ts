@@ -2039,6 +2039,50 @@ export type Database = {
           },
         ]
       }
+      workspace_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_label: string | null
+          business_id: string
+          created_at: string
+          details: Json
+          id: string
+          target_label: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_label?: string | null
+          business_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_label?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_label?: string | null
+          business_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_label?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_activity_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

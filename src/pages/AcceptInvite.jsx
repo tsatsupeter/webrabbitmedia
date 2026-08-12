@@ -65,15 +65,47 @@ export default function AcceptInvite() {
         {state.status === 'success' && (
           <>
             <h1 className="text-white text-xl font-medium mb-2">You're in</h1>
-            <p className="text-white/60 text-sm mb-6">
+            <p className="text-white/60 text-sm mb-5">
               You've joined <span className="text-white">{state.business?.name}</span> as{' '}
-              {state.role === 'admin' ? 'an Editor' : 'a Viewer'}.
+              {state.role === 'admin' ? 'an Editor' : 'a Viewer'}. You don't need to create an
+              account or a business — this workspace is already yours to use.
             </p>
+
+            <div className="text-left rounded-xl border border-merchant-border bg-white/[0.03] p-4 mb-6">
+              <div className="text-[0.78rem] uppercase tracking-wide text-white/45 mb-2">
+                What you can do
+              </div>
+              <ul className="m-0 p-0 list-none space-y-1.5">
+                {(state.role === 'admin'
+                  ? [
+                      'Collect payments and request payouts',
+                      'Manage brands, verification and API keys',
+                      'Send messaging campaigns',
+                    ]
+                  : ['View transactions, payouts, analytics and settings']
+                ).map((c) => (
+                  <li key={c} className="flex gap-2 text-[0.82rem] text-white/70">
+                    <span className="text-accent-bright">✓</span>
+                    {c}
+                  </li>
+                ))}
+                {(state.role === 'admin'
+                  ? ['Invite or remove teammates', 'Transfer or delete the workspace']
+                  : ['Make changes — your access is read-only']
+                ).map((c) => (
+                  <li key={c} className="flex gap-2 text-[0.82rem] text-white/40">
+                    <span className="text-white/30">✕</span>
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <Link
               to="/merchant"
               className="inline-flex h-10 px-5 items-center rounded-lg bg-white text-black text-sm font-medium"
             >
-              Go to dashboard
+              Go to {state.business?.name || 'dashboard'}
             </Link>
           </>
         )}

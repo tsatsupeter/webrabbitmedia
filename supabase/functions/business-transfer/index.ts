@@ -2,6 +2,7 @@
 // Auth: verify_jwt = true — caller is always derived from the Authorization bearer.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { logActivity } from '../_shared/activity.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -179,6 +180,15 @@ Deno.serve(async (req) => {
         })
       }
 
+      await logActivity(db, {
+        business_id: biz.id,
+        action: 'ownership_transfer_requested',
+        actor_id: user.id,
+        actor_label: me?.full_name || me?.email || user.email,
+        target_label: toEmail,
+        details: { to_email: toEmail, expires_at: created.expires_at },
+      })
+
       return json({ ok: true, transfer: { ...created, token: undefined } })
     }
 
@@ -194,6 +204,13 @@ Deno.serve(async (req) => {
         .from('business_transfers')
         .update({ status: 'cancelled', responded_at: new Date().toISOString() })
         .eq('id', id)
+      await logActivity(db, {
+        business_id: t.business_id,
+        action: 'ownership_transfer_cancelled',
+        actor_id: user.id,
+        target_label: t.to_email,
+        details: { to_email: t.to_email },
+      })
       return json({ ok: true })
     }
 
@@ -250,6 +267,14 @@ Deno.serve(async (req) => {
           message: `${callerEmail} declined the ownership transfer of ${biz.name}.`,
           link: '/merchant/settings?tab=business',
           read: false,
+        })
+        await logActivity(db, {
+          business_id: biz.id,
+          action: 'ownership_transfer_declined',
+          actor_id: user.id,
+          actor_label: callerEmail,
+          target_label: fromProfile?.full_name || fromProfile?.email || null,
+          details: { to_email: t.to_email },
         })
         return json({ ok: true, declined: true })
       }
@@ -333,6 +358,54 @@ Deno.serve(async (req) => {
           read: false,
         },
       ])
+
+      const prevOwnerLabel = fromProfile?.full_name || fromProfile?.email || null
+      await logActivity(db, {
+        business_id: biz.id,
+        action: 'ownership_transferred',
+        actor_id: t.from_user_id,
+        actor_label: prevOwnerLabel,
+        target_user_id: user.id,
+        target_label: newOwnerLabel,
+        details: {
+          initiated_by: prevOwnerLabel,
+          initiated_at: t.created_at,
+          previous_owner_id: oldOwner,
+          new_owner_id: user.id,
+          new_owner: newOwnerLabel,
+        },
+      })
+      await logActivity(db, {
+        business_id: biz.id,
+        action: 'role_changed',
+        actor_id: t.from_user_id,
+        actor_label: prevOwnerLabel,
+        target_user_id: oldOwner,
+        target_label: prevOwnerLabel,
+        details: { from: 'owner', to: 'admin', reason: 'ownership_transfer' },
+      })
+      await logActivity(db, {
+        business_id: biz.id,
+        action: 'role_changed',
+        actor_id: t.from_user_id,
+        actor_label: prevOwnerLabel,
+        target_user_id: user.id,
+        target_label: newOwnerLabel,
+        details: { from: 'admin', to: 'owner', reason: 'ownership_transfer' },
+      })
+      await db.from('admin_audit_log').insert({
+        actor_id: t.from_user_id,
+        actor_email: fromProfile?.email || null,
+        action: 'workspace.ownership_transferred',
+        entity_type: 'business',
+        entity_id: biz.id,
+        details: {
+          previous_owner_id: oldOwner,
+          new_owner_id: user.id,
+          new_owner: newOwnerLabel,
+          transfer_id: t.id,
+        },
+      })
 
       await callSendEmail({
         event: 'workspace_transfer_completed',

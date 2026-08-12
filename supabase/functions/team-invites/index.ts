@@ -2,6 +2,7 @@
 // Auth: verify_jwt = true — reads caller from Authorization bearer.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { logActivity } from '../_shared/activity.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -147,6 +148,13 @@ Deno.serve(async (req) => {
 
         try {
           await sendInviteEmail(record as never, biz)
+          await logActivity(db, {
+            business_id: biz.id,
+            action: 'invite_sent',
+            actor_id: user.id,
+            target_label: inv.email,
+            details: { email: inv.email, role: inv.role },
+          })
           results.push({ email: inv.email, status: 'sent' })
         } catch (e) {
           results.push({
@@ -181,13 +189,20 @@ Deno.serve(async (req) => {
       if (!inviteId) return json({ error: 'invalid_input' }, 400)
       const { data: inv } = await db
         .from('team_invites')
-        .select('id, business_id')
+        .select('id, business_id, email, role')
         .eq('id', inviteId)
         .maybeSingle()
       if (!inv) return json({ error: 'not_found' }, 404)
       await assertOwner(inv.business_id)
       const { error } = await db.from('team_invites').delete().eq('id', inv.id)
       if (error) return json({ error: error.message }, 500)
+      await logActivity(db, {
+        business_id: inv.business_id,
+        action: 'invite_revoked',
+        actor_id: user.id,
+        target_label: inv.email,
+        details: { email: inv.email, role: inv.role },
+      })
       return json({ ok: true })
     }
 
@@ -227,6 +242,23 @@ Deno.serve(async (req) => {
       if (memberErr) return json({ error: memberErr.message }, 500)
 
       await db.from('team_invites').update({ accepted_at: new Date().toISOString() }).eq('id', inv.id)
+
+      await logActivity(db, {
+        business_id: inv.business_id,
+        action: 'invite_accepted',
+        actor_id: user.id,
+        target_user_id: user.id,
+        target_label: callerEmail,
+        details: { role: inv.role, email: callerEmail },
+      })
+      await logActivity(db, {
+        business_id: inv.business_id,
+        action: 'role_changed',
+        actor_id: user.id,
+        target_user_id: user.id,
+        target_label: callerEmail,
+        details: { from: null, to: inv.role, reason: 'invite_accepted' },
+      })
 
       return json({ ok: true, business: biz, role: inv.role })
     }

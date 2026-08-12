@@ -28,7 +28,7 @@ const titleByPath = {
 
 export default function MerchantLayout() {
   const { loading: authLoading, user } = useAuth()
-  const { loading: bizLoading, isViewer, active } = useBusinesses()
+  const { loading: bizLoading, isViewer, role, active } = useBusinesses()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [compactSidebar, setCompactSidebar] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -94,6 +94,14 @@ export default function MerchantLayout() {
           <div className="px-4 md:px-6 pt-3">
             <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-200">
               You have view-only access to {active.name}. Ask an owner or editor to make changes.
+            </div>
+          </div>
+        )}
+        {role === 'admin' && active && (
+          <div className="px-4 md:px-6 pt-3">
+            <div className="rounded-lg border border-sky-400/20 bg-sky-400/[0.08] px-3 py-2 text-[0.78rem] text-sky-200">
+              You're an Editor in {active.name}. You can run payments, payouts and messaging —
+              team management and ownership stay with the owner.
             </div>
           </div>
         )}

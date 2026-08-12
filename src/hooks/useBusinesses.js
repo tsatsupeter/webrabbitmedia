@@ -130,6 +130,32 @@ function load(force = false) {
   return inflight
 }
 
+// Realtime: role changes (team_members) and ownership changes (businesses)
+// must reach every open session immediately, so a demoted owner stops seeing
+// owner-only controls without a manual refresh.
+let realtimeChannel = null
+
+function stopRealtime() {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+    realtimeChannel = null
+  }
+}
+
+function startRealtime(userId) {
+  stopRealtime()
+  if (!userId) return
+  realtimeChannel = supabase
+    .channel(`workspace-roles:${userId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () =>
+      load(true),
+    )
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses' }, () =>
+      load(true),
+    )
+    .subscribe()
+}
+
 let started = false
 function start() {
   if (started || typeof window === 'undefined') return
@@ -146,12 +172,16 @@ function start() {
     signedCache.clear()
     emit()
     load(true)
+    startRealtime(uid)
   }
 
   subscribeAuth(onAuth)
   onAuth(getAuthSnapshot())
 
   window.addEventListener(BRAND_EVENT, () => load(true))
+  window.addEventListener('focus', () => {
+    if (currentUserId) load(true)
+  })
 }
 
 export function useBusinesses() {

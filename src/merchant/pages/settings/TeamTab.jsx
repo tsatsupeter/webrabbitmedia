@@ -6,6 +6,7 @@ import { useBusinesses } from '../../../hooks/useBusinesses'
 import { Card, SectionHeader } from './Section'
 import Modal from '../../components/Modal'
 import Icon from '../../Icon'
+import ActivityCard from './ActivityCard'
 
 const ROLE_LABEL = { admin: 'Editor', viewer: 'Viewer' }
 
@@ -24,7 +25,7 @@ function RoleSelect({ value, onChange }) {
 
 export default function TeamTab() {
   const { user } = useAuth()
-  const { active } = useBusinesses()
+  const { active, isOwner: isOwnerRole } = useBusinesses()
   const [members, setMembers] = useState([])
   const [memberProfiles, setMemberProfiles] = useState({})
   const [invites, setInvites] = useState([])
@@ -33,7 +34,8 @@ export default function TeamTab() {
   const [rows, setRows] = useState([{ email: '', role: 'admin' }])
   const [busy, setBusy] = useState(false)
 
-  const isOwner = active && user && active.user_id === user.id
+  // Owner comes from the shared store so it stays correct right after a transfer.
+  const isOwner = Boolean(isOwnerRole && active && user && active.user_id === user.id)
 
   const load = async () => {
     if (!active) return
@@ -64,6 +66,28 @@ export default function TeamTab() {
   }
   useEffect(() => {
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active?.id, active?.user_id])
+
+  // Live-update the roster when membership or ownership changes elsewhere.
+  useEffect(() => {
+    if (!active) return
+    const channel = supabase
+      .channel(`team:${active.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'team_members', filter: `business_id=eq.${active.id}` },
+        () => load(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'team_invites', filter: `business_id=eq.${active.id}` },
+        () => load(),
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.id])
 
@@ -257,6 +281,8 @@ export default function TeamTab() {
           ))}
         </Card>
       )}
+
+      <ActivityCard />
 
       <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} width={520}>
         <form onSubmit={send} className="p-6">

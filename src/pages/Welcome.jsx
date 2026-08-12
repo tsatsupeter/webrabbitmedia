@@ -256,9 +256,13 @@ export default function Welcome() {
                         <span className="block text-[0.9rem] text-white truncate">{b.name}</span>
                         <span className="block text-[0.78rem] text-white/40 capitalize">
                           {b.status || 'pending'}
+                          {b.role && b.role !== 'owner'
+                            ? ` · ${b.role === 'admin' ? 'Editor' : 'Viewer'}`
+                            : ' · Owner'}
                         </span>
                       </span>
                     </span>
+
                     {b.id === activeId ? (
                       <StatusPill tone="live">Selected</StatusPill>
                     ) : (
