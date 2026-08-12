@@ -106,6 +106,9 @@ export default function CampaignDetail() {
             <Link to="/sms/campaigns" className="no-underline">
               <Button variant="ghost">Back</Button>
             </Link>
+            <Button variant="ghost" onClick={syncStatus} disabled={busy}>
+              {busy ? 'Refreshing…' : 'Refresh delivery status'}
+            </Button>
             {cancellable && (
               <Button variant="danger" onClick={cancel} disabled={busy}>
                 {busy ? 'Cancelling…' : 'Cancel & refund'}
