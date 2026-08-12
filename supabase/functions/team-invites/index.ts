@@ -155,6 +155,23 @@ Deno.serve(async (req) => {
             target_label: inv.email,
             details: { email: inv.email, role: inv.role },
           })
+          // If the invitee already has an account, surface it in-app too.
+          const { data: invitee } = await db
+            .from('profiles')
+            .select('id')
+            .eq('email', inv.email)
+            .maybeSingle()
+          if (invitee?.id) {
+            await db.from('notifications').insert({
+              user_id: invitee.id,
+              business_id: biz.id,
+              category: 'team',
+              title: `You're invited to ${biz.name}`,
+              message: `You've been invited to join ${biz.name} as ${inv.role === 'admin' ? 'an Editor' : 'a Viewer'}.`,
+              link: `/team/accept?token=${encodeURIComponent((record as { token: string }).token)}`,
+              read: false,
+            })
+          }
           results.push({ email: inv.email, status: 'sent' })
         } catch (e) {
           results.push({
