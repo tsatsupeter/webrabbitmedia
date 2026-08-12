@@ -522,13 +522,37 @@ function renderText(c: Content, recipient: { name?: string }): string {
   return `${greeting}\n\n${c.intro}\n${hero}${quote}${bullets}\n${rows}${lines}${cta}${outro}\n\n— ${BRAND.name}\n${BRAND.site}`
 }
 
+export type EmailCategory = 'tx_emails' | 'security_emails' | 'messaging_emails'
+
 export type RenderedEmail = {
   subject: string
   html: string
   text: string
   from: string
   replyTo: string
-  category: 'tx_emails' | 'security_emails'
+  category: EmailCategory
+}
+
+const SECURITY_EVENTS: EmailEvent[] = [
+  'business_approved',
+  'team_invite',
+  'workspace_transfer_invite',
+  'workspace_transfer_completed',
+]
+
+const MESSAGING_EVENTS: EmailEvent[] = [
+  'sender_id_approved',
+  'sender_id_rejected',
+  'wallet_topup',
+  'wallet_low_balance',
+  'campaign_sent',
+  'campaign_failed',
+]
+
+export function categoryFor(event: EmailEvent): EmailCategory {
+  if (SECURITY_EVENTS.includes(event)) return 'security_emails'
+  if (MESSAGING_EVENTS.includes(event)) return 'messaging_emails'
+  return 'tx_emails'
 }
 
 export function renderEmail(event: EmailEvent, data: EmailData, ctx: {
@@ -542,13 +566,7 @@ export function renderEmail(event: EmailEvent, data: EmailData, ctx: {
     text: renderText(content, { name: ctx.recipientName }),
     from: BRAND.from,
     replyTo: BRAND.replyTo,
-    category:
-      event === 'business_approved' ||
-      event === 'team_invite' ||
-      event === 'workspace_transfer_invite' ||
-      event === 'workspace_transfer_completed'
-        ? 'security_emails'
-        : 'tx_emails',
+    category: categoryFor(event),
   }
 }
 
