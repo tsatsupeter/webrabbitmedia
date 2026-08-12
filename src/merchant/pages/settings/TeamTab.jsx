@@ -47,19 +47,19 @@ export default function TeamTab() {
         .is('accepted_at', null)
         .order('created_at', { ascending: false }),
     ])
-    setMembers(m || [])
+    // The business owner may also have a team_members row (e.g. after an
+    // ownership transfer demotes the previous owner). Never list them twice.
+    const memberRows = (m || []).filter((x) => x.user_id !== active.user_id)
+    setMembers(memberRows)
     setInvites(inv || [])
-    if (m && m.length) {
-      const { data: profs } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url')
-        .in('id', m.map((x) => x.user_id))
-      const map = {}
-      ;(profs || []).forEach((p) => (map[p.id] = p))
-      setMemberProfiles(map)
-    } else {
-      setMemberProfiles({})
-    }
+    const ids = Array.from(new Set([active.user_id, ...memberRows.map((x) => x.user_id)]))
+    const { data: profs } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .in('id', ids)
+    const map = {}
+    ;(profs || []).forEach((p) => (map[p.id] = p))
+    setMemberProfiles(map)
     setLoading(false)
   }
   useEffect(() => {
