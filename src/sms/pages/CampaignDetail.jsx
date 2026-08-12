@@ -66,23 +66,11 @@ export default function CampaignDetail() {
   async function cancel() {
     setBusy(true)
     try {
-      await supabase.from('sms_campaigns').update({ status: 'cancelled' }).eq('id', campaign.id)
-      await supabase
-        .from('sms_messages')
-        .update({ status: 'cancelled' })
-        .eq('campaign_id', campaign.id)
-        .eq('status', 'queued')
-      await walletEntry({
-        businessId: business.id,
-        mode,
-        type: 'refund',
-        amount: Number(campaign.cost),
-        channel: 'sms',
-        description: `Refund for cancelled campaign: ${campaign.name}`,
-        reference: campaign.id,
-      })
+      const res = await invokeMessaging('messaging-cancel', { campaign_id: campaign.id })
       await refreshWallet()
-      toast.success('Campaign cancelled and credits refunded')
+      toast.success(
+        res?.refunded ? `Campaign cancelled — ${money(res.refunded)} refunded` : 'Campaign cancelled',
+      )
       load()
     } catch (e) {
       toast.error(e.message || 'Could not cancel')
