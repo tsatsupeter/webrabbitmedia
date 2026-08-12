@@ -5,7 +5,8 @@ import { useAuth } from '../../../hooks/useAuth'
 import { Card, SectionHeader } from './Section'
 
 const ROWS = [
-  { key: 'tx_emails', title: 'Transactional emails', desc: 'Payment receipts and payout status updates.' },
+  { key: 'tx_emails', title: 'Transactional emails', desc: 'Payment receipts, payout status and verification updates.' },
+  { key: 'messaging_emails', title: 'Messaging emails', desc: 'Sender ID decisions, credit top-ups, low balance and campaign summaries.' },
   { key: 'product_emails', title: 'Product updates', desc: 'Occasional news about new features and changes.' },
   { key: 'security_emails', title: 'Security alerts', desc: 'Sign-in and account security notifications. Recommended.' },
 ]
