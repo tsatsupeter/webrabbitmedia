@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { useBusinesses } from '../hooks/useBusinesses'
 import AddBusinessOrBrandDrawer from './components/AddBusinessOrBrandDrawer'
 import NewBrandDrawer from './components/NewBrandDrawer'
-import NewBusinessDrawer from './components/NewBusinessDrawer'
 
 
 function Avatar({ name, logoUrl, className = '' }) {
