@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
       'business_approved', 'verification_submitted',
       'verification_on_hold', 'verification_reminder',
       'team_invite',
+      'workspace_transfer_invite', 'workspace_transfer_completed',
     ]
     if (!event || !validEvents.includes(event)) return json({ error: 'invalid_event' }, 400)
     if (!userId && !toEmailOverride) return json({ error: 'user_id_or_to_email_required' }, 400)
