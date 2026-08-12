@@ -40,6 +40,10 @@ export default function AcceptInvite() {
         setState({ status: 'error', message: map[code] || code, code })
         return
       }
+      // Make the newly joined workspace visible + active straight away, so the
+      // dashboard doesn't think the member has no business.
+      await refreshBusinesses()
+      if (data?.business?.id) await setActive(data.business.id)
       setState({
         status: 'success',
         message: 'You have joined the team.',
