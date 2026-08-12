@@ -159,6 +159,7 @@ export default function BusinessSwitcher({ compact = false }) {
 
       <AddBusinessOrBrandDrawer
         open={chooser}
+        canAddBrand={canEdit}
         onClose={() => setChooser(false)}
         onPickBrand={() => { setChooser(false); setBrandOpen(true) }}
         onPickBusiness={() => { setChooser(false); setBizOpen(true) }}
