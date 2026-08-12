@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
-import { useAuth } from '../../hooks/useAuth'
 import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSmsWorkspace'
 import { PageLoader } from '../components/EmptyState'
 import Modal from '../components/Modal'
 import { Page, PageHeader, Card, Table, Row, Cell, StatusPill, Button, Field, inputClass, textareaClass } from '../components/ui'
-import { money, parseRecipients, isValidMsisdn, useSmsRates, useSmsWallet, walletEntry } from '../lib'
+import { money, parseRecipients, isValidMsisdn, useSmsRates, useSmsWallet, invokeMessaging } from '../lib'
 
 export default function Voice() {
-  const { user } = useAuth()
   const { business, mode, modeReady } = useMerchantMode()
   const rates = useSmsRates()
   const { balance, refresh } = useSmsWallet(business?.id, mode)
