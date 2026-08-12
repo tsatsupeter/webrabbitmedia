@@ -23,7 +23,7 @@ export default function Wallet() {
   const smsRate = Number(rates?.sms?.unit_rate ?? 0)
   const credits = smsRate ? Math.floor(balance / smsRate) : 0
   const spent = ledger.filter((l) => l.entry_type === 'charge').reduce((s, l) => s + Number(l.amount), 0)
-  const topups = ledger.filter((l) => ['topup', 'trial'].includes(l.entry_type)).reduce((s, l) => s + Number(l.amount), 0)
+  const topups = ledger.filter((l) => l.entry_type === 'topup').reduce((s, l) => s + Number(l.amount), 0)
 
   async function topUp(e) {
     e.preventDefault()
@@ -70,11 +70,8 @@ export default function Wallet() {
             <Stat label="Balance" value={money(balance)} hint={`≈ ${credits.toLocaleString()} SMS`} tone="accent" icon="wallet" />
             <Stat label="Total topped up" value={money(topups)} />
             <Stat label="Total spent" value={money(spent)} />
-            <Stat
-              label="Trial credits"
-              value={wallet?.trial_granted ? 'Claimed' : 'Available'}
-              hint="50 free SMS for new accounts"
-            />
+            <Stat label="SMS rate" value={money(smsRate)} hint="Per 160-character segment" />
+
           </>
         )}
       </div>
@@ -108,7 +105,7 @@ export default function Wallet() {
               <tr><td colSpan={6} className="px-4 py-12 text-center text-[0.85rem] text-white/45">No wallet activity yet.</td></tr>
             ) : (
               ledger.map((l) => {
-                const credit = ['topup', 'trial', 'refund'].includes(l.entry_type)
+                const credit = ['topup', 'refund', 'bonus'].includes(l.entry_type)
                 return (
                   <Row key={l.id}>
                     <Cell className="capitalize text-white">{l.entry_type}</Cell>
