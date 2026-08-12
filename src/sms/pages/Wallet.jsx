@@ -150,7 +150,7 @@ export default function Wallet() {
           <div>
             <h3 className="font-display text-[1rem] text-white">Top up messaging wallet</h3>
             <p className="text-[0.8rem] text-white/50 mt-1">
-              Credits are added to your {mode} mode wallet immediately.
+              Pay with mobile money. Credits land the moment the payment clears.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
