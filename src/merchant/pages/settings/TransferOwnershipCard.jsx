@@ -16,7 +16,7 @@ const ERRORS = {
 }
 
 export default function TransferOwnershipCard() {
-  const { active } = useBusinesses()
+  const { active, isOwner: isOwnerRole } = useBusinesses()
   const { user } = useAuth()
   const [pending, setPending] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -25,7 +25,7 @@ export default function TransferOwnershipCard() {
   const [confirmName, setConfirmName] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const isOwner = !!active && !!user && active.user_id === user.id
+  const isOwner = Boolean(isOwnerRole && active && user && active.user_id === user.id)
 
   const load = useCallback(async () => {
     if (!active) return
