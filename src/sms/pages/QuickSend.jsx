@@ -2,11 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
-import { useAuth } from '../../hooks/useAuth'
 import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
 import { PageLoader } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Button, Field, inputClass, textareaClass } from '../components/ui'
-import { useSmsWallet, useSmsRates, countSegments, parseRecipients, isValidMsisdn, money, walletEntry } from '../lib'
+import { useSmsWallet, useSmsRates, countSegments, parseRecipients, isValidMsisdn, money, invokeMessaging } from '../lib'
 
 export default function QuickSend() {
   const navigate = useNavigate()
