@@ -100,6 +100,29 @@ export default function Otp() {
           </form>
         </Card>
 
+        <Card className="lg:col-span-1 h-fit">
+          <CardHeader title="Send a test OTP" subtitle="Delivers a live code using your saved template." />
+          <div className="p-5 space-y-4">
+            <Field label="Phone number">
+              <input value={testPhone} onChange={(e) => setTestPhone(e.target.value)} className={inputClass} placeholder="0248980332" />
+            </Field>
+            <Button type="button" className="w-full" onClick={sendTest} disabled={sending}>
+              {sending ? 'Sending…' : 'Send OTP'}
+            </Button>
+            {request && (
+              <>
+                <Field label="Enter the code received" hint={request.test_code ? `Test mode code: ${request.test_code}` : undefined}>
+                  <input value={code} onChange={(e) => setCode(e.target.value)} className={inputClass} placeholder="123456" />
+                </Field>
+                <Button type="button" variant="ghost" className="w-full" onClick={verifyTest} disabled={verifying}>
+                  {verifying ? 'Verifying…' : 'Verify code'}
+                </Button>
+              </>
+            )}
+          </div>
+        </Card>
+
+
         <Card className="lg:col-span-2">
           <CardHeader title="Recent OTP requests" />
           <Table head={['Number', 'Status', 'Cost', 'Expires', 'Requested']}>
