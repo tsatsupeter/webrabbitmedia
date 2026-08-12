@@ -309,8 +309,104 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
         cta: { label: 'Open dashboard', href: BRAND.dashboard },
         outro: `If you did not authorise this change, contact ${BRAND.replyTo} immediately.`,
       }
+    case 'sender_id_approved': {
+      const sender = String(d.sender_name || 'your sender ID')
+      return {
+        subject: `Sender ID "${sender}" approved`,
+        preheader: `You can now send messages with ${sender}.`,
+        headline: 'Your sender ID is approved',
+        intro: `The sender ID ${sender} has been approved on the networks. Messages you send from ${businessName} will now show this name.`,
+        pill: { label: 'Approved', tone: 'success' },
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'Sender ID', value: sender },
+        ],
+        cta: { label: 'Open messaging', href: `${BRAND.site}/sms/sender-ids` },
+      }
+    }
+    case 'sender_id_rejected': {
+      const sender = String(d.sender_name || 'your sender ID')
+      const reason = String(d.reason || 'The networks did not approve this name.')
+      return {
+        subject: `Sender ID "${sender}" was declined`,
+        preheader: reason,
+        headline: 'Your sender ID was declined',
+        intro: `The sender ID ${sender} was not approved. You can submit a different name or update your use case and try again.`,
+        pill: { label: 'Declined', tone: 'danger' },
+        quote: reason,
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'Sender ID', value: sender },
+        ],
+        cta: { label: 'Manage sender IDs', href: `${BRAND.site}/sms/sender-ids` },
+      }
+    }
+    case 'wallet_topup': {
+      return {
+        subject: `Messaging credits added — ${fmtGHS(d.amount)}`,
+        preheader: `Your messaging wallet was topped up.`,
+        headline: 'Messaging credits added',
+        intro: `We've credited your messaging wallet for ${businessName}.`,
+        pill: { label: 'Top-up', tone: 'success' },
+        hero: { amount: fmtGHS(d.amount), caption: 'Amount credited' },
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'New balance', value: fmtGHS(d.balance) },
+          { label: 'Date', value: fmtDate() },
+        ],
+        cta: { label: 'View wallet', href: `${BRAND.site}/sms/wallet` },
+      }
+    }
+    case 'wallet_low_balance': {
+      return {
+        subject: 'Your messaging balance is running low',
+        preheader: `Only ${fmtGHS(d.balance)} left in your messaging wallet.`,
+        headline: 'Low messaging balance',
+        intro: `Your messaging wallet for ${businessName} is running low. Top up to avoid interrupted deliveries.`,
+        pill: { label: 'Action needed', tone: 'warn' },
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'Current balance', value: fmtGHS(d.balance) },
+        ],
+        cta: { label: 'Top up now', href: `${BRAND.site}/sms/wallet` },
+      }
+    }
+    case 'campaign_sent': {
+      const name = String(d.campaign_name || 'Your campaign')
+      return {
+        subject: `Campaign "${name}" was sent`,
+        preheader: `Delivered to ${String(d.recipients ?? 0)} recipients.`,
+        headline: 'Campaign sent',
+        intro: `${name} finished sending from ${businessName}.`,
+        pill: { label: 'Sent', tone: 'success' },
+        rows: [
+          { label: 'Campaign', value: name },
+          { label: 'Recipients', value: String(d.recipients ?? 0) },
+          { label: 'Cost', value: fmtGHS(d.cost) },
+          { label: 'Date', value: fmtDate() },
+        ],
+        cta: { label: 'View campaign', href: `${BRAND.site}/sms/campaigns` },
+      }
+    }
+    case 'campaign_failed': {
+      const name = String(d.campaign_name || 'Your campaign')
+      const reason = String(d.reason || 'The campaign could not be delivered.')
+      return {
+        subject: `Campaign "${name}" failed`,
+        preheader: reason,
+        headline: 'Campaign failed',
+        intro: `${name} could not be delivered for ${businessName}. No credits were consumed for undelivered messages.`,
+        pill: { label: 'Failed', tone: 'danger' },
+        quote: reason,
+        rows: [
+          { label: 'Campaign', value: name },
+          { label: 'Date', value: fmtDate() },
+        ],
+        cta: { label: 'Review campaign', href: `${BRAND.site}/sms/campaigns` },
+      }
     }
   }
+}
 }
 
 
