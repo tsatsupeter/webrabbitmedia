@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { useBusinesses } from '../hooks/useBusinesses'
 import AddBusinessOrBrandDrawer from './components/AddBusinessOrBrandDrawer'
 import NewBrandDrawer from './components/NewBrandDrawer'
-import NewBusinessDrawer from './components/NewBusinessDrawer'
 
 
 function Avatar({ name, logoUrl, className = '' }) {
@@ -37,16 +37,20 @@ function RoleChip({ role }) {
   )
 }
 
-export default function BusinessSwitcher({ compact = false }) {
+export default function BusinessSwitcher({ compact = false, next = '/merchant' }) {
   const { businesses, active, activeId, setActive, refresh, canEdit } = useBusinesses()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [chooser, setChooser] = useState(false)
   const [brandOpen, setBrandOpen] = useState(false)
-  const [bizOpen, setBizOpen] = useState(false)
   const wrapRef = useRef(null)
 
   const owned = businesses.filter((b) => b.role === 'owner')
   const shared = businesses.filter((b) => b.role !== 'owner')
+  const createPath = `/auth/create-business?next=${encodeURIComponent(next)}`
+  const goCreateBusiness = () => navigate(createPath)
+  // Viewers (and users without any workspace of their own) skip the chooser
+  const directCreate = owned.length === 0 || !canEdit
 
 
 
@@ -145,14 +149,17 @@ export default function BusinessSwitcher({ compact = false }) {
             type="button"
             onClick={() => {
               setOpen(false)
-              setChooser(true)
+              if (directCreate) goCreateBusiness()
+              else setChooser(true)
             }}
             className="w-full flex items-center gap-3 px-3 py-3 border-t border-merchant-border hover:bg-white/[0.04] text-left"
           >
             <div className="shrink-0 w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/70">
               <Icon name="plus" size={14} />
             </div>
-            <span className="text-[0.85rem] text-white/85">Add new</span>
+            <span className="text-[0.85rem] text-white/85">
+              {directCreate ? 'Create your own business' : 'Add new'}
+            </span>
           </button>
         </div>
       )}
@@ -162,18 +169,13 @@ export default function BusinessSwitcher({ compact = false }) {
         canAddBrand={canEdit}
         onClose={() => setChooser(false)}
         onPickBrand={() => { setChooser(false); setBrandOpen(true) }}
-        onPickBusiness={() => { setChooser(false); setBizOpen(true) }}
+        onPickBusiness={() => { setChooser(false); goCreateBusiness() }}
       />
       <NewBrandDrawer
         open={brandOpen}
         onClose={() => setBrandOpen(false)}
         businessId={activeId}
         onSaved={refresh}
-      />
-      <NewBusinessDrawer
-        open={bizOpen}
-        onClose={() => setBizOpen(false)}
-        onCreated={refresh}
       />
     </div>
 
