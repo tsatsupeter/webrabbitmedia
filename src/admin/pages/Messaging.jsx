@@ -102,7 +102,10 @@ export default function Messaging() {
   const filterRows = (rows, fields) =>
     !term ? rows : rows.filter((r) => fields.some((f) => String(r[f] ?? '').toLowerCase().includes(term)))
 
-  const senders = useMemo(() => filterRows(data?.senders || [], ['name', 'merchant', 'status']), [data, term])
+  const senders = useMemo(
+    () => filterRows(data?.senders || [], ['name', 'merchant', 'status', 'provider_status']),
+    [data, term],
+  )
   const campaigns = useMemo(() => filterRows(data?.campaigns || [], ['name', 'merchant', 'status']), [data, term])
   const messages = useMemo(() => filterRows(data?.messages || [], ['to_number', 'merchant', 'status']), [data, term])
   const wallets = useMemo(() => filterRows(data?.wallets || [], ['merchant']), [data, term])
