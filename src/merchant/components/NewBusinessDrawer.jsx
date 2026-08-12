@@ -52,6 +52,7 @@ export default function NewBusinessDrawer({ open, onClose, onCreated }) {
       const id = data?.id
       if (id) {
         await setActive(id)
+        await refresh()
         notifyBrandsChanged()
       }
       toast.success('Business created')
