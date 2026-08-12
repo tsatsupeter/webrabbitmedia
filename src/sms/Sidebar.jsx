@@ -17,27 +17,11 @@ function Tooltip({ children, label }) {
   )
 }
 
-function BrandHeader({ compact }) {
+function ProductHeader({ compact }) {
   const { business } = useSmsWorkspace()
   return (
-    <div
-      className={`h-16 shrink-0 flex items-center gap-2.5 border-b border-merchant-border ${
-        compact ? 'justify-center px-2' : 'px-4'
-      }`}
-    >
-      <span className="w-8 h-8 shrink-0 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright flex items-center justify-center">
-        <Icon name="mail" size={17} />
-      </span>
-      {!compact && (
-        <div className="min-w-0">
-          <div className="font-display text-[0.95rem] font-medium text-white leading-tight">
-            Messaging
-          </div>
-          <div className="text-[0.7rem] text-white/40 truncate">
-            {business?.name || 'Web Rabbit'}
-          </div>
-        </div>
-      )}
+    <div className={`p-2 border-b border-merchant-border ${compact ? 'flex justify-center' : ''}`}>
+      <ProductSwitcher compact={compact} subtitle={business?.name} />
     </div>
   )
 }
