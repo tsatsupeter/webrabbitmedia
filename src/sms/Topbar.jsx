@@ -156,6 +156,26 @@ export default function SmsTopbar({
             </div>
             <div className="py-1.5 border-b border-merchant-border">
               <MenuItem
+                icon="home"
+                label="Homepage"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/')
+                }}
+              />
+              {isAdmin && (
+                <MenuItem
+                  icon="shield"
+                  label="Admin Console"
+                  onClick={() => {
+                    setAccountOpen(false)
+                    navigate('/admin')
+                  }}
+                />
+              )}
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem
                 icon="gear"
                 label="Messaging Settings"
                 onClick={() => {
