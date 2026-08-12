@@ -13,6 +13,12 @@ export type EmailEvent =
   | 'team_invite'
   | 'workspace_transfer_invite'
   | 'workspace_transfer_completed'
+  | 'sender_id_approved'
+  | 'sender_id_rejected'
+  | 'wallet_topup'
+  | 'wallet_low_balance'
+  | 'campaign_sent'
+  | 'campaign_failed'
 
 
 export type EmailData = Record<string, unknown>
