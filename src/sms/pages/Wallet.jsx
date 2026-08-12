@@ -37,21 +37,33 @@ export default function Wallet() {
     e.preventDefault()
     const amt = Number(amount)
     if (!amt || amt <= 0) return toast.error('Enter an amount')
+    if (!/^0\d{9}$/.test(msisdn.trim())) return toast.error('Enter a valid wallet number (0XXXXXXXXX)')
     setSaving(true)
+    setPending(null)
     try {
-      await walletEntry({
-        businessId: business.id,
-        mode,
-        type: 'topup',
-        amount: amt,
-        channel: null,
-        description: `Wallet top-up (${mode} mode)`,
-      })
+      const res = await startTopup({ businessId: business.id, amount: amt, network, msisdn: msisdn.trim() })
+      if (res.credited) {
+        await refresh()
+        toast.success(`${money(amt)} added to your messaging wallet`)
+        setOpen(false)
+        return
+      }
+      setPending({ id: res.topup_id, amount: amt })
+      toast.info(res.message || 'Approve the prompt on your phone')
+      const final = await pollTopup(res.topup_id)
       await refresh()
-      toast.success(`${money(amt)} added to your messaging wallet`)
-      setOpen(false)
+      if (final.credited) {
+        toast.success(`${money(amt)} added to your messaging wallet`)
+        setOpen(false)
+      } else if (final.status === 'failed') {
+        toast.error(final.message || 'The payment was not completed')
+      } else {
+        toast.message('Still waiting on the network — credits will appear as soon as the payment clears.')
+      }
+      setPending(null)
     } catch (err) {
       toast.error(err.message || 'Top-up failed')
+      setPending(null)
     } finally {
       setSaving(false)
     }
