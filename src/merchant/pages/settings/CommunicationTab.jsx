@@ -5,7 +5,8 @@ import { useAuth } from '../../../hooks/useAuth'
 import { Card, SectionHeader } from './Section'
 
 const ROWS = [
-  { key: 'tx_emails', title: 'Transactional emails', desc: 'Payment receipts and payout status updates.' },
+  { key: 'tx_emails', title: 'Transactional emails', desc: 'Payment receipts, payout status and verification updates.' },
+  { key: 'messaging_emails', title: 'Messaging emails', desc: 'Sender ID decisions, credit top-ups, low balance and campaign summaries.' },
   { key: 'product_emails', title: 'Product updates', desc: 'Occasional news about new features and changes.' },
   { key: 'security_emails', title: 'Security alerts', desc: 'Sign-in and account security notifications. Recommended.' },
 ]
@@ -23,14 +24,21 @@ function Toggle({ checked, onChange, disabled }) {
 
 export default function CommunicationTab() {
   const { user } = useAuth()
-  const [prefs, setPrefs] = useState({ tx_emails: true, product_emails: true, security_emails: true })
+  const [prefs, setPrefs] = useState({ tx_emails: true, messaging_emails: true, product_emails: true, security_emails: true })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
     ;(async () => {
       const { data } = await supabase.from('notification_preferences').select('*').eq('user_id', user.id).maybeSingle()
-      if (data) setPrefs({ tx_emails: data.tx_emails, product_emails: data.product_emails, security_emails: data.security_emails })
+      if (data) {
+        setPrefs({
+          tx_emails: data.tx_emails,
+          messaging_emails: data.messaging_emails ?? true,
+          product_emails: data.product_emails,
+          security_emails: data.security_emails,
+        })
+      }
       setLoading(false)
     })()
   }, [user?.id])

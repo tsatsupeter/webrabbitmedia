@@ -155,6 +155,23 @@ Deno.serve(async (req) => {
             target_label: inv.email,
             details: { email: inv.email, role: inv.role },
           })
+          // If the invitee already has an account, surface it in-app too.
+          const { data: invitee } = await db
+            .from('profiles')
+            .select('id')
+            .eq('email', inv.email)
+            .maybeSingle()
+          if (invitee?.id) {
+            await db.from('notifications').insert({
+              user_id: invitee.id,
+              business_id: biz.id,
+              category: 'team',
+              title: `You're invited to ${biz.name}`,
+              message: `You've been invited to join ${biz.name} as ${inv.role === 'admin' ? 'an Editor' : 'a Viewer'}.`,
+              link: `/team/accept?token=${encodeURIComponent((record as { token: string }).token)}`,
+              read: false,
+            })
+          }
           results.push({ email: inv.email, status: 'sent' })
         } catch (e) {
           results.push({
@@ -259,6 +276,37 @@ Deno.serve(async (req) => {
         target_label: callerEmail,
         details: { from: null, to: inv.role, reason: 'invite_accepted' },
       })
+
+      // In-app notifications: welcome the new member, tell the owner someone joined.
+      const { data: ownerRow } = await db
+        .from('businesses')
+        .select('user_id, name')
+        .eq('id', inv.business_id)
+        .maybeSingle()
+      const bizName = ownerRow?.name || 'the workspace'
+      const notices: Record<string, unknown>[] = [
+        {
+          user_id: user.id,
+          business_id: inv.business_id,
+          category: 'team',
+          title: `You joined ${bizName}`,
+          message: `You now have ${inv.role === 'admin' ? 'Editor' : 'Viewer'} access to ${bizName}.`,
+          link: '/merchant',
+          read: false,
+        },
+      ]
+      if (ownerRow?.user_id && ownerRow.user_id !== user.id) {
+        notices.push({
+          user_id: ownerRow.user_id,
+          business_id: inv.business_id,
+          category: 'team',
+          title: 'Invitation accepted',
+          message: `${callerEmail} joined ${bizName}.`,
+          link: '/merchant/settings?tab=team',
+          read: false,
+        })
+      }
+      await db.from('notifications').insert(notices)
 
       return json({ ok: true, business: biz, role: inv.role })
     }

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
-import NotificationsPopover from './components/NotificationsPopover'
+import NotificationsBell from './../components/NotificationsBell'
 import RoleBadge from './components/RoleBadge'
 
 export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick, showSearch = true }) {
@@ -12,11 +12,7 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
   const { user } = useAuth()
 
   const [searchValue, setSearchValue] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef(null)
-
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
 
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
@@ -61,28 +57,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-
-  // Fetch unread notification count
-  useEffect(() => {
-    if (!user) return
-    let cancel = false
-    const fetchCount = () => {
-      supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('read', false)
-        .then(({ count }) => {
-          if (!cancel) setUnreadCount(count || 0)
-        })
-    }
-    fetchCount()
-    const interval = setInterval(fetchCount, 30000)
-    return () => {
-      cancel = true
-      clearInterval(interval)
-    }
-  }, [user])
 
   const onSearchChange = (e) => {
     const value = e.target.value
@@ -146,8 +120,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
           type="text"
           value={searchValue}
           onChange={onSearchChange}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
           placeholder={pathname === '/merchant/transactions/payments' ? 'Search payments…' : 'Search transactions (/)'}
           className="flex-1 bg-transparent outline-none text-[0.85rem] text-white placeholder:text-white/40"
         />
@@ -171,22 +143,7 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
       </button>
 
       {/* Notifications */}
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setNotificationsOpen((v) => !v)}
-          className="relative w-10 h-10 min-w-10 min-h-10 flex items-center justify-center rounded-lg text-white/70 hover:text-white bg-white/[0.02] hover:bg-white/[0.06] border border-transparent hover:border-merchant-border"
-          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
-        >
-          <Icon name="bell" size={20} />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-merchant-danger text-white text-[0.6rem] font-semibold flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-        <NotificationsPopover open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
-      </div>
+      <NotificationsBell Icon={Icon} product="merchant" />
 
       {/* Account */}
       <div ref={accountRef} className="relative">
