@@ -5,7 +5,7 @@ import { supabase } from '../../integrations/supabase/client'
 import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
 import { PageLoader, TableSkeleton } from '../components/EmptyState'
 import { Page, PageHeader, Card, CardHeader, Table, Row, Cell, StatusPill, Button, Stat } from '../components/ui'
-import { money, walletEntry } from '../lib'
+import { money, walletEntry, invokeMessaging } from '../lib'
 import { useSmsWallet } from '../lib'
 
 export default function CampaignDetail() {
