@@ -19,10 +19,9 @@ function Tooltip({ children, label }) {
 }
 
 function ProductHeader({ compact }) {
-  const { business } = useSmsWorkspace()
   return (
     <div className={`p-2 border-b border-merchant-border ${compact ? 'flex justify-center' : ''}`}>
-      <ProductSwitcher compact={compact} subtitle={business?.name} />
+      <ProductSwitcher compact={compact} />
     </div>
   )
 }
