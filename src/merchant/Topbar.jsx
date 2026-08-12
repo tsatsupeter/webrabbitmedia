@@ -171,22 +171,7 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
       </button>
 
       {/* Notifications */}
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setNotificationsOpen((v) => !v)}
-          className="relative w-10 h-10 min-w-10 min-h-10 flex items-center justify-center rounded-lg text-white/70 hover:text-white bg-white/[0.02] hover:bg-white/[0.06] border border-transparent hover:border-merchant-border"
-          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
-        >
-          <Icon name="bell" size={20} />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-merchant-danger text-white text-[0.6rem] font-semibold flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-        <NotificationsPopover open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
-      </div>
+      <NotificationsBell Icon={Icon} product="merchant" />
 
       {/* Account */}
       <div ref={accountRef} className="relative">
