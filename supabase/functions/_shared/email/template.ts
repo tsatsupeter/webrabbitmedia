@@ -309,6 +309,7 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
         cta: { label: 'Open dashboard', href: BRAND.dashboard },
         outro: `If you did not authorise this change, contact ${BRAND.replyTo} immediately.`,
       }
+    }
     case 'sender_id_approved': {
       const sender = String(d.sender_name || 'your sender ID')
       return {
