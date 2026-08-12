@@ -50,6 +50,8 @@ export default function SmsSettings() {
         {active === 'defaults' && <DefaultsTab />}
         {active === 'callbacks' && <CallbacksTab />}
         {active === 'rates' && <RatesTab />}
+        {active === 'team' && <TeamTab />}
+        {active === 'workspace' && <WorkspaceTab />}
       </div>
     </Page>
   )
