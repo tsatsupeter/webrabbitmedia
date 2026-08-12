@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { navGroups } from './nav'
 import Icon from './Icon'
 import BusinessSwitcher from './BusinessSwitcher'
+import ProductSwitcher from '../components/ProductSwitcher'
 import { useMerchantMode } from '../hooks/useMerchantMode'
 
 function Tooltip({ children, label }) {
