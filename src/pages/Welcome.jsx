@@ -233,9 +233,16 @@ export default function Welcome() {
                   to="/auth/create-business?next=/welcome%3Fchoose%3D1"
                   className="text-[0.8rem] text-white/50 hover:text-white no-underline"
                 >
-                  + New workspace
+                  + Create your own business
                 </Link>
               </div>
+              {!businesses.some((b) => b.role === 'owner') && (
+                <p className="text-[0.82rem] text-white/40 mb-3">
+                  You&apos;ve been invited to the workspaces below. You can also create your own
+                  business at any time — you&apos;ll be its owner, with your own KYC and payouts.
+                </p>
+              )}
+
               <div className="space-y-2">
                 {businesses.map((b) => (
                   <button
