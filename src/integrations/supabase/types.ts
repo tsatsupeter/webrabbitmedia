@@ -1443,6 +1443,74 @@ export type Database = {
           },
         ]
       }
+      sms_topups: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          credited_at: string | null
+          currency: string
+          gateway: string
+          id: string
+          mode: string
+          msisdn: string
+          network: string
+          provider_code: string | null
+          provider_reason: string | null
+          provider_reference: string | null
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          credited_at?: string | null
+          currency?: string
+          gateway?: string
+          id?: string
+          mode?: string
+          msisdn: string
+          network: string
+          provider_code?: string | null
+          provider_reason?: string | null
+          provider_reference?: string | null
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          credited_at?: string | null
+          currency?: string
+          gateway?: string
+          id?: string
+          mode?: string
+          msisdn?: string
+          network?: string
+          provider_code?: string | null
+          provider_reason?: string | null
+          provider_reference?: string | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_topups_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sms_wallet_ledger: {
         Row: {
           amount: number
