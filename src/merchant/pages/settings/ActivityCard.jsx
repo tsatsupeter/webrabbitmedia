@@ -99,7 +99,7 @@ export default function ActivityCard() {
               className="flex items-start gap-3 px-5 py-3 border-b border-merchant-border last:border-0"
             >
               <span className="mt-0.5 text-white/40">
-                <Icon name={a.action.startsWith('invite') ? 'mail' : 'users'} size={15} />
+                <Icon name={a.action.startsWith('invite') ? 'mail' : 'shield'} size={15} />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="text-[0.84rem] text-white/85">{describe(a)}</div>
