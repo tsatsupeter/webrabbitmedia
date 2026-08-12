@@ -172,9 +172,30 @@ export default function Wallet() {
           <Field label="Amount (GHS)" hint={smsRate ? `≈ ${Math.floor(Number(amount || 0) / smsRate).toLocaleString()} SMS` : undefined}>
             <input type="number" min="1" step="1" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputClass} />
           </Field>
+          <Field label="Mobile money network">
+            <select value={network} onChange={(e) => setNetwork(e.target.value)} className={inputClass}>
+              {NETWORKS.map((n) => (
+                <option key={n.value} value={n.value} className="bg-merchant-bg">{n.label}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Wallet number" hint="The number that will receive the approval prompt">
+            <input
+              inputMode="numeric"
+              placeholder="0244123456"
+              value={msisdn}
+              onChange={(e) => setMsisdn(e.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          {pending && (
+            <p className="text-[0.78rem] text-white/60 rounded-lg border border-merchant-border px-3 py-2">
+              Waiting for you to approve {money(pending.amount)} on your phone…
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Adding…' : 'Add credits'}</Button>
+            <Button type="submit" disabled={saving}>{saving ? 'Waiting for approval…' : 'Pay with mobile money'}</Button>
           </div>
         </form>
       </Modal>
