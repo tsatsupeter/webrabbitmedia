@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '../../integrations/supabase/client'
-import { useAuth } from '../../hooks/useAuth'
 import { useSmsWorkspace as useMerchantMode } from '../useSmsWorkspace'
 import { PageLoader } from '../components/EmptyState'
 import Modal from '../components/Modal'
+import { invokeMessaging } from '../lib'
 import {
   Page, PageHeader, Card, Table, Row, Cell, StatusPill, Button, Field, inputClass, textareaClass,
 } from '../components/ui'
