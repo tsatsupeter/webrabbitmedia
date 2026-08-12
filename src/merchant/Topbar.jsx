@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
-import NotificationsPopover from './components/NotificationsPopover'
+import NotificationsBell from './../components/NotificationsBell'
 import RoleBadge from './components/RoleBadge'
 
 export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick, showSearch = true }) {
@@ -14,9 +14,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
   const [searchValue, setSearchValue] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef(null)
-
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
 
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
@@ -61,28 +58,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-
-  // Fetch unread notification count
-  useEffect(() => {
-    if (!user) return
-    let cancel = false
-    const fetchCount = () => {
-      supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('read', false)
-        .then(({ count }) => {
-          if (!cancel) setUnreadCount(count || 0)
-        })
-    }
-    fetchCount()
-    const interval = setInterval(fetchCount, 30000)
-    return () => {
-      cancel = true
-      clearInterval(interval)
-    }
-  }, [user])
 
   const onSearchChange = (e) => {
     const value = e.target.value
