@@ -134,6 +134,7 @@ export default function SmsSidebar({ onNavigate, compact = false, groups = smsNa
     <aside
       className={`${compact ? 'w-[80px]' : 'w-[260px]'} shrink-0 h-full flex flex-col bg-merchant-panel border-r border-merchant-border transition-all duration-200`}
     >
+      <BusinessSwitcher compact={compact} />
       <ProductHeader compact={compact} />
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
