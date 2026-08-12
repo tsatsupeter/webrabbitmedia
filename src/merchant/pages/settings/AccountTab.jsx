@@ -436,7 +436,7 @@ export default function AccountTab() {
         onSaved={handleSaved}
       />
 
-      <MfaModal open={mfaOpen} onClose={() => setMfaOpen(false)} onDone={() => { bumpActivity(); loadMfa() }} />
+      <MfaModal open={mfaOpen} onClose={() => setMfaOpen(false)} onDone={async () => { await logSecurityEvent(user.id, 'mfa_enabled'); bumpActivity(); loadMfa() }} />
 
       <Modal open={disableOpen} onClose={() => setDisableOpen(false)}>
         <form onSubmit={confirmDisableMfa} className="p-6 space-y-4">
