@@ -71,7 +71,7 @@ export default function PasswordCard({ user, onEvent }) {
           <ul className="space-y-1">
             {checks.map((c) => (
               <li key={c.label} className={`flex items-center gap-2 text-[0.75rem] ${c.ok ? 'text-emerald-300' : 'text-white/45'}`}>
-                <Icon name={c.ok ? 'check' : 'circle'} size={12} /> {c.label}
+                {c.ok ? <Icon name="check" size={12} /> : <span className="w-3 h-3 rounded-full border border-white/25 inline-block" />} {c.label}
               </li>
             ))}
           </ul>
