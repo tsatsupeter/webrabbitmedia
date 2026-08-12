@@ -157,11 +157,16 @@ function start() {
 export function useBusinesses() {
   start()
   const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+  const role = snap.active?.role || null
   return {
     businesses: snap.businesses,
     active: snap.active,
     activeId: snap.activeId,
     loading: snap.loading,
+    role,
+    isOwner: role === 'owner',
+    canEdit: role === 'owner' || role === 'admin',
+    isViewer: role === 'viewer',
     setActive,
     refresh,
   }
