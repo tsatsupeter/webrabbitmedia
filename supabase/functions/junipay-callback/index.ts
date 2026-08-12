@@ -7,6 +7,7 @@
 import { admin, corsHeaders, jsonResponse } from '../_shared/auth.ts'
 import { mapStatus } from '../_shared/junipay.ts'
 import { settleCollection } from '../_shared/settlement.ts'
+import { findTopup, settleTopup } from '../_shared/topup.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -68,6 +69,20 @@ Deno.serve(async (req) => {
         await db.from('transactions').update({ payout_id: null }).eq('payout_id', payout.id)
       }
       return jsonResponse({ received: true, matched: true, kind: 'payout', changed: true }, 200)
+    }
+  }
+
+  // Messaging wallet top-ups live in their own table.
+  if (!row) {
+    const topup = await findTopup(db, ours, providerIds)
+    if (topup) {
+      const out = await settleTopup(db, topup, {
+        status,
+        code: payload?.status != null ? String(payload.status) : null,
+        reason: payload?.message ?? payload?.status ?? null,
+        providerTransactionId: providerIds[0] ?? null,
+      })
+      return jsonResponse({ received: true, matched: true, kind: 'sms_topup', ...out }, 200)
     }
   }
 

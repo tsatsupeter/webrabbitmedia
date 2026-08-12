@@ -4,9 +4,14 @@ import { useSmsWorkspace as useMerchantMode, useModeDataLoading } from '../useSm
 import { PageLoader, Skeleton } from '../components/EmptyState'
 import Modal from '../components/Modal'
 import { Page, PageHeader, Card, CardHeader, Stat, Table, Row, Cell, Button, Field, inputClass } from '../components/ui'
-import { useSmsWallet, useSmsRates, money, walletEntry, useProviderBalance } from '../lib'
+import { useSmsWallet, useSmsRates, money, useProviderBalance, startTopup, pollTopup } from '../lib'
 
 const PRESETS = [20, 50, 100, 250, 500]
+const NETWORKS = [
+  { value: 'MTN', label: 'MTN Mobile Money' },
+  { value: 'TELECEL', label: 'Telecel Cash' },
+  { value: 'AT', label: 'AT Money' },
+]
 
 export default function Wallet() {
   const { business, mode, modeReady } = useMerchantMode()
@@ -15,7 +20,10 @@ export default function Wallet() {
   const provider = useProviderBalance(business?.id)
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('50')
+  const [network, setNetwork] = useState('MTN')
+  const [msisdn, setMsisdn] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pending, setPending] = useState(null)
   useModeDataLoading(loading)
 
   if (!modeReady) return <PageLoader label="Loading wallet…" />
@@ -29,21 +37,33 @@ export default function Wallet() {
     e.preventDefault()
     const amt = Number(amount)
     if (!amt || amt <= 0) return toast.error('Enter an amount')
+    if (!/^0\d{9}$/.test(msisdn.trim())) return toast.error('Enter a valid wallet number (0XXXXXXXXX)')
     setSaving(true)
+    setPending(null)
     try {
-      await walletEntry({
-        businessId: business.id,
-        mode,
-        type: 'topup',
-        amount: amt,
-        channel: null,
-        description: `Wallet top-up (${mode} mode)`,
-      })
+      const res = await startTopup({ businessId: business.id, amount: amt, network, msisdn: msisdn.trim() })
+      if (res.credited) {
+        await refresh()
+        toast.success(`${money(amt)} added to your messaging wallet`)
+        setOpen(false)
+        return
+      }
+      setPending({ id: res.topup_id, amount: amt })
+      toast.info(res.message || 'Approve the prompt on your phone')
+      const final = await pollTopup(res.topup_id)
       await refresh()
-      toast.success(`${money(amt)} added to your messaging wallet`)
-      setOpen(false)
+      if (final.credited) {
+        toast.success(`${money(amt)} added to your messaging wallet`)
+        setOpen(false)
+      } else if (final.status === 'failed') {
+        toast.error(final.message || 'The payment was not completed')
+      } else {
+        toast.message('Still waiting on the network — credits will appear as soon as the payment clears.')
+      }
+      setPending(null)
     } catch (err) {
       toast.error(err.message || 'Top-up failed')
+      setPending(null)
     } finally {
       setSaving(false)
     }
@@ -130,7 +150,7 @@ export default function Wallet() {
           <div>
             <h3 className="font-display text-[1rem] text-white">Top up messaging wallet</h3>
             <p className="text-[0.8rem] text-white/50 mt-1">
-              Credits are added to your {mode} mode wallet immediately.
+              Pay with mobile money. Credits land the moment the payment clears.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -152,9 +172,30 @@ export default function Wallet() {
           <Field label="Amount (GHS)" hint={smsRate ? `≈ ${Math.floor(Number(amount || 0) / smsRate).toLocaleString()} SMS` : undefined}>
             <input type="number" min="1" step="1" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputClass} />
           </Field>
+          <Field label="Mobile money network">
+            <select value={network} onChange={(e) => setNetwork(e.target.value)} className={inputClass}>
+              {NETWORKS.map((n) => (
+                <option key={n.value} value={n.value} className="bg-merchant-bg">{n.label}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Wallet number" hint="The number that will receive the approval prompt">
+            <input
+              inputMode="numeric"
+              placeholder="0244123456"
+              value={msisdn}
+              onChange={(e) => setMsisdn(e.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          {pending && (
+            <p className="text-[0.78rem] text-white/60 rounded-lg border border-merchant-border px-3 py-2">
+              Waiting for you to approve {money(pending.amount)} on your phone…
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Adding…' : 'Add credits'}</Button>
+            <Button type="submit" disabled={saving}>{saving ? 'Waiting for approval…' : 'Pay with mobile money'}</Button>
           </div>
         </form>
       </Modal>

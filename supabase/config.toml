@@ -51,3 +51,12 @@ verify_jwt = true
 
 [functions.admin-messaging]
 verify_jwt = true
+
+[functions.messaging-topup]
+verify_jwt = true
+
+[functions.messaging-topup-status]
+verify_jwt = true
+
+[functions.messaging-cancel]
+verify_jwt = true
