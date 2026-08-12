@@ -38,11 +38,21 @@ Confirmed against the live BMS API with the supplied key:
 
 **Frontend**: Quick Send, Campaigns, CampaignDetail, MessageLog, SenderIds, Voice, Otp and Wallet switch from direct table writes for the send step to `supabase.functions.invoke(...)`, keeping the existing cost preview, wallet guard and design untouched.
 
-## Verification
+## End-to-end tests
 
-- Send a one-recipient campaign to a real number and confirm the campaign moves `queued -> submitted -> delivered` and the BMS credit count drops by one.
-- Force a failure (unregistered sender ID) and confirm the campaign is marked failed and the merchant wallet is refunded on the ledger.
-- Register a sender ID and confirm its status is read back from BMS.
+Deno test suites live next to each function (`supabase/functions/messaging-send/send_test.ts`, etc.) and run with the edge-function test runner. BMS itself is stubbed by swapping `globalThis.fetch`, so the suite is deterministic and spends no real credits.
+
+Covered paths:
+
+1. **Send succeeds** — a quick-send request with a stubbed `2000` BMS response stores the returned campaign id, flips the campaign to `submitted`, marks every recipient row `submitted`, and leaves the wallet debit in place.
+2. **Delivery status flows back** — a stubbed delivery report containing mixed `delivered` / `undelivered` rows updates the matching `sms_messages` rows, stamps `delivered_at`, and rolls the campaign up to `completed`.
+3. **Provider failure** — a BMS error envelope (invalid sender ID) marks the campaign `failed`, marks recipient rows `failed` with the provider reason, and writes a refund entry to the wallet ledger so the balance is restored.
+4. **Transport failure** — a network throw or non-JSON body from BMS is surfaced as a clean 502 to the client rather than an unhandled crash, with the same refund behaviour.
+5. **Authorisation** — a request for a `business_id` the caller doesn't belong to is rejected with 403 and writes nothing.
+6. **Insufficient credits** — a send priced above the wallet balance is rejected before any BMS call is made.
+
+Plus one live smoke check outside the suite: one real SMS to a single number, confirming the BMS credit count drops and the campaign reaches `delivered`.
+
 
 ## Out of scope
 
