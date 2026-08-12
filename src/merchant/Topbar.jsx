@@ -5,6 +5,7 @@ import ProductSwitcher from '../components/ProductSwitcher'
 import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
 import NotificationsPopover from './components/NotificationsPopover'
+import RoleBadge from './components/RoleBadge'
 
 export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick, showSearch = true }) {
   const navigate = useNavigate()
