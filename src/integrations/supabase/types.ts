@@ -848,6 +848,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: string
+          type: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          type: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          type?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sms_campaigns: {
         Row: {
           business_id: string
