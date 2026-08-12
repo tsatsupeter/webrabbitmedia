@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
-import { useSmsWorkspace } from './useSmsWorkspace'
-import { useSmsWallet, money } from './lib'
+import NotificationsBell from '../components/NotificationsBell'
 
 export default function SmsTopbar({
   title = 'Messaging',
@@ -13,12 +12,13 @@ export default function SmsTopbar({
   onMenuClick,
 }) {
   const navigate = useNavigate()
+  const { pathname, search } = useLocation()
   const { user } = useAuth()
-  const { business } = useSmsWorkspace()
-  const { balance, loading: walletLoading } = useSmsWallet(business?.id, 'live')
-
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
+
+  const [searchValue, setSearchValue] = useState('')
+  const searchRef = useRef(null)
 
   useEffect(() => {
     function onDoc(e) {
@@ -37,12 +37,47 @@ export default function SmsTopbar({
     }
   }, [accountOpen])
 
+  useEffect(() => {
+    const params = new URLSearchParams(search)
+    setSearchValue(pathname === '/sms/messages' ? params.get('search') || '' : '')
+  }, [pathname, search])
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const active = document.activeElement
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const toggleCompactSidebar = () => {
     const next = !compactSidebar
     setCompactSidebar(next)
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('wr.smsCompactSidebar', String(next))
     }
+  }
+
+  const onSearchChange = (e) => {
+    const value = e.target.value
+    setSearchValue(value)
+    if (pathname === '/sms/messages') {
+      const params = new URLSearchParams(search)
+      if (value) params.set('search', value)
+      else params.delete('search')
+      navigate({ pathname, search: params.toString() }, { replace: true })
+    }
+  }
+
+  const onSearchSubmit = (e) => {
+    e.preventDefault()
+    if (pathname === '/sms/messages') return
+    navigate(`/sms/messages?search=${encodeURIComponent(searchValue)}`)
   }
 
   async function signOut() {
@@ -65,25 +100,24 @@ export default function SmsTopbar({
 
       <div className="flex-1" />
 
-      {/* Credits chip */}
-      <button
-        type="button"
-        onClick={() => navigate('/sms/wallet')}
-        className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-lg bg-accent/15 border border-accent/30 text-accent-bright text-[0.8rem] font-medium hover:bg-accent/20"
-        title="Messaging credits"
+      {/* Search */}
+      <form
+        onSubmit={onSearchSubmit}
+        className="hidden md:flex items-center gap-2 h-9 w-[280px] lg:w-[360px] px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white/50 focus-within:border-white/20 transition-colors"
       >
-        <Icon name="wallet" size={15} />
-        {walletLoading ? '—' : money(balance || 0)}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => navigate('/sms/send')}
-        className="hidden md:flex items-center gap-2 h-9 px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white/80 text-[0.8rem] font-medium hover:bg-white/[0.08]"
-      >
-        <Icon name="bolt" size={15} />
-        Quick Send
-      </button>
+        <Icon name="search" size={15} />
+        <input
+          ref={searchRef}
+          type="text"
+          value={searchValue}
+          onChange={onSearchChange}
+          placeholder={pathname === '/sms/messages' ? 'Search messages…' : 'Search messages (/)'}
+          className="flex-1 bg-transparent outline-none text-[0.85rem] text-white placeholder:text-white/40"
+        />
+        <kbd className="hidden lg:inline-flex items-center px-1.5 h-5 rounded bg-white/[0.06] text-[0.7rem] text-white/50 font-mono">
+          /
+        </kbd>
+      </form>
 
       {/* Compact sidebar toggle */}
       <button
@@ -95,6 +129,9 @@ export default function SmsTopbar({
       >
         <Icon name={compactSidebar ? 'panelRight' : 'panelLeft'} size={17} />
       </button>
+
+      {/* Notifications */}
+      <NotificationsBell Icon={Icon} product="messaging" />
 
       {/* Account */}
       <div ref={accountRef} className="relative">
