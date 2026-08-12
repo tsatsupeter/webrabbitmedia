@@ -74,7 +74,7 @@ Deno.test('bmsPost throws BmsError when the provider reports a failure', async (
     () => Response.json({ status: 'error', code: '1005', message: 'Invalid sender id' }, { status: 200 }),
     async (base) => {
       const { bmsPost, BmsError } = await loadClient(base)
-      const err = await assertRejects(() => bmsPost('/sms/quick', {}), BmsError)
+      const err = (await assertRejects(() => bmsPost('/sms/quick', {}), BmsError)) as { message: string }
       assertEquals(err.message.includes('Invalid sender id'), true)
     },
   )
@@ -85,7 +85,7 @@ Deno.test('bmsGet surfaces an unreadable provider response as a 502', async () =
     () => new Response('<html>gateway timeout</html>', { status: 504 }),
     async (base) => {
       const { bmsGet, BmsError } = await loadClient(base)
-      const err = await assertRejects(() => bmsGet('/balance/sms'), BmsError)
+      const err = (await assertRejects(() => bmsGet('/balance/sms'), BmsError)) as { status: number; code: string }
       assertEquals(err.status, 502)
       assertEquals(err.code, 'provider_bad_response')
     },
@@ -94,6 +94,6 @@ Deno.test('bmsGet surfaces an unreadable provider response as a 502', async () =
 
 Deno.test('client fails fast when the provider is unreachable', async () => {
   const { bmsGet, BmsError } = await loadClient('http://127.0.0.1:1')
-  const err = await assertRejects(() => bmsGet('/balance/sms'), BmsError)
+  const err = (await assertRejects(() => bmsGet('/balance/sms'), BmsError)) as { status: number; code: string }
   assertEquals(err.code, 'provider_unreachable')
 })
