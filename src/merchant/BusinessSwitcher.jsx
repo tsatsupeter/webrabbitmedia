@@ -37,16 +37,20 @@ function RoleChip({ role }) {
   )
 }
 
-export default function BusinessSwitcher({ compact = false }) {
+export default function BusinessSwitcher({ compact = false, next = '/merchant' }) {
   const { businesses, active, activeId, setActive, refresh, canEdit } = useBusinesses()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [chooser, setChooser] = useState(false)
   const [brandOpen, setBrandOpen] = useState(false)
-  const [bizOpen, setBizOpen] = useState(false)
   const wrapRef = useRef(null)
 
   const owned = businesses.filter((b) => b.role === 'owner')
   const shared = businesses.filter((b) => b.role !== 'owner')
+  const createPath = `/auth/create-business?next=${encodeURIComponent(next)}`
+  const goCreateBusiness = () => navigate(createPath)
+  // Viewers (and users without any workspace of their own) skip the chooser
+  const directCreate = owned.length === 0 || !canEdit
 
 
 
