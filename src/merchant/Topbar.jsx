@@ -131,7 +131,12 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
         <ProductSwitcher />
       </div>
 
+      <div className="hidden sm:block ml-2">
+        <RoleBadge />
+      </div>
+
       <div className="flex-1" />
+
 
       {/* Search */}
       {showSearch && (
