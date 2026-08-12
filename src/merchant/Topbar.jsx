@@ -12,7 +12,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
   const { user } = useAuth()
 
   const [searchValue, setSearchValue] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef(null)
 
   const [accountOpen, setAccountOpen] = useState(false)
@@ -121,8 +120,6 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
           type="text"
           value={searchValue}
           onChange={onSearchChange}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
           placeholder={pathname === '/merchant/transactions/payments' ? 'Search payments…' : 'Search transactions (/)'}
           className="flex-1 bg-transparent outline-none text-[0.85rem] text-white placeholder:text-white/40"
         />
