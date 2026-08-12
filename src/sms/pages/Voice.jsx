@@ -52,35 +52,23 @@ export default function Voice() {
     if (balance < cost) return toast.error('Not enough credits. Top up your wallet.')
     setSaving(true)
     try {
-      const { data, error } = await supabase
-        .from('voice_campaigns')
-        .insert({
-          business_id: business.id,
-          user_id: user.id,
-          mode,
-          name: form.name.trim(),
-          source: 'tts',
-          script: form.script.trim(),
-          caller_id: form.caller_id.trim() || null,
-          recipients_count: recipients.length,
-          cost,
-          status: form.scheduled_at ? 'scheduled' : 'queued',
-          scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
-        })
-        .select()
-        .single()
-      if (error) throw error
-      await walletEntry({
-        businessId: business.id,
+      const res = await invokeMessaging('messaging-voice', {
+        business_id: business.id,
         mode,
-        type: 'charge',
-        amount: cost,
-        channel: 'voice',
-        description: `Voice campaign: ${data.name}`,
-        reference: data.id,
+        name: form.name.trim(),
+        script: form.script.trim(),
+        caller_id: form.caller_id.trim() || undefined,
+        recipients,
+        schedule_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
       })
       await refresh()
-      toast.success('Voice campaign queued')
+      toast.success(
+        form.scheduled_at
+          ? 'Voice campaign scheduled'
+          : res?.simulated
+            ? 'Test voice campaign completed (no real calls placed)'
+            : 'Voice campaign sent to the network',
+      )
       setOpen(false)
       setForm({ name: '', caller_id: '', script: '', numbers: '', scheduled_at: '' })
       load()
@@ -90,6 +78,7 @@ export default function Voice() {
       setSaving(false)
     }
   }
+
 
   return (
     <Page>
