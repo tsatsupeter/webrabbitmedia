@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
+import { setActive, refresh, notifyBrandsChanged } from '../hooks/useBusinesses'
 import Icon from '../merchant/Icon'
 import DisclaimerModal from '../components/DisclaimerModal'
 import { locationSelectOptions } from '../lib/countries'
@@ -50,8 +51,8 @@ const inputCls =
 export default function CreateBusiness() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const nextParam = searchParams.get('next') || '/welcome?choose=1'
-  const nextPath = nextParam.startsWith('/') ? nextParam : '/welcome?choose=1'
+  const nextParam = searchParams.get('next') || '/merchant'
+  const nextPath = nextParam.startsWith('/') ? nextParam : '/merchant'
   const { user } = useAuth()
   const [form, setForm] = useState({
     name: '',
@@ -109,12 +110,14 @@ export default function CreateBusiness() {
         bizId = latest?.id
       }
 
-      // Secondary writes must never block the redirect.
+      // Point the shared workspace store at the new business and make sure the
+      // list contains it before we route, so the dashboard opens on it.
       if (bizId) {
         try {
-          await supabase.from('profiles').update({ last_active_business_id: bizId }).eq('id', user.id)
-        } catch { /* ignore */ }
-        if (typeof window !== 'undefined') localStorage.setItem('wr.activeBusinessId', bizId)
+          await setActive(bizId)
+          await refresh()
+          notifyBrandsChanged()
+        } catch { /* never block the redirect */ }
       }
 
       toast.success('Business created')
