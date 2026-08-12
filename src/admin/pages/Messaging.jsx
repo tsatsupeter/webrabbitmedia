@@ -590,6 +590,13 @@ export default function Messaging() {
               ? 'The merchant will be able to send with this sender ID immediately.'
               : 'Tell the merchant why this sender ID cannot be used.'}
           </p>
+          {decision?.status === 'approved' && isNetworkRejected(decision.sender) && (
+            <div className="rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3.5 py-2.5 text-[0.8rem] text-red-200/85">
+              The messaging network has declined this name ({decision.sender.provider_status}). Approving it only
+              changes the dashboard — sending will still fail until the network approves it. Use “Re-register” or ask
+              the merchant for a different name.
+            </div>
+          )}
           {decision?.status === 'rejected' && (
             <Field label="Reason">
               <textarea
