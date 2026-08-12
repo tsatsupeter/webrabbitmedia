@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const db = admin()
     const { data: campaign } = await db.from('sms_campaigns').select('*').eq('id', campaignId).maybeSingle()
     if (!campaign) throw new HttpError(404, 'not_found', 'Campaign not found')
-    await requireMembership(user.id, campaign.business_id)
+    await requireMembership(user, campaign.business_id)
 
     if (!campaign.provider_campaign_id) {
       return json({ ok: true, updated: 0, message: 'Campaign has not been handed to the provider yet' })

@@ -1,6 +1,6 @@
 // Send and verify one-time passcodes over BMS.
 import {
-  json, errorResponse, corsHeaders, admin, requireUser, requireMembership, requireMode,
+  json, errorResponse, corsHeaders, admin, requireUser, requireMembership, requireMode, enforceKeyScope,
   unitRate, walletEntry, walletBalance, HttpError,
 } from '../_shared/messaging.ts'
 import { bmsPost, toLocalMsisdn, isValidMsisdn } from '../_shared/bms.ts'
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       const { data: row } = await db
         .from('sms_otp_requests').select('*').eq('id', String(body.request_id || '')).maybeSingle()
       if (!row) throw new HttpError(404, 'not_found', 'OTP request not found')
-      await requireMembership(user.id, row.business_id)
+      await requireMembership(user, row.business_id)
 
       if (row.status === 'verified') return json({ ok: true, status: 'verified' })
       if (row.expires_at && new Date(row.expires_at) < new Date()) {
@@ -65,7 +65,8 @@ Deno.serve(async (req) => {
 
     businessId = String(body.business_id || '')
     mode = requireMode(body.mode)
-    await requireMembership(user.id, businessId)
+    await requireMembership(user, businessId)
+    enforceKeyScope(user, { mode, access: 'write' })
 
     const phone = toLocalMsisdn(String(body.phone || ''))
     if (!isValidMsisdn(phone)) throw new HttpError(400, 'invalid_request', 'Enter a valid 10-digit number')

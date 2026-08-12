@@ -45,6 +45,8 @@ import SmsUssd from './sms/pages/Ussd'
 import SmsWallet from './sms/pages/Wallet'
 import SmsSettingsPage from './sms/pages/SmsSettings'
 import SmsDeveloper from './sms/pages/Developer'
+import SmsApiKeys from './sms/pages/developer/ApiKeys'
+import SmsAnalytics from './sms/pages/Analytics'
 
 import AdminLayout from './admin/AdminLayout'
 import AdminOverview from './admin/pages/Overview'
@@ -140,7 +142,9 @@ function App() {
           <Route path="voice" element={<SmsVoice />} />
           <Route path="ussd" element={<SmsUssd />} />
           <Route path="wallet" element={<SmsWallet />} />
+          <Route path="analytics" element={<SmsAnalytics />} />
           <Route path="developer" element={<SmsDeveloper />} />
+          <Route path="developer/api-keys" element={<SmsApiKeys />} />
           <Route path="settings" element={<SmsSettingsPage />} />
 
         </Route>

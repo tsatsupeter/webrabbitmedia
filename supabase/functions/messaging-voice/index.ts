@@ -1,6 +1,6 @@
 // Place outbound voice campaigns through BMS and pull call reports back.
 import {
-  json, errorResponse, corsHeaders, admin, requireUser, requireMembership, requireMode,
+  json, errorResponse, corsHeaders, admin, requireUser, requireMembership, requireMode, enforceKeyScope,
   unitRate, walletEntry, walletBalance, HttpError,
 } from '../_shared/messaging.ts'
 import { bmsPost, bmsGet, toLocalMsisdn, isValidMsisdn, bmsScheduleDate, mapDeliveryStatus } from '../_shared/bms.ts'
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       const { data: campaign } = await db
         .from('voice_campaigns').select('*').eq('id', String(body.campaign_id || '')).maybeSingle()
       if (!campaign) throw new HttpError(404, 'not_found', 'Voice campaign not found')
-      await requireMembership(user.id, campaign.business_id)
+      await requireMembership(user, campaign.business_id)
       if (!campaign.provider_campaign_id) return json({ ok: true, updated: 0 })
 
       const res = await bmsGet(`/voice/campaign/${encodeURIComponent(campaign.provider_campaign_id)}/`)
@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
 
     businessId = String(body.business_id || '')
     mode = requireMode(body.mode)
-    await requireMembership(user.id, businessId)
+    await requireMembership(user, businessId)
+    enforceKeyScope(user, { mode, access: 'write' })
 
     const name = String(body.name || '').trim()
     if (!name) throw new HttpError(400, 'invalid_request', 'Campaign name is required')

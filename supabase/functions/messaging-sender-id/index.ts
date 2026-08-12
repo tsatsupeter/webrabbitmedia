@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
     if (action === 'register') {
       const businessId = String(body.business_id || '')
-      await requireMembership(user.id, businessId)
+      await requireMembership(user, businessId)
       const name = String(body.name || '').trim()
       if (!/^[A-Za-z0-9 ]{3,11}$/.test(name)) {
         throw new HttpError(400, 'invalid_request', 'Sender ID must be 3–11 letters or digits')
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       const senderId = String(body.sender_id || '')
       const { data: row } = await db.from('sms_sender_ids').select('*').eq('id', senderId).maybeSingle()
       if (!row) throw new HttpError(404, 'not_found', 'Sender ID not found')
-      await requireMembership(user.id, row.business_id)
+      await requireMembership(user, row.business_id)
 
       const res = await bmsPost('/senderid/status', { sender_name: row.name })
       const summary = (res.summary || res) as Record<string, unknown>

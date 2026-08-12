@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   try {
     const user = await requireUser(req)
     const body = (await req.json().catch(() => ({}))) as { business_id?: string }
-    await requireMembership(user.id, String(body.business_id || ''))
+    await requireMembership(user, String(body.business_id || ''))
 
     const [sms, voice] = await Promise.allSettled([bmsGet('/balance/sms'), bmsGet('/balance/voice')])
 

@@ -58,6 +58,7 @@ export type Database = {
           key_prefix: string
           mode: string
           name: string
+          product: string
           revoked_at: string | null
           user_id: string
         }
@@ -71,6 +72,7 @@ export type Database = {
           key_prefix: string
           mode?: string
           name: string
+          product?: string
           revoked_at?: string | null
           user_id: string
         }
@@ -84,6 +86,7 @@ export type Database = {
           key_prefix?: string
           mode?: string
           name?: string
+          product?: string
           revoked_at?: string | null
           user_id?: string
         }
@@ -2178,7 +2181,39 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      sms_ensure_wallet_svc: {
+        Args: { _business_id: string; _mode: string }
+        Returns: {
+          balance: number
+          business_id: string
+          created_at: string
+          currency: string
+          id: string
+          mode: string
+          trial_granted: boolean
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sms_wallets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       sms_wallet_entry: {
+        Args: {
+          _amount: number
+          _business_id: string
+          _channel?: string
+          _description?: string
+          _entry_type: string
+          _mode: string
+          _reference?: string
+        }
+        Returns: number
+      }
+      sms_wallet_entry_svc: {
         Args: {
           _amount: number
           _business_id: string
