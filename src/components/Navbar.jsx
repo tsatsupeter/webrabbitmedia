@@ -591,20 +591,41 @@ export default function Navbar() {
           </div>
 
           <div className="border-t border-border bg-white px-4 py-4 flex items-center gap-3">
-            <Link
-              to="/auth"
-              onClick={() => setMobileOpen(false)}
-              className="flex-1 text-center text-[0.95rem] font-medium text-accent border border-accent/40 px-4 py-3 rounded-full no-underline hover:no-underline"
-            >
-              Log in
-            </Link>
-            <Link
-              to="/auth"
-              onClick={() => setMobileOpen(false)}
-              className="flex-1 text-center text-[0.95rem] font-medium text-white bg-accent px-4 py-3 rounded-full no-underline hover:no-underline"
-            >
-              Get started
-            </Link>
+            {signedIn ? (
+              <>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="flex-1 text-center text-[0.95rem] font-medium text-accent border border-accent/40 px-4 py-3 rounded-full"
+                >
+                  Log out
+                </button>
+                <Link
+                  to={dashboardTo}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-1 text-center text-[0.95rem] font-medium text-white bg-accent px-4 py-3 rounded-full no-underline hover:no-underline"
+                >
+                  Go to dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-1 text-center text-[0.95rem] font-medium text-accent border border-accent/40 px-4 py-3 rounded-full no-underline hover:no-underline"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/auth"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-1 text-center text-[0.95rem] font-medium text-white bg-accent px-4 py-3 rounded-full no-underline hover:no-underline"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>,
