@@ -11,6 +11,8 @@ export type EmailEvent =
   | 'verification_on_hold'
   | 'verification_reminder'
   | 'team_invite'
+  | 'workspace_transfer_invite'
+  | 'workspace_transfer_completed'
 
 
 export type EmailData = Record<string, unknown>
@@ -266,6 +268,42 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
         outro: `If you didn't expect this invite, you can safely ignore this email — it will expire on ${expires}.`,
       }
     }
+    case 'workspace_transfer_invite': {
+      const sender = String(d.from_name || d.from_email || 'The current owner')
+      const acceptUrl = String(d.accept_url || `${BRAND.site}/transfer`)
+      const expires = fmtDate(d.expires_at as string)
+      return {
+        subject: `${sender} wants to transfer ${businessName} to you`,
+        preheader: `Accept to become the owner of ${businessName}.`,
+        headline: `Ownership transfer for ${businessName}`,
+        intro: `${sender} has asked to transfer full ownership of ${businessName} to you. Accepting makes you the owner of the workspace, including its verification records, payouts and messaging data. The current owner stays on the team as an Editor.`,
+        pill: { label: 'Ownership transfer', tone: 'warn' },
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'Current owner', value: sender },
+          { label: 'Expires', value: expires },
+        ],
+        cta: { label: 'Review transfer', href: acceptUrl },
+        outro: `If you weren't expecting this, ignore this email — the request expires on ${expires} and nothing changes until you accept.`,
+      }
+    }
+    case 'workspace_transfer_completed': {
+      const newOwner = String(d.new_owner_name || d.new_owner_email || 'the new owner')
+      const role = String(d.your_role || '')
+      return {
+        subject: `Ownership of ${businessName} has been transferred`,
+        preheader: `${businessName} is now owned by ${newOwner}.`,
+        headline: `${businessName} has a new owner`,
+        intro: `Ownership of ${businessName} has been transferred to ${newOwner}.${role ? ` You now have ${role} access to this workspace.` : ''}`,
+        pill: { label: 'Ownership transferred', tone: 'success' },
+        rows: [
+          { label: 'Business', value: businessName },
+          { label: 'New owner', value: newOwner },
+        ],
+        cta: { label: 'Open dashboard', href: BRAND.dashboard },
+        outro: `If you did not authorise this change, contact ${BRAND.replyTo} immediately.`,
+      }
+    }
   }
 }
 
@@ -402,7 +440,13 @@ export function renderEmail(event: EmailEvent, data: EmailData, ctx: {
     text: renderText(content, { name: ctx.recipientName }),
     from: BRAND.from,
     replyTo: BRAND.replyTo,
-    category: event === 'business_approved' || event === 'team_invite' ? 'security_emails' : 'tx_emails',
+    category:
+      event === 'business_approved' ||
+      event === 'team_invite' ||
+      event === 'workspace_transfer_invite' ||
+      event === 'workspace_transfer_completed'
+        ? 'security_emails'
+        : 'tx_emails',
   }
 }
 

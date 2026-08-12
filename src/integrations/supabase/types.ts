@@ -231,6 +231,56 @@ export type Database = {
           },
         ]
       }
+      business_transfers: {
+        Row: {
+          business_id: string
+          created_at: string
+          expires_at: string
+          from_user_id: string
+          id: string
+          responded_at: string | null
+          status: string
+          to_email: string
+          to_user_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          expires_at?: string
+          from_user_id: string
+          id?: string
+          responded_at?: string | null
+          status?: string
+          to_email: string
+          to_user_id?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          expires_at?: string
+          from_user_id?: string
+          id?: string
+          responded_at?: string | null
+          status?: string
+          to_email?: string
+          to_user_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_transfers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_verification: {
         Row: {
           address_line1: string | null

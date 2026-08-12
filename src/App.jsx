@@ -30,6 +30,7 @@ import History from './merchant/pages/payouts/History'
 import Collect from './merchant/pages/sales/Collect'
 import Settings from './merchant/pages/Settings'
 import AcceptInvite from './pages/AcceptInvite'
+import AcceptTransfer from './pages/AcceptTransfer'
 import SmsLayout from './sms/SmsLayout'
 import SmsOverview from './sms/pages/Overview'
 import SmsQuickSend from './sms/pages/QuickSend'
@@ -81,6 +82,7 @@ function App() {
         <Route path="/docs" element={<Docs />} />
         <Route path="/docs/:section" element={<Docs />} />
         <Route path="/team/accept" element={<AcceptInvite />} />
+        <Route path="/transfer/:token" element={<AcceptTransfer />} />
 
         <Route
           path="/welcome"

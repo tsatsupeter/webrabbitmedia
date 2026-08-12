@@ -3,6 +3,7 @@ import { useBusinesses } from '../../../hooks/useBusinesses'
 import { Card, SectionHeader } from './Section'
 import Icon from '../../Icon'
 import BrandsCard from './BrandsCard'
+import TransferOwnershipCard from './TransferOwnershipCard'
 
 function Row({ label, value }) {
   return (
@@ -53,6 +54,8 @@ export default function BusinessTab() {
 
         <BrandsCard />
       </div>
+
+      <TransferOwnershipCard />
     </div>
   )
 }
