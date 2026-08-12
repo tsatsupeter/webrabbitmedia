@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useAdminRole } from '../admin/useAdmin'
+import { supabase } from '../integrations/supabase/client'
 import Icon from '../merchant/Icon'
 
 // Mega-menu nav for the public site. Every row links to a real destination.
