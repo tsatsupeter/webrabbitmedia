@@ -401,25 +401,74 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
-          <Link
-            to="/docs"
-            className="text-[0.92rem] font-medium text-text-secondary px-3 py-2 rounded-lg no-underline hover:no-underline hover:text-text-primary hover:bg-surface-raised transition-colors"
-          >
-            Docs
-          </Link>
-          <Link
-            to="/auth"
-            className="text-[0.92rem] font-medium text-text-primary px-3 py-2 rounded-lg no-underline hover:no-underline hover:text-accent transition-colors"
-          >
-            Log in
-          </Link>
-          <Link
-            to="/auth"
-            className="group inline-flex items-center gap-1.5 text-[0.92rem] font-medium text-white bg-accent px-5 py-2.5 rounded-full no-underline hover:no-underline hover:bg-accent-dim transition-all duration-200 shadow-[0_8px_20px_-12px_rgba(14,26,18,0.8)] hover:-translate-y-0.5"
-          >
-            Get started
-            <Icon name="chevron" size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-          </Link>
+          {authLoading ? (
+            <div className="h-10 w-[168px] rounded-full bg-surface-raised animate-pulse" aria-hidden="true" />
+          ) : signedIn ? (
+            <>
+              <Link
+                to={dashboardTo}
+                className="group inline-flex items-center gap-1.5 text-[0.92rem] font-medium text-white bg-accent px-5 py-2.5 rounded-full no-underline hover:no-underline hover:bg-accent-dim transition-all duration-200 shadow-[0_8px_20px_-12px_rgba(14,26,18,0.8)] hover:-translate-y-0.5"
+              >
+                Dashboard
+                <Icon name="chevron" size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Link>
+
+              <div ref={accountRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen((v) => !v)}
+                  aria-expanded={accountOpen}
+                  aria-label="Account menu"
+                  title={user?.email || 'Account'}
+                  className="w-10 h-10 min-w-10 rounded-full border border-border bg-surface-raised text-[0.85rem] font-semibold text-text-primary flex items-center justify-center hover:border-accent/50 hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  {initial}
+                </button>
+
+                {accountOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-border bg-white shadow-[0_24px_48px_-24px_rgba(14,26,18,0.35)] overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border-light">
+                      <div className="text-[0.85rem] font-semibold text-text-primary">Account</div>
+                      <div className="text-[0.72rem] text-text-muted truncate mt-0.5">{user?.email}</div>
+                    </div>
+                    <div className="py-1.5">
+                      <NavAccountItem icon="chart" label="Merchant Dashboard" to="/merchant" onNavigate={() => setAccountOpen(false)} />
+                      <NavAccountItem icon="mail" label="Messaging" to="/sms" onNavigate={() => setAccountOpen(false)} />
+                      {isAdmin && (
+                        <NavAccountItem icon="shield" label="Admin Console" to="/admin" onNavigate={() => setAccountOpen(false)} />
+                      )}
+                    </div>
+                    <div className="py-1.5 border-t border-border-light">
+                      <button
+                        type="button"
+                        onClick={signOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[0.88rem] text-text-primary hover:bg-surface-raised transition-colors"
+                      >
+                        <Icon name="logout" size={16} className="text-text-muted" />
+                        Log out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className="text-[0.92rem] font-medium text-text-primary px-3 py-2 rounded-lg no-underline hover:no-underline hover:text-accent transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/auth"
+                className="group inline-flex items-center gap-1.5 text-[0.92rem] font-medium text-white bg-accent px-5 py-2.5 rounded-full no-underline hover:no-underline hover:bg-accent-dim transition-all duration-200 shadow-[0_8px_20px_-12px_rgba(14,26,18,0.8)] hover:-translate-y-0.5"
+              >
+                Get started
+                <Icon name="chevron" size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
