@@ -323,31 +323,68 @@ export default function Messaging() {
 
       {tab === 'senders' && (
         <Card>
-          <CardHeader title="Sender IDs" subtitle="Approve or reject the sender names merchants request" />
+          <CardHeader
+            title="Sender IDs"
+            subtitle="Approve or reject the sender names merchants request, and keep them in step with the network"
+            action={
+              isAdmin && (
+                <Button size="sm" variant="ghost" disabled={!!syncing} onClick={() => syncSenders(null)}>
+                  {syncing === 'all' ? 'Syncing…' : 'Sync all pending'}
+                </Button>
+              )
+            }
+          />
+          {networkRejected.length > 0 && (
+            <div className="mx-4 mb-3 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3.5 py-2.5 text-[0.8rem] text-red-200/85">
+              {networkRejected.length} sender ID{networkRejected.length === 1 ? ' was' : 's were'} declined by the
+              messaging network. Approving them here will not make sending work — ask the merchant for a different name
+              or re-register.
+            </div>
+          )}
           {senders.length === 0 ? (
             <EmptyState icon="seal" title="No sender IDs" />
           ) : (
-            <Table head={['Sender', 'Merchant', 'Use case', 'Requested', 'Status', '']}>
+            <Table head={['Sender', 'Merchant', 'Use case', 'Status', 'Network status', '']}>
               <tbody>
                 {senders.map((s) => (
                   <Row key={s.id}>
-                    <Cell className="text-white">{s.name}</Cell>
+                    <Cell className="text-white">
+                      {s.name}
+                      <div className="text-[0.7rem] text-white/35 mt-0.5">{fmtDate(s.created_at)}</div>
+                    </Cell>
                     <Cell>
                       <Link to={`/admin/merchants/${s.business_id}`} className="text-white/80 no-underline hover:underline">
                         {s.merchant}
                       </Link>
                     </Cell>
-                    <Cell className="text-white/60 max-w-[240px] truncate">{s.use_case || '—'}</Cell>
-                    <Cell className="text-white/55">{fmtDate(s.created_at)}</Cell>
+                    <Cell className="text-white/60 max-w-[220px] truncate">{s.use_case || '—'}</Cell>
                     <Cell>
                       <StatusPill status={s.status} />
                       {s.rejection_reason && (
-                        <div className="text-[0.7rem] text-white/40 mt-1 max-w-[200px] truncate">{s.rejection_reason}</div>
+                        <div className="text-[0.7rem] text-white/40 mt-1 max-w-[200px] truncate" title={s.rejection_reason}>
+                          {s.rejection_reason}
+                        </div>
                       )}
                     </Cell>
                     <Cell>
+                      <NetworkStatus sender={s} />
+                    </Cell>
+                    <Cell>
                       {isAdmin && (
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex flex-wrap gap-2 justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={!!syncing}
+                            onClick={() => syncSenders(s.id)}
+                          >
+                            {syncing === s.id ? 'Working…' : 'Sync'}
+                          </Button>
+                          {isNetworkRejected(s) && (
+                            <Button size="sm" variant="ghost" disabled={!!syncing} onClick={() => reregister(s)}>
+                              Re-register
+                            </Button>
+                          )}
                           {s.status !== 'approved' && (
                             <Button size="sm" onClick={() => setDecision({ sender: s, status: 'approved' })}>
                               Approve
@@ -363,6 +400,7 @@ export default function Messaging() {
                     </Cell>
                   </Row>
                 ))}
+
               </tbody>
             </Table>
           )}
