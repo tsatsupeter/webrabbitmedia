@@ -110,12 +110,14 @@ export default function CreateBusiness() {
         bizId = latest?.id
       }
 
-      // Secondary writes must never block the redirect.
+      // Point the shared workspace store at the new business and make sure the
+      // list contains it before we route, so the dashboard opens on it.
       if (bizId) {
         try {
-          await supabase.from('profiles').update({ last_active_business_id: bizId }).eq('id', user.id)
-        } catch { /* ignore */ }
-        if (typeof window !== 'undefined') localStorage.setItem('wr.activeBusinessId', bizId)
+          await setActive(bizId)
+          await refresh()
+          notifyBrandsChanged()
+        } catch { /* never block the redirect */ }
       }
 
       toast.success('Business created')
