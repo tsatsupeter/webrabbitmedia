@@ -26,13 +26,28 @@ function Avatar({ name, logoUrl, className = '' }) {
   )
 }
 
+const ROLE_LABEL = { owner: 'Owner', admin: 'Editor', viewer: 'Viewer' }
+
+function RoleChip({ role }) {
+  if (!role || role === 'owner') return null
+  return (
+    <span className="shrink-0 text-[0.65rem] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-white/50 ring-1 ring-white/10">
+      {ROLE_LABEL[role] || role}
+    </span>
+  )
+}
+
 export default function BusinessSwitcher({ compact = false }) {
-  const { businesses, active, activeId, setActive, refresh } = useBusinesses()
+  const { businesses, active, activeId, setActive, refresh, canEdit } = useBusinesses()
   const [open, setOpen] = useState(false)
   const [chooser, setChooser] = useState(false)
   const [brandOpen, setBrandOpen] = useState(false)
   const [bizOpen, setBizOpen] = useState(false)
   const wrapRef = useRef(null)
+
+  const owned = businesses.filter((b) => b.role === 'owner')
+  const shared = businesses.filter((b) => b.role !== 'owner')
+
 
 
   useEffect(() => {
