@@ -97,6 +97,7 @@ export default function Messaging() {
   const [adjustForm, setAdjustForm] = useState({ entry_type: 'topup', amount: '', description: '' })
   const [rateDraft, setRateDraft] = useState({})
   const [busy, setBusy] = useState(false)
+  const [syncing, setSyncing] = useState(null) // sender id, or 'all'
 
   const term = q.trim().toLowerCase()
   const filterRows = (rows, fields) =>
