@@ -50,15 +50,36 @@ async function resolveLogo(path) {
 }
 
 async function fetchAll(userId) {
-  const [{ data: biz }, { data: profile }] = await Promise.all([
+  const [{ data: biz }, { data: profile }, { data: memberships }] = await Promise.all([
     supabase
       .from('businesses')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: true }),
     supabase.from('profiles').select('last_active_business_id').eq('id', userId).maybeSingle(),
+    supabase.from('team_members').select('business_id, role').eq('user_id', userId),
   ])
-  const list = biz ?? []
+  const list = [...(biz ?? [])]
+  const owned = new Set(list.map((b) => b.id))
+  const roleByBiz = new Map()
+  owned.forEach((id) => roleByBiz.set(id, 'owner'))
+
+  // Workspaces the user was invited to (team member, not owner).
+  const memberIds = (memberships ?? []).map((m) => m.business_id).filter((id) => !owned.has(id))
+  if (memberIds.length > 0) {
+    ;(memberships ?? []).forEach((m) => {
+      if (!owned.has(m.business_id)) roleByBiz.set(m.business_id, m.role)
+    })
+    const { data: shared } = await supabase
+      .from('businesses')
+      .select('*')
+      .in('id', memberIds)
+      .order('created_at', { ascending: true })
+    ;(shared ?? []).forEach((b) => {
+      if (!owned.has(b.id)) list.push(b)
+    })
+  }
+
   const ids = list.map((b) => b.id)
   const brandsByBiz = new Map()
   if (ids.length > 0) {
@@ -73,7 +94,11 @@ async function fetchAll(userId) {
       brandsByBiz.set(r.business_id, { name: r.name, logoUrl: urls[i] })
     })
   }
-  const merged = list.map((b) => ({ ...b, brand: brandsByBiz.get(b.id) || null }))
+  const merged = list.map((b) => ({
+    ...b,
+    brand: brandsByBiz.get(b.id) || null,
+    role: roleByBiz.get(b.id) || 'viewer',
+  }))
 
   businesses = merged
   const remembered = profile?.last_active_business_id || activeId
@@ -132,11 +157,16 @@ function start() {
 export function useBusinesses() {
   start()
   const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+  const role = snap.active?.role || null
   return {
     businesses: snap.businesses,
     active: snap.active,
     activeId: snap.activeId,
     loading: snap.loading,
+    role,
+    isOwner: role === 'owner',
+    canEdit: role === 'owner' || role === 'admin',
+    isViewer: role === 'viewer',
     setActive,
     refresh,
   }
