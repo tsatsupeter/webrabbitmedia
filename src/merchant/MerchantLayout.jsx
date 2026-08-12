@@ -90,6 +90,13 @@ export default function MerchantLayout() {
             <Icon name="menu" size={20} />
           </button>
         )}
+        {isViewer && active && (
+          <div className="px-4 md:px-6 pt-3">
+            <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-200">
+              You have view-only access to {active.name}. Ask an owner or editor to make changes.
+            </div>
+          </div>
+        )}
         <main className="flex-1 overflow-y-auto flex flex-col">
           <Outlet />
         </main>
