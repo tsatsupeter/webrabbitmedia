@@ -43,6 +43,7 @@ export function Stat({ label, value, hint, icon, tone = 'default' }) {
     default: 'text-white',
     accent: 'text-accent-bright',
     warn: 'text-amber-400',
+    danger: 'text-red-400',
   }
   return (
     <Card className="px-5 py-4">

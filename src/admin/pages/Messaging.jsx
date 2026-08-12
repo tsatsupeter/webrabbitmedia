@@ -64,6 +64,37 @@ async function adminAction(payload) {
   return data
 }
 
+/** Did the upstream network decline this sender name? */
+function isNetworkRejected(s) {
+  const p = String(s?.provider_status || '').toLowerCase()
+  return /reject|declin|denied/.test(p)
+}
+
+function NetworkStatus({ sender }) {
+  const raw = sender.provider_status
+  if (!raw) {
+    return <span className="text-[0.78rem] text-white/35">Not synced</span>
+  }
+  const p = raw.toLowerCase()
+  const tone = /reject|declin|denied|error/.test(p)
+    ? 'text-red-400'
+    : /approve|active|accept/.test(p)
+      ? 'text-accent-bright'
+      : /not\s*registered/.test(p)
+        ? 'text-amber-300'
+        : 'text-white/70'
+  return (
+    <div>
+      <div className={`text-[0.78rem] ${tone} max-w-[200px] truncate`} title={raw}>
+        {raw}
+      </div>
+      {sender.provider_synced_at && (
+        <div className="text-[0.7rem] text-white/35 mt-0.5">{fmtDate(sender.provider_synced_at)}</div>
+      )}
+    </div>
+  )
+}
+
 function Tabs({ active, onChange }) {
   return (
     <div className="flex flex-wrap gap-1 border-b border-merchant-border">
@@ -97,12 +128,16 @@ export default function Messaging() {
   const [adjustForm, setAdjustForm] = useState({ entry_type: 'topup', amount: '', description: '' })
   const [rateDraft, setRateDraft] = useState({})
   const [busy, setBusy] = useState(false)
+  const [syncing, setSyncing] = useState(null) // sender id, or 'all'
 
   const term = q.trim().toLowerCase()
   const filterRows = (rows, fields) =>
     !term ? rows : rows.filter((r) => fields.some((f) => String(r[f] ?? '').toLowerCase().includes(term)))
 
-  const senders = useMemo(() => filterRows(data?.senders || [], ['name', 'merchant', 'status']), [data, term])
+  const senders = useMemo(
+    () => filterRows(data?.senders || [], ['name', 'merchant', 'status', 'provider_status']),
+    [data, term],
+  )
   const campaigns = useMemo(() => filterRows(data?.campaigns || [], ['name', 'merchant', 'status']), [data, term])
   const messages = useMemo(() => filterRows(data?.messages || [], ['to_number', 'merchant', 'status']), [data, term])
   const wallets = useMemo(() => filterRows(data?.wallets || [], ['merchant']), [data, term])
@@ -123,8 +158,41 @@ export default function Messaging() {
   const delivered = data.messages.filter((m) => m.status === 'delivered').length
   const settled = data.messages.filter((m) => ['delivered', 'failed', 'rejected'].includes(m.status)).length
   const pendingSenders = data.senders.filter((s) => s.status === 'pending')
+  const networkRejected = data.senders.filter((s) => isNetworkRejected(s))
   const spend = data.ledger.filter((l) => l.entry_type === 'charge').reduce((s, l) => s + Number(l.amount || 0), 0)
   const topups = data.ledger.filter((l) => l.entry_type === 'topup').reduce((s, l) => s + Number(l.amount || 0), 0)
+
+  async function syncSenders(senderId) {
+    setSyncing(senderId || 'all')
+    try {
+      const res = await adminAction({ action: 'sender_sync', sender_id: senderId || undefined })
+      toast.success(
+        senderId
+          ? `Network status: ${res.results?.[0]?.provider_status || 'unknown'}`
+          : `Synced ${res.synced} sender ID${res.synced === 1 ? '' : 's'} · ${res.changed} changed`,
+      )
+      refresh()
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setSyncing(null)
+    }
+  }
+
+  async function reregister(sender) {
+    setSyncing(sender.id)
+    try {
+      const res = await adminAction({ action: 'sender_reregister', sender_id: sender.id })
+      toast.success(`Re-submitted to the network — ${res.provider_status}`)
+      refresh()
+    } catch (e) {
+      toast.error(e.message)
+      refresh()
+    } finally {
+      setSyncing(null)
+    }
+  }
+
 
   async function submitDecision() {
     if (!decision) return
@@ -207,7 +275,6 @@ export default function Messaging() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Stat label="Credits in circulation" value={money(totalCredits)} icon="wallet" />
-            <Stat label="Total topped up" value={money(topups)} icon="arrow-up" />
             <Stat label="Merchant spend" value={money(spend)} icon="chart" />
             <Stat
               label="Sender IDs pending"
@@ -215,9 +282,19 @@ export default function Messaging() {
               icon="seal"
               tone={pendingSenders.length ? 'warn' : 'default'}
             />
+            <Stat
+              label="Declined by network"
+              value={networkRejected.length}
+              icon="seal"
+              tone={networkRejected.length ? 'danger' : 'default'}
+              hint={networkRejected.length ? 'Needs a new sender name' : 'All clear'}
+            />
           </div>
+
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Stat label="Total topped up" value={money(topups)} icon="arrow-up" />
             <Stat label="Messages sent" value={compact(sent.length)} icon="mail" />
+
             <Stat
               label="Delivery rate"
               value={settled ? `${Math.round((delivered / settled) * 100)}%` : '—'}
@@ -255,31 +332,68 @@ export default function Messaging() {
 
       {tab === 'senders' && (
         <Card>
-          <CardHeader title="Sender IDs" subtitle="Approve or reject the sender names merchants request" />
+          <CardHeader
+            title="Sender IDs"
+            subtitle="Approve or reject the sender names merchants request, and keep them in step with the network"
+            action={
+              isAdmin && (
+                <Button size="sm" variant="ghost" disabled={!!syncing} onClick={() => syncSenders(null)}>
+                  {syncing === 'all' ? 'Syncing…' : 'Sync all pending'}
+                </Button>
+              )
+            }
+          />
+          {networkRejected.length > 0 && (
+            <div className="mx-4 mb-3 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3.5 py-2.5 text-[0.8rem] text-red-200/85">
+              {networkRejected.length} sender ID{networkRejected.length === 1 ? ' was' : 's were'} declined by the
+              messaging network. Approving them here will not make sending work — ask the merchant for a different name
+              or re-register.
+            </div>
+          )}
           {senders.length === 0 ? (
             <EmptyState icon="seal" title="No sender IDs" />
           ) : (
-            <Table head={['Sender', 'Merchant', 'Use case', 'Requested', 'Status', '']}>
+            <Table head={['Sender', 'Merchant', 'Use case', 'Status', 'Network status', '']}>
               <tbody>
                 {senders.map((s) => (
                   <Row key={s.id}>
-                    <Cell className="text-white">{s.name}</Cell>
+                    <Cell className="text-white">
+                      {s.name}
+                      <div className="text-[0.7rem] text-white/35 mt-0.5">{fmtDate(s.created_at)}</div>
+                    </Cell>
                     <Cell>
                       <Link to={`/admin/merchants/${s.business_id}`} className="text-white/80 no-underline hover:underline">
                         {s.merchant}
                       </Link>
                     </Cell>
-                    <Cell className="text-white/60 max-w-[240px] truncate">{s.use_case || '—'}</Cell>
-                    <Cell className="text-white/55">{fmtDate(s.created_at)}</Cell>
+                    <Cell className="text-white/60 max-w-[220px] truncate">{s.use_case || '—'}</Cell>
                     <Cell>
                       <StatusPill status={s.status} />
                       {s.rejection_reason && (
-                        <div className="text-[0.7rem] text-white/40 mt-1 max-w-[200px] truncate">{s.rejection_reason}</div>
+                        <div className="text-[0.7rem] text-white/40 mt-1 max-w-[200px] truncate" title={s.rejection_reason}>
+                          {s.rejection_reason}
+                        </div>
                       )}
                     </Cell>
                     <Cell>
+                      <NetworkStatus sender={s} />
+                    </Cell>
+                    <Cell>
                       {isAdmin && (
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex flex-wrap gap-2 justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={!!syncing}
+                            onClick={() => syncSenders(s.id)}
+                          >
+                            {syncing === s.id ? 'Working…' : 'Sync'}
+                          </Button>
+                          {isNetworkRejected(s) && (
+                            <Button size="sm" variant="ghost" disabled={!!syncing} onClick={() => reregister(s)}>
+                              Re-register
+                            </Button>
+                          )}
                           {s.status !== 'approved' && (
                             <Button size="sm" onClick={() => setDecision({ sender: s, status: 'approved' })}>
                               Approve
@@ -295,6 +409,7 @@ export default function Messaging() {
                     </Cell>
                   </Row>
                 ))}
+
               </tbody>
             </Table>
           )}
@@ -475,6 +590,13 @@ export default function Messaging() {
               ? 'The merchant will be able to send with this sender ID immediately.'
               : 'Tell the merchant why this sender ID cannot be used.'}
           </p>
+          {decision?.status === 'approved' && isNetworkRejected(decision.sender) && (
+            <div className="rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3.5 py-2.5 text-[0.8rem] text-red-200/85">
+              The messaging network has declined this name ({decision.sender.provider_status}). Approving it only
+              changes the dashboard — sending will still fail until the network approves it. Use “Re-register” or ask
+              the merchant for a different name.
+            </div>
+          )}
           {decision?.status === 'rejected' && (
             <Field label="Reason">
               <textarea
