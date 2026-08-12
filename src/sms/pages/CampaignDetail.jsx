@@ -47,6 +47,22 @@ export default function CampaignDetail() {
 
   const cancellable = ['scheduled', 'queued'].includes(campaign.status)
 
+  async function syncStatus() {
+    setBusy(true)
+    try {
+      const res = await invokeMessaging('messaging-status', { campaign_id: campaign.id })
+      toast.success(
+        res?.updated ? `${res.updated} recipient update${res.updated === 1 ? '' : 's'} pulled` : 'No new delivery updates yet',
+      )
+      load()
+    } catch (e) {
+      toast.error(e.message || 'Could not refresh delivery status')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+
   async function cancel() {
     setBusy(true)
     try {
