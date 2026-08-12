@@ -656,3 +656,16 @@ export default function Navbar() {
     </>
   )
 }
+
+function NavAccountItem({ icon, label, to, onNavigate }) {
+  return (
+    <Link
+      to={to}
+      onClick={onNavigate}
+      className="flex items-center gap-3 px-4 py-2.5 text-[0.88rem] text-text-primary no-underline hover:no-underline hover:bg-surface-raised transition-colors"
+    >
+      <Icon name={icon} size={16} className="text-text-muted" />
+      {label}
+    </Link>
+  )
+}
