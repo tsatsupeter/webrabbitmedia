@@ -229,13 +229,38 @@ function FeatureCard({ feature, onNavigate }) {
 
 export default function Navbar() {
   const { pathname, hash } = useLocation()
+  const navigate = useNavigate()
+  const { user, loading: authLoading } = useAuth()
+  const { isAdmin } = useAdminRole()
   const [open, setOpen] = useState(null) // desktop mega menu key
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSection, setMobileSection] = useState(null)
   const [scrolled, setScrolled] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const closeTimer = useRef(null)
   const headerRef = useRef(null)
+  const accountRef = useRef(null)
   const triggerRefs = useRef({})
+
+  const signedIn = !!user
+  const dashboardTo = isAdmin ? '/admin' : '/merchant'
+  const initial = (user?.email || '?').charAt(0).toUpperCase()
+
+  async function signOut() {
+    setAccountOpen(false)
+    setMobileOpen(false)
+    await supabase.auth.signOut()
+    navigate('/', { replace: true })
+  }
+
+  useEffect(() => {
+    if (!accountOpen) return
+    const onDown = (e) => {
+      if (!accountRef.current?.contains(e.target)) setAccountOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [accountOpen])
 
   // Close everything on route change.
   useEffect(() => {
