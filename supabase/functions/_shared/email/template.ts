@@ -408,7 +408,6 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
     }
   }
 }
-}
 
 
 function pillHtml(p: Pill): string {
