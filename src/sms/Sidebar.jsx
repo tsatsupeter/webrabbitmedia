@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { smsNavGroups } from './nav'
 import Icon from './Icon'
+import ProductSwitcher from '../components/ProductSwitcher'
 import { useSmsWorkspace } from './useSmsWorkspace'
 import { useSmsWallet, money } from './lib'
 
