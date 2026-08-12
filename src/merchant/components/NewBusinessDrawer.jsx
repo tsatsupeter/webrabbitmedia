@@ -20,7 +20,7 @@ const inputCls =
 
 export default function NewBusinessDrawer({ open, onClose, onCreated }) {
   const { user } = useAuth()
-  const { setActive } = useBusinesses()
+  const { setActive, refresh } = useBusinesses()
   const [form, setForm] = useState({ name: '', website: '', location: 'Ghana', category: '', referral: '', note: '' })
   const [saving, setSaving] = useState(false)
 
