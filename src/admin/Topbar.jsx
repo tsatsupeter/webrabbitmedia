@@ -119,6 +119,24 @@ export default function AdminTopbar({
             </div>
             <div className="py-1.5 border-b border-merchant-border">
               <MenuItem
+                icon="home"
+                label="Homepage"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/')
+                }}
+              />
+              <MenuItem
+                icon="store"
+                label="Merchant Dashboard"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/merchant')
+                }}
+              />
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem
                 icon="gear"
                 label="Platform Settings"
                 onClick={() => {

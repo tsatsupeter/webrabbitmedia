@@ -5,11 +5,13 @@ import { supabase } from './../integrations/supabase/client'
 import { useAuth } from './../hooks/useAuth'
 import NotificationsBell from './../components/NotificationsBell'
 import RoleBadge from './components/RoleBadge'
+import { useAdminRole } from '../admin/useAdmin'
 
 export default function Topbar({ title = 'Get Started', compactSidebar, setCompactSidebar, onMenuClick, showSearch = true }) {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const { user } = useAuth()
+  const { isAdmin } = useAdminRole()
 
   const [searchValue, setSearchValue] = useState('')
   const searchRef = useRef(null)
@@ -164,6 +166,26 @@ export default function Topbar({ title = 'Get Started', compactSidebar, setCompa
               <div className="text-[0.85rem] font-semibold text-white">Account Options</div>
               {user?.email && (
                 <div className="text-[0.7rem] text-white/45 truncate mt-0.5">{user.email}</div>
+              )}
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem
+                icon="home"
+                label="Homepage"
+                onClick={() => {
+                  setAccountOpen(false)
+                  navigate('/')
+                }}
+              />
+              {isAdmin && (
+                <MenuItem
+                  icon="shield"
+                  label="Admin Console"
+                  onClick={() => {
+                    setAccountOpen(false)
+                    navigate('/admin')
+                  }}
+                />
               )}
             </div>
             <div className="py-1.5 border-b border-merchant-border">
