@@ -260,6 +260,37 @@ Deno.serve(async (req) => {
         details: { from: null, to: inv.role, reason: 'invite_accepted' },
       })
 
+      // In-app notifications: welcome the new member, tell the owner someone joined.
+      const { data: ownerRow } = await db
+        .from('businesses')
+        .select('user_id, name')
+        .eq('id', inv.business_id)
+        .maybeSingle()
+      const bizName = ownerRow?.name || 'the workspace'
+      const notices: Record<string, unknown>[] = [
+        {
+          user_id: user.id,
+          business_id: inv.business_id,
+          category: 'team',
+          title: `You joined ${bizName}`,
+          message: `You now have ${inv.role === 'admin' ? 'Editor' : 'Viewer'} access to ${bizName}.`,
+          link: '/merchant',
+          read: false,
+        },
+      ]
+      if (ownerRow?.user_id && ownerRow.user_id !== user.id) {
+        notices.push({
+          user_id: ownerRow.user_id,
+          business_id: inv.business_id,
+          category: 'team',
+          title: 'Invitation accepted',
+          message: `${callerEmail} joined ${bizName}.`,
+          link: '/merchant/settings?tab=team',
+          read: false,
+        })
+      }
+      await db.from('notifications').insert(notices)
+
       return json({ ok: true, business: biz, role: inv.role })
     }
 
