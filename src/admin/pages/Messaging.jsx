@@ -127,8 +127,41 @@ export default function Messaging() {
   const delivered = data.messages.filter((m) => m.status === 'delivered').length
   const settled = data.messages.filter((m) => ['delivered', 'failed', 'rejected'].includes(m.status)).length
   const pendingSenders = data.senders.filter((s) => s.status === 'pending')
+  const networkRejected = data.senders.filter((s) => isNetworkRejected(s))
   const spend = data.ledger.filter((l) => l.entry_type === 'charge').reduce((s, l) => s + Number(l.amount || 0), 0)
   const topups = data.ledger.filter((l) => l.entry_type === 'topup').reduce((s, l) => s + Number(l.amount || 0), 0)
+
+  async function syncSenders(senderId) {
+    setSyncing(senderId || 'all')
+    try {
+      const res = await adminAction({ action: 'sender_sync', sender_id: senderId || undefined })
+      toast.success(
+        senderId
+          ? `Network status: ${res.results?.[0]?.provider_status || 'unknown'}`
+          : `Synced ${res.synced} sender ID${res.synced === 1 ? '' : 's'} · ${res.changed} changed`,
+      )
+      refresh()
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setSyncing(null)
+    }
+  }
+
+  async function reregister(sender) {
+    setSyncing(sender.id)
+    try {
+      const res = await adminAction({ action: 'sender_reregister', sender_id: sender.id })
+      toast.success(`Re-submitted to the network — ${res.provider_status}`)
+      refresh()
+    } catch (e) {
+      toast.error(e.message)
+      refresh()
+    } finally {
+      setSyncing(null)
+    }
+  }
+
 
   async function submitDecision() {
     if (!decision) return
