@@ -51,6 +51,10 @@ Deno.serve(async (req) => {
     out.push(await call('AUTH-003', '/v1/payments/name-verify', { institution_code: '300323', account_number: '1234567890' }, { auth: null }))
   }
 
+  if (group === 'balance' || group === 'all') {
+    out.push(await call('BAL-001', '/v1/payments/disbursement-balance', null, { method: 'GET' }))
+  }
+
   if (group === 'verify' || group === 'all') {
     out.push(await call('NV-001', '/v1/payments/name-verify', { institution_code: BANK.institution_code, account_number: BANK.account_number }))
     out.push(await call('NV-002', '/v1/payments/name-verify', { institution_code: MOMO.institution_code, account_number: MOMO.account_number }))
