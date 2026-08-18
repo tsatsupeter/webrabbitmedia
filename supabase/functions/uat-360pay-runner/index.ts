@@ -109,9 +109,9 @@ Deno.serve(async (req) => {
   }
 
   if (group === 'checkout' || group === 'all') {
-    out.push(await call('CHK-001', '/v1/transactions/initiate', { email: 'uat@webrabbitmedia.com', amount: '50.00', phone_number: '0246089019', payment_slug: 'mtn' }))
-    out.push(await call('CHK-002', '/v1/transactions/initiate', { email: 'not-a-valid-email', amount: '10.00', phone_number: '0246089019' }))
-    out.push(await call('CHK-003', '/v1/transactions/initiate', { email: 'uat@webrabbitmedia.com', amount: '0', phone_number: '0246089019' }))
+    out.push(await call('CHK-001', '/v1/transactions/initiate', { email: 'uat@webrabbitmedia.com', amount: 50, phone_number: '233246089019', payment_slug: 'mtn' }))
+    out.push(await call('CHK-002', '/v1/transactions/initiate', { email: 'not-a-valid-email', amount: 10, phone_number: '233246089019' }))
+    out.push(await call('CHK-003', '/v1/transactions/initiate', { email: 'uat@webrabbitmedia.com', amount: 0, phone_number: '233246089019' }))
   }
 
   if (group === 'errors' || group === 'all') {
