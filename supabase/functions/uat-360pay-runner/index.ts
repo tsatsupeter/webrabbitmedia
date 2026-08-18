@@ -75,9 +75,9 @@ Deno.serve(async (req) => {
     out.push(await call('DISB-002', '/v1/payments/disbursement', { ...MOMO, amount: 1.00, transaction_id: d2, currency: 'GHS', reference: d2 }))
     out.push(await call('STAT-002', '/v1/payments/status-check', { transaction_id: d2 }))
     out.push(await call('DISB-003', '/v1/payments/disbursement', { ...BANK, amount: 1.00, transaction_id: d1, currency: 'GHS', reference: d1 }))
-    out.push(await call('DISB-004', '/v1/payments/disbursement', { ...BANK, amount: 99999999.00, transaction_id: `WR-UAT-DISB4-${stamp}`, currency: 'GHS' }))
-    out.push(await call('DISB-005', '/v1/payments/disbursement', { account_number: BANK.account_number, amount: 1.00, institution_code: BANK.institution_code, currency: 'GHS' }))
-    out.push(await call('DISB-006', '/v1/payments/disbursement', { ...BANK, amount: 0, transaction_id: `WR-UAT-DISB6-${stamp}`, currency: 'GHS' }))
+    out.push(await call('DISB-004', '/v1/payments/disbursement', { ...BANK, amount: 99999999.00, transaction_id: `WR-UAT-DISB4-${stamp}`, currency: 'GHS', reference: `WR-UAT-DISB4-${stamp}` }))
+    out.push(await call('DISB-005', '/v1/payments/disbursement', { account_number: BANK.account_number, amount: 1.00, institution_code: BANK.institution_code, currency: 'GHS', reference: `WR-UAT-DISB5-${stamp}` }))
+    out.push(await call('DISB-006', '/v1/payments/disbursement', { ...BANK, amount: 0, transaction_id: `WR-UAT-DISB6-${stamp}`, currency: 'GHS', reference: `WR-UAT-DISB6-${stamp}` }))
     await sleep(45000)
     out.push(await call('STAT-001', '/v1/payments/status-check', { transaction_id: d1 }))
     out.push(await call('STAT-001B', '/v1/payments/status-check', { transaction_id: d2 }))
@@ -87,17 +87,17 @@ Deno.serve(async (req) => {
   if (group === 'bulkdisb' || group === 'all') {
     const b1 = `WR-UAT-BULK1-${stamp}`
     out.push(await call('BDISB-001', '/v1/payments/bulk-disbursement', { bulk_transaction_id: b1, disbursements: [
-      { ...BANK, amount: 1.00, transaction_id: `${b1}-A`, currency: 'GHS' },
-      { ...MOMO, amount: 1.00, transaction_id: `${b1}-B`, currency: 'GHS' },
+      { ...BANK, amount: 1.00, transaction_id: `${b1}-A`, currency: 'GHS', reference: `${b1}-A` },
+      { ...MOMO, amount: 1.00, transaction_id: `${b1}-B`, currency: 'GHS', reference: `${b1}-B` },
     ] }))
     const b2 = `WR-UAT-BULK2-${stamp}`
     out.push(await call('BDISB-002', '/v1/payments/bulk-disbursement', { bulk_transaction_id: b2, disbursements: [
-      { ...BANK, amount: 1.00, transaction_id: `${b2}-A`, currency: 'GHS' },
+      { ...BANK, amount: 1.00, transaction_id: `${b2}-A`, currency: 'GHS', reference: `${b2}-A` },
     ] }))
     out.push(await call('BDISB-003', '/v1/payments/bulk-disbursement', { disbursements: [] }))
     await sleep(20000)
-    out.push(await call('BSTAT-001', '/v1/payments/bulk-disbursement-status', { bulk_transaction_Id: b1 }))
-    out.push(await call('BSTAT-002', '/v1/payments/bulk-disbursement-status', { bulk_transaction_Id: 'INVALID-BULK-999999' }))
+    out.push(await call('BSTAT-001', '/v1/payments/bulk-disbursement-status', { bulk_transaction_id: b1 }))
+    out.push(await call('BSTAT-002', '/v1/payments/bulk-disbursement-status', { bulk_transaction_id: 'INVALID-BULK-999999' }))
   }
 
   if (group === 'collect' || group === 'all') {
