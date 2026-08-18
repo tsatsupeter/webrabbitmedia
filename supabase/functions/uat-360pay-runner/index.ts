@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
-  const { group, base } = await req.json().catch(() => ({ group: 'all' }))
+  const { group, base, raw_path, raw_body } = await req.json().catch(() => ({ group: 'all' }))
   if (base) BASE = String(base)
   const out: Rec[] = []
   const stamp = Date.now().toString().slice(-9)
@@ -51,8 +51,8 @@ Deno.serve(async (req) => {
     out.push(await call('AUTH-003', '/v1/payments/name-verify', { institution_code: '300323', account_number: '1234567890' }, { auth: null }))
   }
 
-  if (group === 'raw') {
-    const { path, payload, method } = await Promise.resolve((req as any)._x ?? {}) as any
+  if (group === 'raw' && raw_path) {
+    out.push(await call('RAW', String(raw_path), raw_body ?? {}))
   }
 
   if (group === 'balance' || group === 'all') {
