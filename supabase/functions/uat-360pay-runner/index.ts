@@ -51,6 +51,10 @@ Deno.serve(async (req) => {
     out.push(await call('AUTH-003', '/v1/payments/name-verify', { institution_code: '300323', account_number: '1234567890' }, { auth: null }))
   }
 
+  if (group === 'raw') {
+    const { path, payload, method } = await Promise.resolve((req as any)._x ?? {}) as any
+  }
+
   if (group === 'balance' || group === 'all') {
     out.push(await call('BAL-001', '/v1/payments/disbursement-balance', null, { method: 'GET' }))
   }
