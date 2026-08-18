@@ -3,7 +3,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const GUARD = 'wr-uat-retest-2026'
-const BASE = 'https://uat-360pay-merchant-api.libertepay.com'
+let BASE = 'https://uat-360pay-merchant-api.libertepay.com'
 
 const key = () => Deno.env.get('LIBERTE_TEST_SECRET_KEY') ?? ''
 
@@ -38,7 +38,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
-  const { group } = await req.json().catch(() => ({ group: 'all' }))
+  const { group, base } = await req.json().catch(() => ({ group: 'all' }))
+  if (base) BASE = String(base)
   const out: Rec[] = []
   const stamp = Date.now().toString().slice(-9)
   const BANK = { institution_code: '300315', account_number: '1020820171412', account_name: 'OLAM PURCHASE ACCOUNT' }
