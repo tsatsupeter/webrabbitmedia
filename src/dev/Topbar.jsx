@@ -1,0 +1,123 @@
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Icon from './Icon'
+import { supabase } from '../integrations/supabase/client'
+import { useAuth } from '../hooks/useAuth'
+import NotificationsBell from '../components/NotificationsBell'
+import { useAdminRole } from '../admin/useAdmin'
+
+export default function DevTopbar({ title = 'Developer', compactSidebar, setCompactSidebar, onMenuClick }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { isAdmin } = useAdminRole()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef(null)
+
+  useEffect(() => {
+    function onDoc(e) {
+      if (!accountRef.current?.contains(e.target)) setAccountOpen(false)
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') setAccountOpen(false)
+    }
+    if (accountOpen) {
+      document.addEventListener('mousedown', onDoc)
+      document.addEventListener('keydown', onKey)
+    }
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [accountOpen])
+
+  const toggleCompactSidebar = () => {
+    const next = !compactSidebar
+    setCompactSidebar(next)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('wr.devCompactSidebar', String(next))
+    }
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    navigate('/auth', { replace: true })
+  }
+
+  return (
+    <header className="h-16 shrink-0 flex items-center gap-3 px-4 md:px-6 border-b border-merchant-border bg-merchant-bg">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        className="md:hidden w-9 h-9 min-w-9 min-h-9 flex items-center justify-center rounded-lg text-white/70 hover:bg-white/[0.06]"
+        aria-label="Open menu"
+      >
+        <Icon name="menu" size={20} />
+      </button>
+
+      <h1 className="font-display text-[1.05rem] font-medium text-white truncate">{title}</h1>
+
+      <div className="flex-1" />
+
+      <button
+        type="button"
+        onClick={toggleCompactSidebar}
+        className="w-9 h-9 min-w-9 min-h-9 hidden md:flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06]"
+        aria-label={compactSidebar ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <Icon name={compactSidebar ? 'panelRight' : 'panelLeft'} size={17} />
+      </button>
+
+      <NotificationsBell Icon={Icon} product="developer" />
+
+      <div ref={accountRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setAccountOpen((v) => !v)}
+          title={user?.email || 'Account'}
+          className="w-10 h-10 min-w-10 min-h-10 flex items-center justify-center rounded-lg text-white/70 hover:text-white bg-white/[0.02] hover:bg-white/[0.06] border border-transparent hover:border-merchant-border"
+          aria-label="Account options"
+          aria-expanded={accountOpen}
+        >
+          <Icon name="user" size={20} />
+        </button>
+
+        {accountOpen && (
+          <div className="absolute right-0 top-full mt-2 z-40 w-60 bg-merchant-panel border border-merchant-border rounded-xl shadow-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-merchant-border">
+              <div className="text-[0.85rem] font-semibold text-white">Account</div>
+              {user?.email && (
+                <div className="text-[0.7rem] text-white/45 truncate mt-0.5">{user.email}</div>
+              )}
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem icon="home" label="Homepage" onClick={() => { setAccountOpen(false); navigate('/') }} />
+              <MenuItem icon="layers" label="All services" onClick={() => { setAccountOpen(false); navigate('/welcome?choose=1') }} />
+              {isAdmin && (
+                <MenuItem icon="shield" label="Admin Console" onClick={() => { setAccountOpen(false); navigate('/admin') }} />
+              )}
+            </div>
+            <div className="py-1.5 border-b border-merchant-border">
+              <MenuItem icon="user" label="My developer profile" onClick={() => { setAccountOpen(false); navigate('/dev/profile') }} />
+            </div>
+            <div className="py-1.5">
+              <MenuItem icon="logout" label="Log out" onClick={() => { setAccountOpen(false); signOut() }} />
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  )
+}
+
+function MenuItem({ icon, label, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[0.85rem] text-white/85 hover:bg-white/[0.05] transition-colors"
+    >
+      <Icon name={icon} size={16} className="text-white/60" />
+      <span className="flex-1">{label}</span>
+    </button>
+  )
+}
