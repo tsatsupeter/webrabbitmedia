@@ -596,6 +596,10 @@ export type Database = {
           headline: string | null
           id: string
           linkedin_url: string | null
+          location: string | null
+          payout_account: string | null
+          payout_method: string | null
+          payout_name: string | null
           phone: string | null
           pitch: string | null
           portfolio_url: string | null
@@ -610,6 +614,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          years_experience: number | null
         }
         Insert: {
           availability?: string
@@ -622,6 +627,10 @@ export type Database = {
           headline?: string | null
           id?: string
           linkedin_url?: string | null
+          location?: string | null
+          payout_account?: string | null
+          payout_method?: string | null
+          payout_name?: string | null
           phone?: string | null
           pitch?: string | null
           portfolio_url?: string | null
@@ -636,6 +645,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          years_experience?: number | null
         }
         Update: {
           availability?: string
@@ -648,6 +658,10 @@ export type Database = {
           headline?: string | null
           id?: string
           linkedin_url?: string | null
+          location?: string | null
+          payout_account?: string | null
+          payout_method?: string | null
+          payout_name?: string | null
           phone?: string | null
           pitch?: string | null
           portfolio_url?: string | null
@@ -662,6 +676,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          years_experience?: number | null
         }
         Relationships: []
       }
