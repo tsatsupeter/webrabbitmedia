@@ -469,6 +469,217 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_earnings: {
+        Row: {
+          amount: number
+          assignment_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          developer_id: string
+          id: string
+          milestone_id: string | null
+          note: string | null
+          paid_at: string | null
+          project_id: string
+          reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          assignment_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          developer_id: string
+          id?: string
+          milestone_id?: string | null
+          note?: string | null
+          paid_at?: string | null
+          project_id: string
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          assignment_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          developer_id?: string
+          id?: string
+          milestone_id?: string | null
+          note?: string | null
+          paid_at?: string | null
+          project_id?: string
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_earnings_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "project_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "developer_earnings_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "studio_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "developer_earnings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      developer_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          note: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          note?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          note?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      developer_profiles: {
+        Row: {
+          availability: string
+          avatar_url: string | null
+          created_at: string
+          currency: string
+          display_name: string
+          email: string | null
+          github_url: string | null
+          headline: string | null
+          id: string
+          linkedin_url: string | null
+          location: string | null
+          payout_account: string | null
+          payout_method: string | null
+          payout_name: string | null
+          phone: string | null
+          pitch: string | null
+          portfolio_url: string | null
+          rate: number
+          rate_unit: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seniority: string
+          skills: string[]
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          availability?: string
+          avatar_url?: string | null
+          created_at?: string
+          currency?: string
+          display_name: string
+          email?: string | null
+          github_url?: string | null
+          headline?: string | null
+          id?: string
+          linkedin_url?: string | null
+          location?: string | null
+          payout_account?: string | null
+          payout_method?: string | null
+          payout_name?: string | null
+          phone?: string | null
+          pitch?: string | null
+          portfolio_url?: string | null
+          rate?: number
+          rate_unit?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seniority?: string
+          skills?: string[]
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          availability?: string
+          avatar_url?: string | null
+          created_at?: string
+          currency?: string
+          display_name?: string
+          email?: string | null
+          github_url?: string | null
+          headline?: string | null
+          id?: string
+          linkedin_url?: string | null
+          location?: string | null
+          payout_account?: string | null
+          payout_method?: string | null
+          payout_name?: string | null
+          phone?: string | null
+          pitch?: string | null
+          portfolio_url?: string | null
+          rate?: number
+          rate_unit?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seniority?: string
+          skills?: string[]
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           api_key_id: string
@@ -903,6 +1114,78 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_assignments: {
+        Row: {
+          amount: number
+          assigned_at: string
+          assigned_by: string | null
+          created_at: string
+          currency: string
+          developer_id: string
+          developer_profile_id: string | null
+          hours: number
+          id: string
+          note: string | null
+          pay_type: string
+          project_id: string
+          removed_at: string | null
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          currency?: string
+          developer_id: string
+          developer_profile_id?: string | null
+          hours?: number
+          id?: string
+          note?: string | null
+          pay_type?: string
+          project_id: string
+          removed_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          currency?: string
+          developer_id?: string
+          developer_profile_id?: string | null
+          hours?: number
+          id?: string
+          note?: string | null
+          pay_type?: string
+          project_id?: string
+          removed_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assignments_developer_profile_id_fkey"
+            columns: ["developer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "developer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       security_events: {
         Row: {
@@ -2584,6 +2867,8 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_business_editor: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
+      is_developer: { Args: never; Returns: boolean }
+      is_project_developer: { Args: { _project_id: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       sms_ensure_wallet: {
         Args: { _business_id: string; _mode: string }

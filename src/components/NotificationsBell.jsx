@@ -9,6 +9,8 @@ const SHARED = ['account', 'security', 'team', 'workspace']
 const SCOPES = {
   merchant: ['payment', 'payout', 'verification', 'approval', ...SHARED],
   messaging: ['messaging', ...SHARED],
+  studio: ['studio', ...SHARED],
+  developer: ['developer', 'studio', ...SHARED],
 }
 
 function inScope(category, product) {
