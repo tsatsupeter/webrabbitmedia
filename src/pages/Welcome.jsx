@@ -131,7 +131,7 @@ export default function Welcome() {
 
   function openProduct(id) {
     setLastProduct(id)
-    if (id === 'software') return navigate('/welcome/software')
+    if (id === 'software') return navigate('/studio')
     if (businesses.length === 0) {
       return navigate(`/auth/create-business?next=${id === 'messaging' ? '/sms' : '/merchant'}`)
     }
@@ -308,7 +308,7 @@ export default function Welcome() {
 
           <p className="text-[0.83rem] text-white/40 mt-10">
             Not sure where to start?{' '}
-            <Link to="/welcome/software" className="text-white hover:text-accent-bright no-underline">
+            <Link to="/studio" className="text-white hover:text-accent-bright no-underline">
               Talk to our team
             </Link>{' '}
             or read the{' '}
