@@ -1,26 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../hooks/useAuth'
 import NotificationsBell from '../components/NotificationsBell'
 import { useAdminRole } from '../admin/useAdmin'
 
-export default function SmsTopbar({
-  title = 'Messaging',
+export default function StudioTopbar({
+  title = 'Studio',
   compactSidebar,
   setCompactSidebar,
   onMenuClick,
 }) {
   const navigate = useNavigate()
-  const { pathname, search } = useLocation()
   const { user } = useAuth()
   const { isAdmin } = useAdminRole()
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
-
-  const [searchValue, setSearchValue] = useState('')
-  const searchRef = useRef(null)
 
   useEffect(() => {
     function onDoc(e) {
@@ -39,47 +35,12 @@ export default function SmsTopbar({
     }
   }, [accountOpen])
 
-  useEffect(() => {
-    const params = new URLSearchParams(search)
-    setSearchValue(pathname === '/sms/messages' ? params.get('search') || '' : '')
-  }, [pathname, search])
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const active = document.activeElement
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return
-        e.preventDefault()
-        searchRef.current?.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
   const toggleCompactSidebar = () => {
     const next = !compactSidebar
     setCompactSidebar(next)
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('wr.smsCompactSidebar', String(next))
+      window.localStorage.setItem('wr.studioCompactSidebar', String(next))
     }
-  }
-
-  const onSearchChange = (e) => {
-    const value = e.target.value
-    setSearchValue(value)
-    if (pathname === '/sms/messages') {
-      const params = new URLSearchParams(search)
-      if (value) params.set('search', value)
-      else params.delete('search')
-      navigate({ pathname, search: params.toString() }, { replace: true })
-    }
-  }
-
-  const onSearchSubmit = (e) => {
-    e.preventDefault()
-    if (pathname === '/sms/messages') return
-    navigate(`/sms/messages?search=${encodeURIComponent(searchValue)}`)
   }
 
   async function signOut() {
@@ -102,26 +63,6 @@ export default function SmsTopbar({
 
       <div className="flex-1" />
 
-      {/* Search */}
-      <form
-        onSubmit={onSearchSubmit}
-        className="hidden md:flex items-center gap-2 h-9 w-[280px] lg:w-[360px] px-3 rounded-lg bg-white/[0.04] border border-merchant-border text-white/50 focus-within:border-white/20 transition-colors"
-      >
-        <Icon name="search" size={15} />
-        <input
-          ref={searchRef}
-          type="text"
-          value={searchValue}
-          onChange={onSearchChange}
-          placeholder={pathname === '/sms/messages' ? 'Search messages…' : 'Search messages (/)'}
-          className="flex-1 bg-transparent outline-none text-[0.85rem] text-white placeholder:text-white/40"
-        />
-        <kbd className="hidden lg:inline-flex items-center px-1.5 h-5 rounded bg-white/[0.06] text-[0.7rem] text-white/50 font-mono">
-          /
-        </kbd>
-      </form>
-
-      {/* Compact sidebar toggle */}
       <button
         type="button"
         onClick={toggleCompactSidebar}
@@ -132,10 +73,8 @@ export default function SmsTopbar({
         <Icon name={compactSidebar ? 'panelRight' : 'panelLeft'} size={17} />
       </button>
 
-      {/* Notifications */}
-      <NotificationsBell Icon={Icon} product="messaging" />
+      <NotificationsBell Icon={Icon} product="studio" />
 
-      {/* Account */}
       <div ref={accountRef} className="relative">
         <button
           type="button"
@@ -157,52 +96,17 @@ export default function SmsTopbar({
               )}
             </div>
             <div className="py-1.5 border-b border-merchant-border">
-              <MenuItem
-                icon="home"
-                label="Homepage"
-                onClick={() => {
-                  setAccountOpen(false)
-                  navigate('/')
-                }}
-              />
+              <MenuItem icon="home" label="Homepage" onClick={() => { setAccountOpen(false); navigate('/') }} />
               {isAdmin && (
-                <MenuItem
-                  icon="shield"
-                  label="Admin Console"
-                  onClick={() => {
-                    setAccountOpen(false)
-                    navigate('/admin')
-                  }}
-                />
+                <MenuItem icon="shield" label="Admin Console" onClick={() => { setAccountOpen(false); navigate('/admin') }} />
               )}
             </div>
             <div className="py-1.5 border-b border-merchant-border">
-              <MenuItem
-                icon="gear"
-                label="Messaging Settings"
-                onClick={() => {
-                  setAccountOpen(false)
-                  navigate('/sms/settings')
-                }}
-              />
-              <MenuItem
-                icon="code"
-                label="Developer"
-                onClick={() => {
-                  setAccountOpen(false)
-                  navigate('/sms/developer')
-                }}
-              />
+              <MenuItem icon="plus" label="Start a project" onClick={() => { setAccountOpen(false); navigate('/studio/new') }} />
+              <MenuItem icon="gear" label="Settings" onClick={() => { setAccountOpen(false); navigate('/merchant/settings') }} />
             </div>
             <div className="py-1.5">
-              <MenuItem
-                icon="logout"
-                label="Log out"
-                onClick={() => {
-                  setAccountOpen(false)
-                  signOut()
-                }}
-              />
+              <MenuItem icon="logout" label="Log out" onClick={() => { setAccountOpen(false); signOut() }} />
             </div>
           </div>
         )}
@@ -211,7 +115,7 @@ export default function SmsTopbar({
   )
 }
 
-function MenuItem({ icon, label, onClick, trailing }) {
+function MenuItem({ icon, label, onClick }) {
   return (
     <button
       type="button"
@@ -220,7 +124,6 @@ function MenuItem({ icon, label, onClick, trailing }) {
     >
       <Icon name={icon} size={16} className="text-white/60" />
       <span className="flex-1">{label}</span>
-      {trailing}
     </button>
   )
 }
