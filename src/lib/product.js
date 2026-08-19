@@ -16,7 +16,11 @@ export function getLastProduct() {
   return PRODUCTS.some((p) => p.id === v) ? v : null
 }
 
+/** Shown only to approved members of the developer network. */
+export const DEVELOPER_PRODUCT = { id: 'developer', label: 'Developer workspace', icon: 'code', to: '/dev' }
+
 export function productFromPath(pathname) {
+  if (pathname.startsWith('/dev')) return 'developer'
   if (pathname.startsWith('/sms')) return 'messaging'
   if (pathname.startsWith('/merchant')) return 'payments'
   if (pathname.startsWith('/studio') || pathname.startsWith('/welcome/software')) return 'software'

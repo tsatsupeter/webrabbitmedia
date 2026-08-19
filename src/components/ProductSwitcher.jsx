@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from '../merchant/Icon'
-import { PRODUCTS, productFromPath, setLastProduct } from '../lib/product'
+import { PRODUCTS, DEVELOPER_PRODUCT, productFromPath, setLastProduct } from '../lib/product'
+import { useDeveloperProfile } from '../dev/lib'
 
 /**
  * Product switcher: one account, one workspace, many products.
@@ -14,8 +15,11 @@ export default function ProductSwitcher({ compact = false, subtitle }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
+  const { approved: isDeveloper } = useDeveloperProfile()
+
+  const products = isDeveloper ? [...PRODUCTS, DEVELOPER_PRODUCT] : PRODUCTS
   const currentId = productFromPath(pathname)
-  const current = PRODUCTS.find((p) => p.id === currentId) || PRODUCTS[0]
+  const current = products.find((p) => p.id === currentId) || products[0]
 
   useEffect(() => {
     if (currentId) setLastProduct(currentId)
@@ -90,7 +94,7 @@ export default function ProductSwitcher({ compact = false, subtitle }) {
           <div className="px-3 pt-3 pb-2 text-[0.7rem] uppercase tracking-wider text-white/35">
             Your products
           </div>
-          {PRODUCTS.map((p) => (
+          {products.map((p) => (
             <button
               key={p.id}
               type="button"
