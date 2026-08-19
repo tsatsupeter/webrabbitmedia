@@ -66,6 +66,15 @@ import AdminMessaging from './admin/pages/Messaging'
 import AdminUsers from './admin/pages/Users'
 import AdminSettings from './admin/pages/Settings'
 import AdminAudit from './admin/pages/Audit'
+import AdminDevelopers from './admin/pages/Developers'
+
+import DevLayout from './dev/DevLayout'
+import DevOverview from './dev/pages/Overview'
+import DevProjects from './dev/pages/Projects'
+import DevProjectDetail from './dev/pages/ProjectDetail'
+import DevEarnings from './dev/pages/Earnings'
+import DevProfile from './dev/pages/Profile'
+import DeveloperApply from './pages/DeveloperApply'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -165,6 +174,16 @@ function App() {
           <Route path="care" element={<StudioCare />} />
         </Route>
 
+        <Route path="/developers/apply" element={<DeveloperApply />} />
+
+        <Route path="/dev" element={<ProtectedRoute><DevLayout /></ProtectedRoute>}>
+          <Route index element={<DevOverview />} />
+          <Route path="projects" element={<DevProjects />} />
+          <Route path="projects/:id" element={<DevProjectDetail />} />
+          <Route path="earnings" element={<DevEarnings />} />
+          <Route path="profile" element={<DevProfile />} />
+        </Route>
+
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminOverview />} />
           <Route path="merchants" element={<AdminMerchants />} />
@@ -175,6 +194,7 @@ function App() {
           <Route path="messaging" element={<AdminMessaging />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="developers" element={<AdminDevelopers />} />
           <Route path="audit" element={<AdminAudit />} />
         </Route>
 

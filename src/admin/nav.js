@@ -27,6 +27,7 @@ export const adminNavGroups = [
   {
     label: 'Platform',
     items: [
+      { key: 'admin-developers', label: 'Developers', icon: 'code', to: '/admin/developers' },
       { key: 'admin-users', label: 'Users & Teams', icon: 'userPlus', to: '/admin/users' },
       { key: 'admin-settings', label: 'Settings', icon: 'gear', to: '/admin/settings' },
       { key: 'admin-audit', label: 'Audit Log', icon: 'history', to: '/admin/audit' },
@@ -41,6 +42,7 @@ export const adminTitleByPath = {
   '/admin/transactions': 'Transactions',
   '/admin/payouts': 'Payout Operations',
   '/admin/messaging': 'Messaging',
+  '/admin/developers': 'Developer Network',
   '/admin/users': 'Users & Teams',
   '/admin/settings': 'Platform Settings',
   '/admin/audit': 'Audit Log',
