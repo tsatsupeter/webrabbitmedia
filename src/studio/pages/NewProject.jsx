@@ -6,7 +6,20 @@ import { Page, Card, Button, Field, inputClass, Choice, Chip, PageLoader } from 
 import { useAuth } from '../../hooks/useAuth'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { supabase } from '../../integrations/supabase/client'
-import { estimate, suggestTitle, GOALS, FEATURES, CONTENT_ITEMS, STYLES, BUDGETS, TIMELINES, INDUSTRIES } from '../pricing'
+import {
+  estimate,
+  suggestTitle,
+  classifyCustomFeature,
+  normalizeCustomFeature,
+  matchCatalogueFeature,
+  GOALS,
+  FEATURES,
+  CONTENT_ITEMS,
+  STYLES,
+  BUDGETS,
+  TIMELINES,
+  INDUSTRIES,
+} from '../pricing'
 import { money, logEvent } from '../lib'
 
 const STEPS = [
