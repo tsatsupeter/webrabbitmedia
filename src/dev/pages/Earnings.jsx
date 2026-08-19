@@ -3,7 +3,7 @@ import {
   Page, PageHeader, Card, CardHeader, Stat, Badge, EmptyState, PageLoader,
   Table, Row, Cell,
 } from '../components/ui'
-import { useMyEarnings, useDeveloperProfile, money, fmtDate, PAY_TYPE_LABEL } from '../lib'
+import { useMyEarnings, useDeveloperProfile, money, fmtDate } from '../lib'
 
 const TONE = { paid: 'success', approved: 'accent', pending: 'warn', cancelled: 'danger' }
 
@@ -35,7 +35,7 @@ export default function DevEarnings() {
           <Info label="Method" value={profile?.payout_method ? profile.payout_method.replace('_', ' ') : 'Not set'} />
           <Info label="Account" value={profile?.payout_account || 'Not set'} />
           <Info label="Account name" value={profile?.payout_name || 'Not set'} />
-          <Info label="Preferred rate" value={profile?.hourly_rate ? `${money(profile.hourly_rate)} / hour` : 'Not set'} />
+          <Info label="Preferred rate" value={profile?.rate ? `${money(profile.rate)} / ${profile.rate_unit || 'hour'}` : 'Not set'} />
         </div>
         <div className="px-5 pb-5">
           <Link to="/dev/profile" className="text-[0.8rem] text-accent-bright no-underline hover:underline">
@@ -55,7 +55,7 @@ export default function DevEarnings() {
             description="Agreed fees appear here as soon as you are staffed on a project."
           />
         ) : (
-          <Table head={['Project', 'Description', 'Type', 'Amount', 'Status', 'Date']}>
+          <Table head={['Project', 'Description', 'Amount', 'Status', 'Date']}>
             {earnings.map((e) => (
               <Row key={e.id}>
                 <Cell>
@@ -68,7 +68,6 @@ export default function DevEarnings() {
                   )}
                 </Cell>
                 <Cell className="text-white/60">{e.description || '—'}</Cell>
-                <Cell className="text-white/60">{PAY_TYPE_LABEL[e.pay_type] || e.pay_type}</Cell>
                 <Cell>{money(e.amount, e.currency)}</Cell>
                 <Cell>
                   <Badge tone={TONE[e.status] || 'default'}>{e.status}</Badge>

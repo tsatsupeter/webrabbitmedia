@@ -21,11 +21,11 @@ export default function DevProfile() {
     setForm({
       display_name: profile.display_name || '',
       headline: profile.headline || '',
-      bio: profile.bio || '',
+      pitch: profile.pitch || '',
       skills: profile.skills || [],
       seniority: profile.seniority || 'mid',
       availability: profile.availability || 'part_time',
-      hourly_rate: profile.hourly_rate ?? '',
+      rate: profile.rate ?? '',
       portfolio_url: profile.portfolio_url || '',
       github_url: profile.github_url || '',
       linkedin_url: profile.linkedin_url || '',
@@ -54,7 +54,7 @@ export default function DevProfile() {
       .from('developer_profiles')
       .update({
         ...form,
-        hourly_rate: form.hourly_rate === '' ? null : Number(form.hourly_rate),
+        rate: form.rate === '' ? null : Number(form.rate),
       })
       .eq('user_id', user.id)
     setSaving(false)
@@ -78,7 +78,7 @@ export default function DevProfile() {
             </Field>
             <div className="sm:col-span-2">
               <Field label="Short bio">
-                <textarea className={textareaClass} rows={4} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+                <textarea className={textareaClass} rows={4} value={form.pitch} onChange={(e) => set('pitch', e.target.value)} />
               </Field>
             </div>
             <Field label="Phone">
@@ -133,7 +133,7 @@ export default function DevProfile() {
                 </select>
               </Field>
               <Field label="Preferred hourly rate (GHS)">
-                <input type="number" min="0" step="1" className={inputClass} value={form.hourly_rate} onChange={(e) => set('hourly_rate', e.target.value)} />
+                <input type="number" min="0" step="1" className={inputClass} value={form.rate} onChange={(e) => set('rate', e.target.value)} />
               </Field>
             </div>
           </div>

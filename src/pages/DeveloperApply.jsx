@@ -22,11 +22,11 @@ export default function DeveloperApply() {
   const [form, setForm] = useState({
     display_name: '',
     headline: '',
-    bio: '',
+    pitch: '',
     skills: [],
     seniority: 'mid',
     availability: 'part_time',
-    hourly_rate: '',
+    rate: '',
     years_experience: '',
     portfolio_url: '',
     github_url: '',
@@ -45,11 +45,11 @@ export default function DeveloperApply() {
         ...f,
         display_name: profile.display_name || '',
         headline: profile.headline || '',
-        bio: profile.bio || '',
+        pitch: profile.pitch || '',
         skills: profile.skills || [],
         seniority: profile.seniority || 'mid',
         availability: profile.availability || 'part_time',
-        hourly_rate: profile.hourly_rate ?? '',
+        rate: profile.rate ?? '',
         years_experience: profile.years_experience ?? '',
         portfolio_url: profile.portfolio_url || '',
         github_url: profile.github_url || '',
@@ -133,12 +133,12 @@ export default function DeveloperApply() {
       user_id: user.id,
       email: user.email,
       ...form,
-      hourly_rate: form.hourly_rate === '' ? null : Number(form.hourly_rate),
+      rate: form.rate === '' ? null : Number(form.rate),
+      rate_unit: 'hour',
       years_experience: form.years_experience === '' ? null : Number(form.years_experience),
       status: 'pending',
       rejection_reason: null,
-      invite_token: inviteToken,
-      applied_at: new Date().toISOString(),
+      source: inviteToken ? 'invite' : 'application',
     }
     const { error: err } = await supabase
       .from('developer_profiles')
@@ -184,7 +184,7 @@ export default function DeveloperApply() {
             </F>
             <div className="sm:col-span-2">
               <F label="Tell us about your work" hint="What have you shipped? What do you enjoy building?">
-                <textarea className={area} rows={5} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+                <textarea className={area} rows={5} value={form.pitch} onChange={(e) => set('pitch', e.target.value)} />
               </F>
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function DeveloperApply() {
               <input type="number" min="0" max="50" className={input} value={form.years_experience} onChange={(e) => set('years_experience', e.target.value)} />
             </F>
             <F label="Preferred hourly rate (GHS)" hint="Indicative — we agree a fee per project">
-              <input type="number" min="0" step="1" className={input} value={form.hourly_rate} onChange={(e) => set('hourly_rate', e.target.value)} />
+              <input type="number" min="0" step="1" className={input} value={form.rate} onChange={(e) => set('rate', e.target.value)} />
             </F>
           </div>
         </Section>
