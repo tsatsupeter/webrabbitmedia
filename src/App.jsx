@@ -11,7 +11,6 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import CreateBusiness from './pages/CreateBusiness'
 import Welcome from './pages/Welcome'
-import SoftwareRequest from './pages/SoftwareRequest'
 import MerchantLayout from './merchant/MerchantLayout'
 import GetStarted from './merchant/pages/GetStarted'
 import Verification from './merchant/pages/Verification'
@@ -44,6 +43,14 @@ import SmsVoice from './sms/pages/Voice'
 import SmsUssd from './sms/pages/Ussd'
 import SmsWallet from './sms/pages/Wallet'
 import SmsSettingsPage from './sms/pages/SmsSettings'
+
+import StudioLayout from './studio/StudioLayout'
+import StudioHome from './studio/pages/Home'
+import StudioProjects from './studio/pages/Projects'
+import StudioNewProject from './studio/pages/NewProject'
+import StudioProjectDetail from './studio/pages/ProjectDetail'
+import StudioInvoices from './studio/pages/Invoices'
+import StudioCare from './studio/pages/Care'
 
 import SmsApiKeys from './sms/pages/developer/ApiKeys'
 import SmsAnalytics from './sms/pages/Analytics'
@@ -98,7 +105,7 @@ function App() {
           path="/welcome/software"
           element={
             <ProtectedRoute>
-              <SoftwareRequest />
+              <Navigate to="/studio" replace />
             </ProtectedRoute>
           }
         />
@@ -147,6 +154,15 @@ function App() {
           <Route path="developer/api-keys" element={<SmsApiKeys />} />
           <Route path="settings" element={<SmsSettingsPage />} />
 
+        </Route>
+
+        <Route path="/studio" element={<ProtectedRoute><StudioLayout /></ProtectedRoute>}>
+          <Route index element={<StudioHome />} />
+          <Route path="new" element={<StudioNewProject />} />
+          <Route path="projects" element={<StudioProjects />} />
+          <Route path="projects/:id" element={<StudioProjectDetail />} />
+          <Route path="invoices" element={<StudioInvoices />} />
+          <Route path="care" element={<StudioCare />} />
         </Route>
 
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
