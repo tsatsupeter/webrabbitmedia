@@ -549,7 +549,7 @@ function InvoicesTab({ invoices, onPay }) {
         {invoices.map((inv) => (
           <div key={inv.id} className="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-white text-[0.9rem]">{inv.title}</div>
+              <div className="text-white text-[0.9rem]">{inv.description || 'Project invoice'}</div>
               <div className="text-[0.74rem] text-white/35 mt-0.5">
                 {inv.due_date ? `Due ${fmtDate(inv.due_date)}` : `Raised ${fmtDate(inv.created_at)}`}
               </div>
@@ -584,7 +584,6 @@ function ChangesTab({ project, user, refresh }) {
       author_role: 'client',
       author_label: user?.email || 'You',
       body: `Change request: ${text.trim()}`,
-      kind: 'change_request',
     })
     setBusy(false)
     if (error) return toast.error(error.message)

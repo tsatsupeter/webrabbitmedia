@@ -66,9 +66,5 @@ export async function settleInvoice(
 
   if (!updated) return { changed: false, paid: approved, status: approved ? 'paid' : 'due' }
 
-  if (approved && row.milestone_id) {
-    await db.from('studio_milestones').update({ paid: true }).eq('id', row.milestone_id)
-  }
-
   return { changed: true, paid: approved, status: approved ? 'paid' : 'due' }
 }
