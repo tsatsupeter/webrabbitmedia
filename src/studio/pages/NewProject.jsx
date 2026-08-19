@@ -260,7 +260,7 @@ export default function NewProject() {
             <>
               <Head
                 title="What must it do?"
-                hint="Pick everything you need. The estimate updates as you choose."
+                hint="Pick everything you need, or type your own. The estimate updates as you choose."
               />
               <div className="flex flex-wrap gap-2">
                 {FEATURES.map((f) => (
@@ -268,10 +268,37 @@ export default function NewProject() {
                     {f.label}
                   </Chip>
                 ))}
+                {brief.custom_features.map((t) => {
+                  const band = classifyCustomFeature(t)
+                  return (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-accent/60 bg-accent/[0.1] text-[0.8rem] text-white"
+                      title={`${band.label} · ${money(band.price[0])} – ${money(band.price[1])}`}
+                    >
+                      {t}
+                      <span className="text-white/40 text-[0.7rem]">{band.label.toLowerCase()}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeCustomFeature(t)}
+                        className="text-white/45 hover:text-white"
+                        aria-label={`Remove ${t}`}
+                      >
+                        <Icon name="x" size={13} />
+                      </button>
+                    </span>
+                  )
+                })}
               </div>
+              <CustomFeatureInput
+                items={brief.custom_features}
+                onAdd={addCustomFeatures}
+                onSelectCatalogue={(id) => !brief.features.includes(id) && toggleFeature(id)}
+              />
               <EstimateStrip est={est} />
             </>
           )}
+
 
           {step === 3 && (
             <>
