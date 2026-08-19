@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import {
   Page, PageHeader, Card, CardHeader, Button, Field, Chip, inputClass, textareaClass, PageLoader,
 } from '../components/ui'
-import { supabase } from '../integrations/supabase/client'
-import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../../integrations/supabase/client'
+import { useAuth } from '../../hooks/useAuth'
 import {
   useDeveloperProfile, SENIORITY, AVAILABILITY, SKILL_SUGGESTIONS, parseList,
 } from '../lib'

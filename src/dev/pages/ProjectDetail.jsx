@@ -4,8 +4,8 @@ import {
   Page, Card, CardHeader, Badge, Button, EmptyState, PageLoader, inputClass, textareaClass,
 } from '../components/ui'
 import Icon from '../Icon'
-import { supabase } from '../integrations/supabase/client'
-import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../../integrations/supabase/client'
+import { useAuth } from '../../hooks/useAuth'
 import {
   useDevProject, useDeveloperProfile, money, fmtDate, fmtDateTime,
   ROLE_LABEL, STATUS_LABEL, statusTone,
