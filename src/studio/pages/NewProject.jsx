@@ -32,6 +32,8 @@ const STEPS = [
   'Review',
 ]
 
+const MAX_CUSTOM = 10
+
 const emptyBrief = {
   goal: '',
   business_name: '',
