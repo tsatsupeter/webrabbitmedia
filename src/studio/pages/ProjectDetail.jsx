@@ -156,7 +156,13 @@ function OverviewTab({ project, events, milestones, invoices }) {
     ['Industry', brief.industry],
     ['What they do', brief.what_you_sell],
     ['Current web', brief.current_web],
-    ['Features', FEATURES.filter((f) => (brief.features || []).includes(f.id)).map((f) => f.label).join(', ')],
+    [
+      'Features',
+      [
+        ...FEATURES.filter((f) => (brief.features || []).includes(f.id)).map((f) => f.label),
+        ...(brief.custom_features || []),
+      ].join(', '),
+    ],
     ['Style', STYLES.find((s) => s.id === brief.style)?.label],
     ['References', brief.references],
     ['We produce', CONTENT_ITEMS.filter((c) => brief.content?.[c.id] === 'help').map((c) => c.label).join(', ')],

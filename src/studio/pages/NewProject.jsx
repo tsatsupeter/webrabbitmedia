@@ -6,7 +6,20 @@ import { Page, Card, Button, Field, inputClass, Choice, Chip, PageLoader } from 
 import { useAuth } from '../../hooks/useAuth'
 import { useBusinesses } from '../../hooks/useBusinesses'
 import { supabase } from '../../integrations/supabase/client'
-import { estimate, suggestTitle, GOALS, FEATURES, CONTENT_ITEMS, STYLES, BUDGETS, TIMELINES, INDUSTRIES } from '../pricing'
+import {
+  estimate,
+  suggestTitle,
+  classifyCustomFeature,
+  normalizeCustomFeature,
+  matchCatalogueFeature,
+  GOALS,
+  FEATURES,
+  CONTENT_ITEMS,
+  STYLES,
+  BUDGETS,
+  TIMELINES,
+  INDUSTRIES,
+} from '../pricing'
 import { money, logEvent } from '../lib'
 
 const STEPS = [
@@ -19,6 +32,8 @@ const STEPS = [
   'Review',
 ]
 
+const MAX_CUSTOM = 10
+
 const emptyBrief = {
   goal: '',
   business_name: '',
@@ -26,6 +41,7 @@ const emptyBrief = {
   what_you_sell: '',
   current_web: '',
   features: [],
+  custom_features: [],
   style: '',
   references: '',
   content: {},
@@ -60,7 +76,9 @@ export default function NewProject() {
       if (draftParam) {
         const { data } = await supabase.from('studio_projects').select('*').eq('id', draftParam).maybeSingle()
         if (!cancelled && data) {
-          setBrief({ ...emptyBrief, ...(data.brief || {}) })
+          const loaded = { ...emptyBrief, ...(data.brief || {}) }
+          if (!Array.isArray(loaded.custom_features)) loaded.custom_features = []
+          setBrief(loaded)
           setProjectId(data.id)
         }
         if (!cancelled) setLoading(false)
@@ -88,6 +106,28 @@ export default function NewProject() {
       ...b,
       features: b.features.includes(id) ? b.features.filter((f) => f !== id) : [...b.features, id],
     }))
+
+  /** Add one or more typed must-haves, ignoring blanks and duplicates. */
+  const addCustomFeatures = (list) =>
+    setBrief((b) => {
+      const existing = Array.isArray(b.custom_features) ? b.custom_features : []
+      const next = [...existing]
+      list.forEach((raw) => {
+        const text = normalizeCustomFeature(raw)
+        if (!text) return
+        if (next.length >= MAX_CUSTOM) return
+        if (next.some((t) => t.toLowerCase() === text.toLowerCase())) return
+        next.push(text)
+      })
+      return { ...b, custom_features: next }
+    })
+
+  const removeCustomFeature = (text) =>
+    setBrief((b) => ({
+      ...b,
+      custom_features: (b.custom_features || []).filter((t) => t !== text),
+    }))
+
 
   const setContent = (id, value) =>
     setBrief((b) => ({ ...b, content: { ...b.content, [id]: value } }))
@@ -260,7 +300,7 @@ export default function NewProject() {
             <>
               <Head
                 title="What must it do?"
-                hint="Pick everything you need. The estimate updates as you choose."
+                hint="Pick everything you need, or type your own. The estimate updates as you choose."
               />
               <div className="flex flex-wrap gap-2">
                 {FEATURES.map((f) => (
@@ -268,10 +308,37 @@ export default function NewProject() {
                     {f.label}
                   </Chip>
                 ))}
+                {brief.custom_features.map((t) => {
+                  const band = classifyCustomFeature(t)
+                  return (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-accent/60 bg-accent/[0.1] text-[0.8rem] text-white"
+                      title={`${band.label} · ${money(band.price[0])} – ${money(band.price[1])}`}
+                    >
+                      {t}
+                      <span className="text-white/40 text-[0.7rem]">{band.label.toLowerCase()}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeCustomFeature(t)}
+                        className="text-white/45 hover:text-white"
+                        aria-label={`Remove ${t}`}
+                      >
+                        <Icon name="x" size={13} />
+                      </button>
+                    </span>
+                  )
+                })}
               </div>
+              <CustomFeatureInput
+                items={brief.custom_features}
+                onAdd={addCustomFeatures}
+                onSelectCatalogue={(id) => !brief.features.includes(id) && toggleFeature(id)}
+              />
               <EstimateStrip est={est} />
             </>
           )}
+
 
           {step === 3 && (
             <>
@@ -466,10 +533,68 @@ function EstimateStrip({ est }) {
   )
 }
 
+/** Free-text must-haves: type, separate with commas, get a priced chip. */
+function CustomFeatureInput({ items, onAdd, onSelectCatalogue }) {
+  const [value, setValue] = useState('')
+  const full = items.length >= MAX_CUSTOM
+
+  const commit = (raw) => {
+    const parts = String(raw || '')
+      .split(',')
+      .map(normalizeCustomFeature)
+      .filter(Boolean)
+    if (!parts.length) return
+    const typed = []
+    parts.forEach((p) => {
+      const match = matchCatalogueFeature(p)
+      if (match) onSelectCatalogue(match.id)
+      else typed.push(p)
+    })
+    if (typed.length) onAdd(typed)
+    setValue('')
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <input
+        className={inputClass}
+        value={value}
+        disabled={full}
+        onChange={(e) => {
+          const v = e.target.value
+          if (v.includes(',')) {
+            const parts = v.split(',')
+            const tail = parts.pop()
+            commit(parts.join(','))
+            setValue(tail.trimStart())
+          } else {
+            setValue(v)
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit(value)
+          }
+        }}
+        onBlur={() => commit(value)}
+        placeholder={full ? '' : 'e.g. loyalty points, driver tracking, arabic version'}
+        aria-label="Anything else it must do?"
+      />
+      <p className="text-[0.75rem] text-white/35">
+        {full
+          ? "That's plenty — tell us the rest in the notes on the last step."
+          : 'Anything else it must do? Type and separate with commas — keep each one short (2–4 words).'}
+      </p>
+    </div>
+  )
+}
+
 function EstimateFooter({ est }) {
   return (
     <p className="text-[0.75rem] text-white/35 text-center">
-      Indicative estimate {money(est.priceMin)} – {money(est.priceMax)}. Final price comes with your proposal.
+      Indicative estimate {money(est.priceMin)} – {money(est.priceMax)}. Typed items are priced by category until we
+      read your brief. Final price comes with your proposal.
     </p>
   )
 }
@@ -479,7 +604,14 @@ function Summary({ brief, goal }) {
     ['Goal', goal?.label],
     ['Business', brief.business_name],
     ['Industry', brief.industry],
-    ['Features', FEATURES.filter((f) => brief.features.includes(f.id)).map((f) => f.label).join(', ')],
+    [
+      'Features',
+      [
+        ...FEATURES.filter((f) => brief.features.includes(f.id)).map((f) => f.label),
+        ...(brief.custom_features || []),
+      ].join(', '),
+    ],
+
     ['Style', STYLES.find((s) => s.id === brief.style)?.label],
     ['We produce', CONTENT_ITEMS.filter((c) => brief.content[c.id] === 'help').map((c) => c.label).join(', ')],
     ['Budget', BUDGETS.find((b) => b.id === brief.budget)?.label],
