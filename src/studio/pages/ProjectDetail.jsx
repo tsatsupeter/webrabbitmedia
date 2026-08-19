@@ -149,6 +149,7 @@ function Timeline({ status }) {
 
 function OverviewTab({ project, events, milestones, invoices }) {
   const brief = project.brief || {}
+  const prop = project.proposal || {}
   const rows = [
     ['Goal', GOALS.find((g) => g.id === brief.goal)?.label],
     ['Business', brief.business_name],
@@ -207,18 +208,18 @@ function OverviewTab({ project, events, milestones, invoices }) {
       <div className="space-y-4">
         <Card className="p-5">
           <div className="text-[0.72rem] uppercase tracking-wide text-white/40">
-            {project.quoted_amount ? 'Quoted price' : 'Indicative estimate'}
+            {prop.amount ? 'Quoted price' : 'Indicative estimate'}
           </div>
           <div className="font-display text-[1.4rem] text-white mt-1">
-            {project.quoted_amount
-              ? money(project.quoted_amount)
+            {prop.amount
+              ? money(prop.amount)
               : project.estimate_max
                 ? `${money(project.estimate_min)} – ${money(project.estimate_max)}`
                 : 'To be scoped'}
           </div>
           <div className="text-[0.8rem] text-white/50 mt-1">
-            {project.quoted_weeks
-              ? `${project.quoted_weeks} weeks`
+            {prop.weeks
+              ? `${prop.weeks} weeks`
               : project.weeks_max
                 ? `${project.weeks_min}–${project.weeks_max} weeks`
                 : ''}
@@ -246,6 +247,7 @@ function Row({ label, value }) {
 }
 
 function ProposalTab({ project, user, refresh }) {
+  const prop = project.proposal || {}
   const [busy, setBusy] = useState(false)
   const [changes, setChanges] = useState('')
   const sent = !!project.proposal_sent_at
@@ -289,27 +291,27 @@ function ProposalTab({ project, user, refresh }) {
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="rounded-xl border border-merchant-border bg-white/[0.02] p-4">
             <div className="text-[0.72rem] uppercase tracking-wide text-white/40">Price</div>
-            <div className="font-display text-[1.3rem] text-white mt-1">{money(project.quoted_amount)}</div>
+            <div className="font-display text-[1.3rem] text-white mt-1">{money(prop.amount)}</div>
           </div>
           <div className="rounded-xl border border-merchant-border bg-white/[0.02] p-4">
             <div className="text-[0.72rem] uppercase tracking-wide text-white/40">Timeline</div>
-            <div className="font-display text-[1.3rem] text-white mt-1">{project.quoted_weeks || '—'} weeks</div>
+            <div className="font-display text-[1.3rem] text-white mt-1">{prop.weeks || '—'} weeks</div>
           </div>
         </div>
 
-        {project.proposal_scope && (
+        {prop.scope && (
           <div>
             <div className="text-[0.8rem] text-white/45 mb-1.5">What's included</div>
             <div className="text-[0.86rem] text-white/85 whitespace-pre-wrap leading-relaxed">
-              {project.proposal_scope}
+              {prop.scope}
             </div>
           </div>
         )}
-        {project.proposal_terms && (
+        {prop.terms && (
           <div>
             <div className="text-[0.8rem] text-white/45 mb-1.5">Terms</div>
             <div className="text-[0.82rem] text-white/65 whitespace-pre-wrap leading-relaxed">
-              {project.proposal_terms}
+              {prop.terms}
             </div>
           </div>
         )}
