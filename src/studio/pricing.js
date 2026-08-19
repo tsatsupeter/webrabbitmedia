@@ -126,9 +126,103 @@ export const INDUSTRIES = [
   'Fashion & beauty', 'Events & entertainment', 'Technology', 'NGO / non-profit', 'Other',
 ]
 
+/**
+ * Complexity bands used to price features the client typed themselves.
+ * We can't price free text exactly, so we recognise what kind of work it
+ * sounds like and use a band until a human reads the brief.
+ */
+export const CUSTOM_BANDS = [
+  {
+    id: 'advanced',
+    label: 'Advanced',
+    price: [6000, 14000],
+    weeks: [2, 4],
+    keywords: [
+      'ai', 'a.i', 'machine learning', 'ml model', 'recommendation', 'recommend',
+      'chatbot', 'chat bot', 'assistant', 'automation', 'predict', 'face',
+      'image recognition', 'voice', 'blockchain', 'crypto', 'nft', 'bidding',
+      'auction', 'matching engine', 'route optimisation', 'route optimization',
+    ],
+  },
+  {
+    id: 'complex',
+    label: 'Complex',
+    price: [4000, 9000],
+    weeks: [1, 3],
+    keywords: [
+      'payment', 'pay', 'wallet', 'momo', 'mobile money', 'checkout', 'billing',
+      'subscription', 'invoice', 'tracking', 'track', 'gps', 'map live',
+      'inventory', 'stock', 'loyalty', 'points', 'rewards', 'multi vendor',
+      'multi-vendor', 'marketplace', 'vendor', 'role', 'permission', 'admin',
+      'dashboard', 'report', 'analytics', 'offline', 'sync', 'integration',
+      'integrate', 'api', 'erp', 'accounting', 'payroll', 'pos', 'delivery',
+      'driver', 'dispatch', 'escrow', 'kyc', 'verification', 'scanner', 'qr scan',
+    ],
+  },
+  {
+    id: 'simple',
+    label: 'Simple',
+    price: [600, 1500],
+    weeks: [0, 1],
+    keywords: [
+      'page', 'section', 'content', 'text', 'copy', 'link', 'badge', 'banner',
+      'gallery', 'photo', 'image', 'faq', 'contact', 'about', 'map', 'social',
+      'icon', 'colour', 'color', 'logo placement', 'testimonial', 'footer',
+      'header', 'whatsapp button', 'download',
+    ],
+  },
+  {
+    id: 'standard',
+    label: 'Standard',
+    price: [1800, 4000],
+    weeks: [0, 1],
+    keywords: [
+      'form', 'filter', 'search', 'profile', 'account', 'login', 'notification',
+      'alert', 'email', 'sms', 'export', 'import', 'calendar', 'booking',
+      'schedule', 'upload', 'review', 'rating', 'blog', 'news', 'newsletter',
+      'language', 'translate', 'chat',
+    ],
+  },
+]
+
+const DEFAULT_BAND = CUSTOM_BANDS.find((b) => b.id === 'standard')
+
+/** Trim, collapse whitespace and cap a typed feature so chips stay short. */
+export function normalizeCustomFeature(text) {
+  return String(text || '')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s,;.-]+|[\s,;.-]+$/g, '')
+    .slice(0, 40)
+    .trim()
+}
+
+/** Pick the complexity band a typed feature belongs to. */
+export function classifyCustomFeature(text) {
+  const t = ` ${normalizeCustomFeature(text).toLowerCase()} `
+  for (const band of CUSTOM_BANDS) {
+    if (band.keywords.some((k) => t.includes(` ${k}`) || t.includes(`${k} `) || t.includes(k))) {
+      return band
+    }
+  }
+  return DEFAULT_BAND
+}
+
+/** Catalogue feature whose label matches typed text, so we never double count. */
+export function matchCatalogueFeature(text) {
+  const t = normalizeCustomFeature(text).toLowerCase()
+  if (!t) return null
+  return (
+    FEATURES.find((f) => f.label.toLowerCase() === t) ||
+    FEATURES.find((f) => f.id === t.replace(/\s+/g, '')) ||
+    FEATURES.find((f) => f.label.toLowerCase().includes(t) && t.length >= 5) ||
+    null
+  )
+}
+
 export function goalById(id) {
   return GOALS.find((g) => g.id === id) || null
 }
+
 
 const round = (n) => Math.round(n / 100) * 100
 
