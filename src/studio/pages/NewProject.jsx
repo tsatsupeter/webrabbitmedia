@@ -39,6 +39,7 @@ const emptyBrief = {
   what_you_sell: '',
   current_web: '',
   features: [],
+  custom_features: [],
   style: '',
   references: '',
   content: {},
