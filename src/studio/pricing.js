@@ -256,6 +256,21 @@ export function estimate(brief = {}) {
     lines.push({ label: f.label, min: f.price[0], max: f.price[1] })
   })
 
+  const custom = Array.isArray(brief.custom_features) ? brief.custom_features : []
+  custom
+    .map(normalizeCustomFeature)
+    .filter(Boolean)
+    .forEach((text) => {
+      const band = classifyCustomFeature(text)
+      min += band.price[0]
+      max += band.price[1]
+      wMin += band.weeks[0]
+      wMax += band.weeks[1]
+      lines.push({ label: `${text} (${band.label.toLowerCase()})`, min: band.price[0], max: band.price[1] })
+    })
+
+
+
   const content = brief.content || {}
   CONTENT_ITEMS.forEach((c) => {
     if (content[c.id] === 'help') {
