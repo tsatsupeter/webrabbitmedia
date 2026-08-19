@@ -103,6 +103,28 @@ export default function NewProject() {
       features: b.features.includes(id) ? b.features.filter((f) => f !== id) : [...b.features, id],
     }))
 
+  /** Add one or more typed must-haves, ignoring blanks and duplicates. */
+  const addCustomFeatures = (list) =>
+    setBrief((b) => {
+      const existing = Array.isArray(b.custom_features) ? b.custom_features : []
+      const next = [...existing]
+      list.forEach((raw) => {
+        const text = normalizeCustomFeature(raw)
+        if (!text) return
+        if (next.length >= MAX_CUSTOM) return
+        if (next.some((t) => t.toLowerCase() === text.toLowerCase())) return
+        next.push(text)
+      })
+      return { ...b, custom_features: next }
+    })
+
+  const removeCustomFeature = (text) =>
+    setBrief((b) => ({
+      ...b,
+      custom_features: (b.custom_features || []).filter((t) => t !== text),
+    }))
+
+
   const setContent = (id, value) =>
     setBrief((b) => ({ ...b, content: { ...b.content, [id]: value } }))
 
