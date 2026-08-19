@@ -76,7 +76,9 @@ export default function NewProject() {
       if (draftParam) {
         const { data } = await supabase.from('studio_projects').select('*').eq('id', draftParam).maybeSingle()
         if (!cancelled && data) {
-          setBrief({ ...emptyBrief, ...(data.brief || {}) })
+          const loaded = { ...emptyBrief, ...(data.brief || {}) }
+          if (!Array.isArray(loaded.custom_features)) loaded.custom_features = []
+          setBrief(loaded)
           setProjectId(data.id)
         }
         if (!cancelled) setLoading(false)
