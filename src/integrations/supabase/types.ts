@@ -1661,6 +1661,359 @@ export type Database = {
           },
         ]
       }
+      studio_events: {
+        Row: {
+          actor_id: string | null
+          actor_label: string | null
+          created_at: string
+          details: Json
+          id: string
+          message: string | null
+          project_id: string
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_label?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          message?: string | null
+          project_id: string
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_label?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          message?: string | null
+          project_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_files: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string | null
+          label: string | null
+          path: string
+          project_id: string
+          size_bytes: number | null
+          uploaded_by: string | null
+          uploader_role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string | null
+          label?: string | null
+          path: string
+          project_id: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+          uploader_role?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string | null
+          label?: string | null
+          path?: string
+          project_id?: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+          uploader_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_invoices: {
+        Row: {
+          amount: number
+          business_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          due_date: string | null
+          gateway: string | null
+          id: string
+          milestone_id: string | null
+          msisdn: string | null
+          network: string | null
+          paid_at: string | null
+          project_id: string
+          provider_reference: string | null
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          business_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          gateway?: string | null
+          id?: string
+          milestone_id?: string | null
+          msisdn?: string | null
+          network?: string | null
+          paid_at?: string | null
+          project_id: string
+          provider_reference?: string | null
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          gateway?: string | null
+          id?: string
+          milestone_id?: string | null
+          msisdn?: string | null
+          network?: string | null
+          paid_at?: string | null
+          project_id?: string
+          provider_reference?: string | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_invoices_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "studio_invoices_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "studio_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "studio_invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_messages: {
+        Row: {
+          attachment_path: string | null
+          author_id: string | null
+          author_label: string | null
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          attachment_path?: string | null
+          author_id?: string | null
+          author_label?: string | null
+          author_role?: string
+          body: string
+          created_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          attachment_path?: string | null
+          author_id?: string | null
+          author_label?: string | null
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_milestones: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          due_date: string | null
+          id: string
+          order_index: number
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          order_index?: number
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          order_index?: number
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "studio_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_projects: {
+        Row: {
+          admin_note: string | null
+          approved_at: string | null
+          brief: Json
+          business_id: string | null
+          change_request: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          currency: string
+          estimate_max: number
+          estimate_min: number
+          goal: string | null
+          id: string
+          launched_at: string | null
+          project_type: string | null
+          proposal: Json | null
+          proposal_sent_at: string | null
+          status: string
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          weeks_max: number
+          weeks_min: number
+        }
+        Insert: {
+          admin_note?: string | null
+          approved_at?: string | null
+          brief?: Json
+          business_id?: string | null
+          change_request?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          estimate_max?: number
+          estimate_min?: number
+          goal?: string | null
+          id?: string
+          launched_at?: string | null
+          project_type?: string | null
+          proposal?: Json | null
+          proposal_sent_at?: string | null
+          status?: string
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+          weeks_max?: number
+          weeks_min?: number
+        }
+        Update: {
+          admin_note?: string | null
+          approved_at?: string | null
+          brief?: Json
+          business_id?: string | null
+          change_request?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          estimate_max?: number
+          estimate_min?: number
+          goal?: string | null
+          id?: string
+          launched_at?: string | null
+          project_type?: string | null
+          proposal?: Json | null
+          proposal_sent_at?: string | null
+          status?: string
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          weeks_max?: number
+          weeks_min?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_projects_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_invites: {
         Row: {
           accepted_at: string | null
