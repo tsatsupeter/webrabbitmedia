@@ -533,10 +533,68 @@ function EstimateStrip({ est }) {
   )
 }
 
+/** Free-text must-haves: type, separate with commas, get a priced chip. */
+function CustomFeatureInput({ items, onAdd, onSelectCatalogue }) {
+  const [value, setValue] = useState('')
+  const full = items.length >= MAX_CUSTOM
+
+  const commit = (raw) => {
+    const parts = String(raw || '')
+      .split(',')
+      .map(normalizeCustomFeature)
+      .filter(Boolean)
+    if (!parts.length) return
+    const typed = []
+    parts.forEach((p) => {
+      const match = matchCatalogueFeature(p)
+      if (match) onSelectCatalogue(match.id)
+      else typed.push(p)
+    })
+    if (typed.length) onAdd(typed)
+    setValue('')
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <input
+        className={inputClass}
+        value={value}
+        disabled={full}
+        onChange={(e) => {
+          const v = e.target.value
+          if (v.includes(',')) {
+            const parts = v.split(',')
+            const tail = parts.pop()
+            commit(parts.join(','))
+            setValue(tail.trimStart())
+          } else {
+            setValue(v)
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit(value)
+          }
+        }}
+        onBlur={() => commit(value)}
+        placeholder={full ? '' : 'e.g. loyalty points, driver tracking, arabic version'}
+        aria-label="Anything else it must do?"
+      />
+      <p className="text-[0.75rem] text-white/35">
+        {full
+          ? "That's plenty — tell us the rest in the notes on the last step."
+          : 'Anything else it must do? Type and separate with commas — keep each one short (2–4 words).'}
+      </p>
+    </div>
+  )
+}
+
 function EstimateFooter({ est }) {
   return (
     <p className="text-[0.75rem] text-white/35 text-center">
-      Indicative estimate {money(est.priceMin)} – {money(est.priceMax)}. Final price comes with your proposal.
+      Indicative estimate {money(est.priceMin)} – {money(est.priceMax)}. Typed items are priced by category until we
+      read your brief. Final price comes with your proposal.
     </p>
   )
 }
@@ -546,7 +604,14 @@ function Summary({ brief, goal }) {
     ['Goal', goal?.label],
     ['Business', brief.business_name],
     ['Industry', brief.industry],
-    ['Features', FEATURES.filter((f) => brief.features.includes(f.id)).map((f) => f.label).join(', ')],
+    [
+      'Features',
+      [
+        ...FEATURES.filter((f) => brief.features.includes(f.id)).map((f) => f.label),
+        ...(brief.custom_features || []),
+      ].join(', '),
+    ],
+
     ['Style', STYLES.find((s) => s.id === brief.style)?.label],
     ['We produce', CONTENT_ITEMS.filter((c) => brief.content[c.id] === 'help').map((c) => c.label).join(', ')],
     ['Budget', BUDGETS.find((b) => b.id === brief.budget)?.label],
