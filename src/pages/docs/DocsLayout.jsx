@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, NavLink, useParams, useLocation } from 'react-router-dom'
+import { Link, NavLink, useParams, useLocation, useNavigate } from 'react-router-dom'
 import { groups, findBySlug, flat } from './registry'
 import SearchDialog from './ui/SearchDialog'
 import Pager from './ui/Pager'
+import { useAuth } from '../../hooks/useAuth'
+import { useAdminRole } from '../../admin/useAdmin'
+import { supabase } from '../../integrations/supabase/client'
 const logo = '/webrabbitmedia-logo-green.jpeg'
 
 function useHash() {
@@ -10,7 +13,89 @@ function useHash() {
   return hash.replace(/^#/, '')
 }
 
+function AccountItem({ label, to, onNavigate }) {
+  return (
+    <Link
+      to={to}
+      onClick={onNavigate}
+      className="flex items-center px-4 py-2.5 text-[13.5px] text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors no-underline"
+    >
+      {label}
+    </Link>
+  )
+}
+
+function AccountMenu({ user, isAdmin }) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const initial = (user?.email || '?').charAt(0).toUpperCase()
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => {
+      if (!ref.current?.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
+
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
+  async function signOut() {
+    setOpen(false)
+    await supabase.auth.signOut()
+    navigate('/', { replace: true })
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label="Account menu"
+        title={user?.email || 'Account'}
+        className="w-9 h-9 rounded-full border border-slate-200 bg-slate-50 text-[13px] font-semibold text-slate-700 flex items-center justify-center hover:border-emerald-500 hover:text-emerald-700 transition-colors"
+      >
+        {initial}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-slate-200 bg-white shadow-[0_24px_48px_-24px_rgba(15,23,42,0.35)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100">
+            <div className="text-[13px] font-semibold text-slate-900">Account</div>
+            <div className="text-[11.5px] text-slate-500 truncate mt-0.5">{user?.email}</div>
+          </div>
+          <div className="py-1">
+            <AccountItem label="Homepage" to="/" onNavigate={() => setOpen(false)} />
+            <AccountItem label="Merchant Dashboard" to="/merchant" onNavigate={() => setOpen(false)} />
+            <AccountItem label="Messaging" to="/sms" onNavigate={() => setOpen(false)} />
+            {isAdmin && <AccountItem label="Admin Console" to="/admin" onNavigate={() => setOpen(false)} />}
+          </div>
+          <div className="py-1 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={signOut}
+              className="w-full text-left px-4 py-2.5 text-[13.5px] text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TopBar({ onSearch, onToggleNav }) {
+  const { user, loading: authLoading } = useAuth()
+  const { isAdmin } = useAdminRole()
+  const signedIn = !!user
+  const dashboardTo = isAdmin ? '/admin' : '/merchant'
+
   return (
     <header className="sticky top-0 z-40 h-14 flex items-center border-b border-slate-200 bg-white/85 backdrop-blur">
       <div className="flex items-center gap-2 px-4 lg:px-6 w-full">
@@ -35,18 +120,35 @@ function TopBar({ onSearch, onToggleNav }) {
           <span className="flex-1 text-left">Search docs…</span>
           <kbd className="text-[10px] font-mono border border-slate-200 bg-white rounded px-1.5 py-0.5">⌘K</kbd>
         </button>
-        <Link
-          to="/auth"
-          className="hidden md:inline-flex items-center h-9 px-3.5 rounded-lg text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
-        >
-          Sign in
-        </Link>
-        <Link
-          to="/merchant"
-          className="inline-flex items-center h-9 px-3.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition"
-        >
-          Dashboard
-        </Link>
+
+        {authLoading ? (
+          <div className="h-9 w-[132px] rounded-lg bg-slate-100 animate-pulse" aria-hidden="true" />
+        ) : signedIn ? (
+          <>
+            <Link
+              to={dashboardTo}
+              className="inline-flex items-center h-9 px-3.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition no-underline"
+            >
+              Dashboard
+            </Link>
+            <AccountMenu user={user} isAdmin={isAdmin} />
+          </>
+        ) : (
+          <>
+            <Link
+              to="/auth"
+              className="hidden md:inline-flex items-center h-9 px-3.5 rounded-lg text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition no-underline"
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/auth?mode=signup"
+              className="inline-flex items-center h-9 px-3.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition no-underline"
+            >
+              Get started
+            </Link>
+          </>
+        )}
       </div>
     </header>
   )
