@@ -142,7 +142,7 @@ function TopBar({ onSearch, onToggleNav }) {
               Sign in
             </Link>
             <Link
-              to="/auth?mode=signup"
+              to="/auth"
               className="inline-flex items-center h-9 px-3.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition no-underline"
             >
               Get started
