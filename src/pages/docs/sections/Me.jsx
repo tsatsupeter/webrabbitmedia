@@ -1,7 +1,7 @@
 import EndpointHeader from '../ui/EndpointHeader'
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs, CodeBlock } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
-import { API_VERSION } from '../../../lib/apiBase'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function Me() {
   return (
@@ -17,6 +17,41 @@ export default function Me() {
 
       <h2 id="endpoint">Endpoint</h2>
       <EndpointHeader method="GET" path={`/${API_VERSION}/me`} />
+
+      <h2 id="request">Request</h2>
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl ${API_BASE}/${API_VERSION}/me \\
+  -H "Authorization: Bearer wr_test_..."`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'index.js',
+            code: `const res = await fetch("${API_BASE}/${API_VERSION}/me", {
+  headers: { Authorization: "Bearer wr_test_..." },
+})
+const me = await res.json()
+if (!me.live_ready) console.warn("Business is not cleared for live charges")`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'me.php',
+            code: `$ch = curl_init("${API_BASE}/${API_VERSION}/me");
+curl_setopt_array($ch, [
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => ["Authorization: Bearer wr_test_..."],
+]);
+$me = json_decode(curl_exec($ch), true);
+echo $me["mode"];`,
+          },
+        ]}
+      />
 
       <h2 id="response">Response</h2>
       <CodeBlock

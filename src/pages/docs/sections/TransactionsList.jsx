@@ -1,8 +1,8 @@
 import EndpointHeader from '../ui/EndpointHeader'
 import ParamTable from '../ui/ParamTable'
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs, CodeBlock } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
-import { API_VERSION } from '../../../lib/apiBase'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function TransactionsList() {
   return (
@@ -25,6 +25,53 @@ export default function TransactionsList() {
           { name: 'type', type: 'enum', desc: 'collection.' },
           { name: 'from', type: 'string · ISO 8601', desc: 'Inclusive lower bound on created_at.' },
           { name: 'to', type: 'string · ISO 8601', desc: 'Inclusive upper bound on created_at.' },
+        ]}
+      />
+
+      <h2 id="request">Request</h2>
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -G ${API_BASE}/${API_VERSION}/transactions \\
+  -H "Authorization: Bearer wr_test_..." \\
+  -d limit=25 \\
+  -d status=approved \\
+  -d channel=momo`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'index.js',
+            code: `const params = new URLSearchParams({ limit: "25", status: "approved" })
+const res = await fetch(\`${API_BASE}/${API_VERSION}/transactions?\${params}\`, {
+  headers: { Authorization: "Bearer wr_test_..." },
+})
+const page = await res.json()
+
+// next page
+if (page.next_cursor) {
+  params.set("cursor", page.next_cursor)
+  // fetch again with the same headers
+}`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'list.php',
+            code: `$query = http_build_query(["limit" => 25, "status" => "approved"]);
+$ch = curl_init("${API_BASE}/${API_VERSION}/transactions?" . $query);
+curl_setopt_array($ch, [
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => ["Authorization: Bearer wr_test_..."],
+]);
+$page = json_decode(curl_exec($ch), true);
+foreach ($page["items"] as $tx) {
+  echo $tx["provider_transaction_id"] . " " . $tx["status"] . PHP_EOL;
+}`,
+          },
         ]}
       />
 

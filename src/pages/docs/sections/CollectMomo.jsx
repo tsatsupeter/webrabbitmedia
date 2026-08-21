@@ -99,6 +99,30 @@ export default function CollectMomo() {
 })
 const tx = await res.json()`,
           },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'collect.php',
+            code: `$ch = curl_init("${API_BASE}/${API_VERSION}/collect/momo");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_test_...",
+    "Content-Type: application/json",
+    "Idempotency-Key: 8f4b7c1e-invoice-a104",
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "amount" => 10.50,
+    "subscriber_number" => "0240000000",
+    "network" => "MTN",
+    "desc" => "Invoice A104",
+    "customer_email" => "customer@example.com",
+  ]),
+]);
+$tx = json_decode(curl_exec($ch), true);
+echo $tx["transaction_id"];`,
+          },
         ]}
       />
 

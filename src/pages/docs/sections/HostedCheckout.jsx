@@ -79,6 +79,28 @@ export default function HostedCheckout() {
 const session = await res.json()
 window.location.href = session.checkout_url`,
           },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'checkout.php',
+            code: `$ch = curl_init("${API_BASE}/${API_VERSION}/checkout/session");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_test_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "amount" => 170.00,
+    "customer_email" => "customer@example.com",
+    "channel" => "ANY",
+    "desc" => "Order 1042",
+  ]),
+]);
+$session = json_decode(curl_exec($ch), true);
+header("Location: " . $session["checkout_url"]);`,
+          },
         ]}
       />
 
