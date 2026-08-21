@@ -1,5 +1,6 @@
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs, CodeBlock } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function Authentication() {
   return (
@@ -33,6 +34,61 @@ export default function Authentication() {
         lang="bash"
         filename="Authorization header"
         code={`Authorization: Bearer wr_test_1a2b3c4d5e6f...`}
+      />
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl ${API_BASE}/${API_VERSION}/me \\
+  -H "Authorization: Bearer wr_test_1a2b3c4d5e6f..."`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'client.js',
+            code: `const API_KEY = process.env.WEBRABBIT_API_KEY // never ship this to the browser
+
+async function wr(path, init = {}) {
+  const res = await fetch("${API_BASE}/${API_VERSION}" + path, {
+    ...init,
+    headers: {
+      Authorization: \`Bearer \${API_KEY}\`,
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+  })
+  if (res.status === 401) throw new Error("Invalid API key")
+  return res.json()
+}
+
+const me = await wr("/me")`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'client.php',
+            code: `$apiKey = getenv("WEBRABBIT_API_KEY");
+
+function wr($path, $body = null) {
+  global $apiKey;
+  $ch = curl_init("${API_BASE}/${API_VERSION}" . $path);
+  $headers = ["Authorization: Bearer " . $apiKey, "Content-Type: application/json"];
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => $headers,
+  ]);
+  if ($body !== null) {
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+  }
+  return json_decode(curl_exec($ch), true);
+}
+
+$me = wr("/me");`,
+          },
+        ]}
       />
       <p>Requests without a valid key return <code>401 Unauthorized</code>.</p>
 
