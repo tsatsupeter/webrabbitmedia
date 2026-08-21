@@ -1,6 +1,6 @@
 import EndpointHeader from '../ui/EndpointHeader'
 import ParamTable from '../ui/ParamTable'
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs, CodeBlock } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
 import { MESSAGING_BASE } from './MessagingOverview'
 
@@ -151,6 +151,48 @@ $report = json_decode(curl_exec($ch), true);`,
         Returns the upstream network credits behind the platform — useful for operational dashboards. Your
         own spendable balance is the messaging wallet, not this figure.
       </p>
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -X POST ${MESSAGING_BASE}/messaging-balance \\
+  -H "Authorization: Bearer wr_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{ "business_id": "b0a1…" }'`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'balance.js',
+            code: `const balance = await fetch("${MESSAGING_BASE}/messaging-balance", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer wr_live_...",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ business_id: "b0a1…" }),
+}).then((r) => r.json())`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'balance.php',
+            code: `$ch = curl_init("${MESSAGING_BASE}/messaging-balance");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_live_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode(["business_id" => "b0a1…"]),
+]);
+$balance = json_decode(curl_exec($ch), true);`,
+          },
+        ]}
+      />
       <CodeBlock
         lang="json"
         filename="Response · 200"
