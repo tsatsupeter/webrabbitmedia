@@ -27,10 +27,13 @@ export default function MessagingVoice() {
           { name: 'schedule_at', type: 'string', desc: 'ISO timestamp. Omit to dial immediately.' },
         ]}
       />
-      <CodeBlock
-        lang="bash"
-        filename="shell"
-        code={`curl -X POST ${MESSAGING_BASE}/messaging-voice \\
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -X POST ${MESSAGING_BASE}/messaging-voice \\
   -H "Authorization: Bearer wr_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -39,7 +42,51 @@ export default function MessagingVoice() {
     "name": "Delivery reminder",
     "script": "Your order arrives today between 2 and 5 pm.",
     "recipients": ["0248980332"]
-  }'`}
+  }'`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'voice.js',
+            code: `const res = await fetch("${MESSAGING_BASE}/messaging-voice", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer wr_live_...",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    business_id: "b0a1…",
+    mode: "live",
+    name: "Delivery reminder",
+    script: "Your order arrives today between 2 and 5 pm.",
+    recipients: ["0248980332"],
+  }),
+})
+const campaign = await res.json()`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'voice.php',
+            code: `$ch = curl_init("${MESSAGING_BASE}/messaging-voice");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_live_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "business_id" => "b0a1…",
+    "mode" => "live",
+    "name" => "Delivery reminder",
+    "script" => "Your order arrives today between 2 and 5 pm.",
+    "recipients" => ["0248980332"],
+  ]),
+]);
+$campaign = json_decode(curl_exec($ch), true);`,
+          },
+        ]}
       />
       <Callout type="warn" title="Voice is billed per call placed">
         Credits are debited for every recipient before dialling. If the network rejects the batch the
@@ -47,14 +94,52 @@ export default function MessagingVoice() {
       </Callout>
 
       <h2 id="status">Call reports</h2>
-      <CodeBlock
-        lang="bash"
-        filename="shell"
-        code={`curl -X POST ${MESSAGING_BASE}/messaging-voice \\
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -X POST ${MESSAGING_BASE}/messaging-voice \\
   -H "Authorization: Bearer wr_live_..." \\
   -H "Content-Type: application/json" \\
-  -d '{ "action": "status", "campaign_id": "7d22…" }'`}
+  -d '{ "action": "status", "campaign_id": "7d22…" }'`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'reports.js',
+            code: `const report = await fetch("${MESSAGING_BASE}/messaging-voice", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer wr_live_...",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ action: "status", campaign_id: "7d22…" }),
+}).then((r) => r.json())`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'reports.php',
+            code: `$ch = curl_init("${MESSAGING_BASE}/messaging-voice");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_live_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "action" => "status",
+    "campaign_id" => "7d22…",
+  ]),
+]);
+$report = json_decode(curl_exec($ch), true);`,
+          },
+        ]}
       />
+
       <CodeBlock lang="json" filename="Response · 200" code={`{ "ok": true, "updated": 40 }`} />
       <p className="text-sm text-white/60 mt-2">
         Each reconciled call stores its outcome and answered duration in seconds.
