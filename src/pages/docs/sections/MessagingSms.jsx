@@ -130,13 +130,47 @@ echo $out["campaign_id"];`,
         Poll for per-recipient outcomes. Each call reconciles the campaign’s messages with the network’s
         report and returns how many rows changed.
       </p>
-      <CodeBlock
-        lang="bash"
-        filename="shell"
-        code={`curl -X POST ${MESSAGING_BASE}/messaging-status \\
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -X POST ${MESSAGING_BASE}/messaging-status \\
   -H "Authorization: Bearer wr_live_..." \\
   -H "Content-Type: application/json" \\
-  -d '{ "campaign_id": "3f0c…" }'`}
+  -d '{ "campaign_id": "3f0c…" }'`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'status.js',
+            code: `const report = await fetch("${MESSAGING_BASE}/messaging-status", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer wr_live_...",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ campaign_id: "3f0c…" }),
+}).then((r) => r.json())`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'status.php',
+            code: `$ch = curl_init("${MESSAGING_BASE}/messaging-status");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_live_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode(["campaign_id" => "3f0c…"]),
+]);
+$report = json_decode(curl_exec($ch), true);`,
+          },
+        ]}
       />
       <CodeBlock lang="json" filename="Response · 200" code={`{ "ok": true, "updated": 12 }`} />
       <p className="text-sm text-white/60 mt-2">
