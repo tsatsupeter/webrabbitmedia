@@ -1,5 +1,5 @@
 import Callout from '../ui/Callout'
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs, CodeBlock } from '../ui/CodeBlock'
 import ParamTable from '../ui/ParamTable'
 import { MESSAGING_BASE } from '../../../lib/apiBase'
 
@@ -27,13 +27,60 @@ export default function MessagingOverview() {
         scoped to the messaging product — a payments key returns <code>403 insufficient_scope</code>, and
         the reverse is also true.
       </p>
-      <CodeBlock
-        lang="bash"
-        filename="shell"
-        code={`curl -X POST ${MESSAGING_BASE}/messaging-send \\
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -X POST ${MESSAGING_BASE}/messaging-send \\
   -H "Authorization: Bearer wr_live_..." \\
   -H "Content-Type: application/json" \\
-  -d '{ "business_id": "…", "mode": "live", "sender": "WEBRABBIT", "recipients": ["0248980332"], "message": "Hello" }'`}
+  -d '{ "business_id": "…", "mode": "live", "sender": "WEBRABBIT", "recipients": ["0248980332"], "message": "Hello" }'`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'index.js',
+            code: `const res = await fetch("${MESSAGING_BASE}/messaging-send", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer wr_live_...",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    business_id: "…",
+    mode: "live",
+    sender: "WEBRABBIT",
+    recipients: ["0248980332"],
+    message: "Hello",
+  }),
+})
+const out = await res.json()`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'hello.php',
+            code: `$ch = curl_init("${MESSAGING_BASE}/messaging-send");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_live_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "business_id" => "…",
+    "mode" => "live",
+    "sender" => "WEBRABBIT",
+    "recipients" => ["0248980332"],
+    "message" => "Hello",
+  ]),
+]);
+$out = json_decode(curl_exec($ch), true);`,
+          },
+        ]}
       />
       <Callout type="warn" title="Write access required for sends">
         Sending SMS, OTPs or voice calls needs a <code>write</code> key. Read-only keys can still fetch

@@ -1,6 +1,7 @@
 import ParamTable from '../ui/ParamTable'
 import Callout from '../ui/Callout'
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs } from '../ui/CodeBlock'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function TestData() {
   return (
@@ -47,10 +48,13 @@ export default function TestData() {
 
 
       <h2 id="example">Example test charge</h2>
-      <CodeBlock
-        lang="bash"
-        filename="shell"
-        code={`curl -X POST https://api.webrabbitmedia.com/v1/collect/momo \\
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -X POST ${API_BASE}/${API_VERSION}/collect/momo \\
   -H "Authorization: Bearer wr_test_..." \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: test-$(date +%s)" \\
@@ -59,7 +63,51 @@ export default function TestData() {
     "subscriber_number": "0246089019",
     "network": "MTN",
     "desc": "Smoke test"
-  }'`}
+  }'`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'smoke.js',
+            code: `const res = await fetch("${API_BASE}/${API_VERSION}/collect/momo", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer wr_test_...",
+    "Content-Type": "application/json",
+    "Idempotency-Key": \`test-\${Date.now()}\`,
+  },
+  body: JSON.stringify({
+    amount: 1.0,
+    subscriber_number: "0246089019",
+    network: "MTN",
+    desc: "Smoke test",
+  }),
+})
+console.log(res.status, await res.json())`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'smoke.php',
+            code: `$ch = curl_init("${API_BASE}/${API_VERSION}/collect/momo");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_test_...",
+    "Content-Type: application/json",
+    "Idempotency-Key: test-" . time(),
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "amount" => 1.00,
+    "subscriber_number" => "0246089019",
+    "network" => "MTN",
+    "desc" => "Smoke test",
+  ]),
+]);
+print_r(json_decode(curl_exec($ch), true));`,
+          },
+        ]}
       />
     </>
   )

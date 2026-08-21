@@ -1,5 +1,6 @@
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function Webhooks() {
   return (
@@ -25,13 +26,30 @@ export default function Webhooks() {
         (~60 seconds — the standard MoMo prompt window).
       </p>
 
-      <CodeBlock
-        lang="js"
-        filename="poll.js"
-        code={`async function waitForFinal(id, key) {
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `id=521888807466
+
+for i in $(seq 1 20); do
+  tx=$(curl -s ${API_BASE}/${API_VERSION}/transactions/$id \\
+    -H "Authorization: Bearer wr_live_...")
+  echo "$tx"
+  echo "$tx" | grep -q '"resolved_status":"pending"' || break
+  sleep 3
+done`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'poll.js',
+            code: `async function waitForFinal(id, key) {
   for (let i = 0; i < 20; i++) {
     const r = await fetch(
-      \`https://api.webrabbitmedia.com/v1/transactions/\${id}\`,
+      \`${API_BASE}/${API_VERSION}/transactions/\${id}\`,
       { headers: { Authorization: \`Bearer \${key}\` } }
     )
     const tx = await r.json()
@@ -39,7 +57,27 @@ export default function Webhooks() {
     await new Promise((res) => setTimeout(res, 3000))
   }
   throw new Error('timeout waiting for transaction')
-}`}
+}`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'poll.php',
+            code: `function wait_for_final($id, $key) {
+  for ($i = 0; $i < 20; $i++) {
+    $ch = curl_init("${API_BASE}/${API_VERSION}/transactions/" . $id);
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_HTTPHEADER => ["Authorization: Bearer " . $key],
+    ]);
+    $tx = json_decode(curl_exec($ch), true);
+    if (($tx["resolved_status"] ?? "pending") !== "pending") return $tx;
+    sleep(3);
+  }
+  throw new Exception("timeout waiting for transaction");
+}`,
+          },
+        ]}
       />
 
       <h2 id="notify-me">Get notified at launch</h2>
