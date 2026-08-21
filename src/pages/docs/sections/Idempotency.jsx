@@ -1,6 +1,7 @@
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
 import ParamTable from '../ui/ParamTable'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function Idempotency() {
   return (
@@ -118,14 +119,48 @@ function charge($attempt = 1) {
         If the response to a <code>POST</code> is lost in transit you can look the transaction up by the
         <code> Idempotency-Key </code>you sent, without re-issuing the money-moving request:
       </p>
-      <CodeBlock
-        lang="bash"
-        filename="shell"
-        code={`curl -H "Authorization: Bearer wr_live_..." \\
-  "https://api.webrabbitmedia.com/v1/transactions?idempotency_key=8f4b7c1e-invoice-a104"
+      <CodeTabs
+        samples={[
+          {
+            label: 'cURL',
+            lang: 'bash',
+            filename: 'shell',
+            code: `curl -H "Authorization: Bearer wr_live_..." \\
+  "${API_BASE}/${API_VERSION}/transactions?idempotency_key=8f4b7c1e-invoice-a104"
 
 # -> { "items": [ { "provider_transaction_id": "521888807466", "status": "approved", ... } ], ... }
-# -> Empty items[] means we have no record — safe to retry the POST with the same key.`}
+# -> Empty items[] means we have no record — safe to retry the POST with the same key.`,
+          },
+          {
+            label: 'JavaScript',
+            lang: 'js',
+            filename: 'recover.js',
+            code: `const key = "8f4b7c1e-invoice-a104"
+const page = await fetch(
+  \`${API_BASE}/${API_VERSION}/transactions?idempotency_key=\${encodeURIComponent(key)}\`,
+  { headers: { Authorization: "Bearer wr_live_..." } },
+).then((r) => r.json())
+
+const existing = page.items[0]
+if (!existing) {
+  // no record — safe to retry the POST with the same Idempotency-Key
+}`,
+          },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'recover.php',
+            code: `$key = "8f4b7c1e-invoice-a104";
+$url = "${API_BASE}/${API_VERSION}/transactions?" . http_build_query(["idempotency_key" => $key]);
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => ["Authorization: Bearer wr_live_..."],
+]);
+$page = json_decode(curl_exec($ch), true);
+$existing = $page["items"][0] ?? null; // null => safe to retry the POST`,
+          },
+        ]}
       />
 
       <h2 id="best-practices">Best practices</h2>
