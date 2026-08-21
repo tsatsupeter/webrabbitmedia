@@ -74,6 +74,30 @@ export default function MessagingSms() {
 })
 const out = await res.json()`,
           },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'send.php',
+            code: `$ch = curl_init("${MESSAGING_BASE}/messaging-send");
+curl_setopt_array($ch, [
+  CURLOPT_POST => true,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer wr_live_...",
+    "Content-Type: application/json",
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "business_id" => "b0a1…",
+    "mode" => "live",
+    "name" => "October promo",
+    "sender" => "WEBRABBIT",
+    "message" => "Our October sale is live — 20% off everything.",
+    "recipients" => ["0248980332", "233201112233"],
+  ]),
+]);
+$out = json_decode(curl_exec($ch), true);
+echo $out["campaign_id"];`,
+          },
         ]}
       />
 

@@ -61,6 +61,38 @@ const check = await fetch("${MESSAGING_BASE}/messaging-otp", {
   body: JSON.stringify({ action: "verify", request_id: sent.request_id, code: "123456" }),
 }).then((r) => r.json())`,
           },
+          {
+            label: 'PHP',
+            lang: 'php',
+            filename: 'otp.php',
+            code: `function wr_otp($payload) {
+  $ch = curl_init("${MESSAGING_BASE}/messaging-otp");
+  curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => [
+      "Authorization: Bearer wr_live_...",
+      "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode($payload),
+  ]);
+  return json_decode(curl_exec($ch), true);
+}
+
+$sent = wr_otp([
+  "action" => "send",
+  "business_id" => "b0a1…",
+  "mode" => "live",
+  "phone" => "0248980332",
+]);
+
+// later, with the code the user typed
+$check = wr_otp([
+  "action" => "verify",
+  "request_id" => $sent["request_id"],
+  "code" => "123456",
+]);`,
+          },
         ]}
       />
       <CodeBlock
