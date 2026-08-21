@@ -1,5 +1,6 @@
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs } from '../ui/CodeBlock'
 import Callout from '../ui/Callout'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function RequestIds() {
   return (
