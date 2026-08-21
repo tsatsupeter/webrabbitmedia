@@ -72,6 +72,7 @@ export const groups = [
           { id: 'how-it-works', text: 'How it works', depth: 2 },
           { id: 'example', text: 'Example', depth: 2 },
           { id: 'conflicts', text: 'Conflicts', depth: 2 },
+          { id: 'recovery', text: 'Recovering a lost transaction id', depth: 2 },
           { id: 'best-practices', text: 'Best practices', depth: 2 },
         ],
       },
@@ -104,6 +105,7 @@ export const groups = [
         headings: [
           { id: 'error-shape', text: 'Error shape', depth: 2 },
           { id: 'status-codes', text: 'Status codes', depth: 2 },
+          { id: 'handling', text: 'Handling errors in code', depth: 2 },
         ],
       },
       {
@@ -156,6 +158,7 @@ export const groups = [
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
           { id: 'query-parameters', text: 'Query parameters', depth: 2 },
+          { id: 'request', text: 'Request', depth: 2 },
           { id: 'response', text: 'Response', depth: 2 },
         ],
       },
@@ -166,6 +169,7 @@ export const groups = [
         Component: TransactionsRetrieve,
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
+          { id: 'request', text: 'Request', depth: 2 },
           { id: 'response', text: 'Response', depth: 2 },
           { id: 'not-found', text: 'Unknown transaction — HTTP 404', depth: 2 },
           { id: 'polling', text: 'Polling pattern', depth: 2 },
@@ -178,6 +182,7 @@ export const groups = [
         Component: Me,
         headings: [
           { id: 'endpoint', text: 'Endpoint', depth: 2 },
+          { id: 'request', text: 'Request', depth: 2 },
           { id: 'response', text: 'Response', depth: 2 },
         ],
       },
