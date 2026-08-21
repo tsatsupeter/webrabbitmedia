@@ -1,6 +1,7 @@
 import ParamTable from '../ui/ParamTable'
 import Callout from '../ui/Callout'
-import { CodeBlock } from '../ui/CodeBlock'
+import { CodeTabs } from '../ui/CodeBlock'
+import { API_BASE, API_VERSION } from '../../../lib/apiBase'
 
 export default function TestData() {
   return (
