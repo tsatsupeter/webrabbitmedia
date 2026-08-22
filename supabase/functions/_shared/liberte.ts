@@ -227,8 +227,25 @@ export type StatusCheckResult = {
   status: LedgerStatus
   code: string | null
   message: string | null
+  /** True when 360Pay has clawed the collection back after settling it. */
+  reversed: boolean
+  /** Provider's own fee on the transaction, when reported. */
+  fee: number | null
+  accountName: string | null
+  notFound: boolean
   data: any
   httpStatus: number
+}
+
+export function parseBool(v: unknown): boolean {
+  if (typeof v === 'boolean') return v
+  const s = String(v ?? '').trim().toLowerCase()
+  return s === 'true' || s === '1' || s === 'yes'
+}
+
+export function parseAmount(v: unknown): number | null {
+  const n = Number(String(v ?? '').replace(/[^0-9.\-]/g, ''))
+  return Number.isFinite(n) ? n : null
 }
 
 export async function statusCheck(mode: Mode, transaction_id: string): Promise<StatusCheckResult> {
@@ -244,10 +261,15 @@ export async function statusCheck(mode: Mode, transaction_id: string): Promise<S
     status: notFound ? 'pending' : mapStatusCode(code, d.status ?? res.json?.status),
     code,
     message,
+    reversed: parseBool(d.is_reversed),
+    fee: parseAmount(d.fee),
+    accountName: d.account_name ? String(d.account_name) : null,
+    notFound,
     data: res.json,
     httpStatus: res.status,
   }
 }
+
 
 // ---- institutions --------------------------------------------------------------
 export type Institution = { code: string; currency: string; name: string; slug: string; type: string }
