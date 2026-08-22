@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { newReference, normalizeMsisdn, normalizeNetwork } from '../_shared/liberte.ts'
 import { disburse, disbursementBalance, gatewayFor, gatewayLabel, verifyBank, verifyMomo } from '../_shared/gateway.ts'
+import { emitPayoutEvent } from '../_shared/webhooks.ts'
 
 
 Deno.serve(async (req) => {
@@ -55,6 +56,9 @@ Deno.serve(async (req) => {
 
     const { data, error } = await admin.from('payouts').update(patch).eq('id', payout_id).select('*').single()
     if (error) return json({ error: error.message }, 500)
+    if ((patch.status === 'success' || patch.status === 'failed') && patch.status !== current.status) {
+      await emitPayoutEvent(admin, payout_id, patch.status === 'success')
+    }
     return json({ payout: data }, 200)
   } catch (e) {
     return json({ error: String((e as Error).message || e) }, 500)
@@ -130,6 +134,7 @@ async function runDisbursement(admin: any, payout: any) {
       notes: message || `Disbursement rejected by ${label}`,
     }).eq('id', payout.id)
     await admin.from('transactions').update({ payout_id: null }).eq('payout_id', payout.id)
+    await emitPayoutEvent(admin, payout.id, false)
     return { ok: false as const, error: `disbursement_failed: ${message || res.httpStatus}`, httpStatus: 502 }
   }
 
@@ -141,6 +146,7 @@ async function runDisbursement(admin: any, payout: any) {
   if (res.status === 'approved') patch.completed_at = new Date().toISOString()
 
   const { data: updated } = await admin.from('payouts').update(patch).eq('id', payout.id).select('*').single()
+  if (patch.status === 'success') await emitPayoutEvent(admin, payout.id, true)
   return {
     ok: true as const,
     payout: updated,

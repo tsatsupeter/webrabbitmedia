@@ -8,6 +8,7 @@ import { admin, corsHeaders, jsonResponse } from '../_shared/auth.ts'
 import { mapStatus } from '../_shared/junipay.ts'
 import { settleCollection } from '../_shared/settlement.ts'
 import { findTopup, settleTopup } from '../_shared/topup.ts'
+import { emitPayoutEvent } from '../_shared/webhooks.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -68,6 +69,7 @@ Deno.serve(async (req) => {
       if (status === 'failed') {
         await db.from('transactions').update({ payout_id: null }).eq('payout_id', payout.id)
       }
+      await emitPayoutEvent(db, payout.id, status === 'approved')
       return jsonResponse({ received: true, matched: true, kind: 'payout', changed: true }, 200)
     }
   }
