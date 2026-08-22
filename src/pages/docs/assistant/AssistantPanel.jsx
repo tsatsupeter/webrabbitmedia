@@ -68,10 +68,19 @@ function Bubble({ message }) {
   )
 }
 
+const WIDTH_KEY = 'docsAssistantWidth'
+const MIN_W = 360
+const MAX_W = 720
+
 export default function AssistantPanel({ open, threadId, onClose, initialQuestion, onConsumedQuestion }) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [wide, setWide] = useState(false)
+  const [width, setWidth] = useState(() => {
+    if (typeof window === 'undefined') return 420
+    const v = Number(window.localStorage.getItem(WIDTH_KEY))
+    return Number.isFinite(v) && v >= MIN_W && v <= MAX_W ? v : 420
+  })
+  const [resizing, setResizing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [input, setInput] = useState('')
   const { threads, refresh } = useThreads(user?.id)
@@ -81,6 +90,41 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
   const sentRef = useRef('')
 
   const busy = status === 'loading' || status === 'streaming'
+
+  const applyWidth = useCallback((next) => {
+    const clamped = Math.min(MAX_W, Math.max(MIN_W, Math.round(next)))
+    setWidth(clamped)
+    try {
+      window.localStorage.setItem(WIDTH_KEY, String(clamped))
+    } catch {
+      /* storage unavailable */
+    }
+  }, [])
+
+  // Drag the left edge to resize the assistant column.
+  useEffect(() => {
+    if (!resizing) return
+    const move = (e) => {
+      const x = e.touches?.[0]?.clientX ?? e.clientX
+      if (typeof x === 'number') applyWidth(window.innerWidth - x)
+    }
+    const stop = () => setResizing(false)
+    window.addEventListener('mousemove', move)
+    window.addEventListener('touchmove', move, { passive: true })
+    window.addEventListener('mouseup', stop)
+    window.addEventListener('touchend', stop)
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('touchmove', move)
+      window.removeEventListener('mouseup', stop)
+      window.removeEventListener('touchend', stop)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [resizing, applyWidth])
+
 
   useEffect(() => {
     if (open && user) setTimeout(() => inputRef.current?.focus(), 60)
