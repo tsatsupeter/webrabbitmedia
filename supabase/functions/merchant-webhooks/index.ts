@@ -287,7 +287,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (action === 'retry') {
+    if (action === 'retry' || action === 'resend') {
       const delivery_id = String(body?.delivery_id || '')
       if (!delivery_id) return json({ error: 'delivery_id required' }, 400)
       await db.from('webhook_deliveries')
