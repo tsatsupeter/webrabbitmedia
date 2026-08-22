@@ -324,6 +324,130 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Advanced settings: custom headers, throttling and transformation.
+    if (action === 'advanced_save') {
+      const patch: Record<string, unknown> = {}
+      if (body?.custom_headers !== undefined) {
+        const parsed = parseCustomHeaders(body.custom_headers)
+        if ('error' in parsed) return json({ error: parsed.error }, 400)
+        patch.custom_headers = parsed.headers
+      }
+      if (body?.throttle_per_minute !== undefined) {
+        const throttle = parseThrottle(body.throttle_per_minute)
+        if (throttle === 'invalid') return json({ error: 'Throttle must be between 1 and 600 events per minute' }, 400)
+        patch.throttle_per_minute = throttle
+      }
+      if (body?.transformation_code !== undefined) {
+        const code = String(body.transformation_code || '')
+        if (code.trim()) {
+          const err = validateTransformCode(code)
+          if (err) return json({ error: err }, 400)
+          patch.transformation_code = code
+        } else {
+          patch.transformation_code = null
+          patch.transformation_enabled = false
+        }
+      }
+      if (body?.transformation_enabled !== undefined) {
+        const enabled = Boolean(body.transformation_enabled)
+        const code = String(patch.transformation_code ?? ep.transformation_code ?? '')
+        if (enabled && !code.trim()) return json({ error: 'Add transformation code before enabling it' }, 400)
+        patch.transformation_enabled = enabled
+      }
+      const { data, error } = await db.from('webhook_endpoints').update(patch).eq('id', endpoint_id)
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at,custom_headers,transformation_code,transformation_enabled').single()
+      if (error) return json({ error: error.message }, 500)
+      return json({ endpoint: data }, 200)
+    }
+
+    // Dry-run a transformation against a sample payload without saving it.
+    if (action === 'simulate') {
+      const code = String(body?.transformation_code ?? ep.transformation_code ?? '')
+      if (!code.trim()) return json({ error: 'No transformation code to simulate' }, 400)
+      let payload: unknown
+      if (body?.payload !== undefined) {
+        if (typeof body.payload === 'string') {
+          try { payload = JSON.parse(body.payload) } catch { return json({ error: 'Sample payload is not valid JSON' }, 400) }
+        } else payload = body.payload
+      } else {
+        const type = isEventType(body?.event_type) ? String(body.event_type) : (ep.events?.[0] ?? 'collection.approved')
+        payload = {
+          id: crypto.randomUUID(), type, mode: ep.mode,
+          created_at: new Date().toISOString(), data: sampleEventPayload(type),
+        }
+      }
+      const started = Date.now()
+      const out = runTransform(code, { url: ep.url, method: 'POST', payload, headers: headersToObject(ep.custom_headers) })
+      if (!out.ok) return json({ ok: false, error: out.error, duration_ms: Date.now() - started }, 200)
+      return json({
+        ok: true, duration_ms: Date.now() - started,
+        result: { payload: out.result.payload, url: out.result.url, method: out.result.method },
+      }, 200)
+    }
+
+    // Bulk replay: recover failed deliveries, backfill missing ones, or resend
+    // everything in a window. Always bounded so a click cannot storm an endpoint.
+    if (action === 'replay') {
+      const kind = ['failed', 'missing', 'all'].includes(String(body?.kind)) ? String(body.kind) : 'failed'
+      const hours = Math.min(Math.max(Number(body?.hours) || 24, 1), 24 * 30)
+      const since = new Date(Date.now() - hours * 3600_000).toISOString()
+      const CAP = 200
+      let queued = 0
+
+      if (kind === 'failed') {
+        const { data: rows } = await db.from('webhook_deliveries')
+          .select('id').eq('business_id', business_id).eq('endpoint_id', endpoint_id)
+          .eq('status', 'failed').gte('created_at', since)
+          .order('created_at', { ascending: false }).limit(CAP)
+        const ids = (rows ?? []).map((r: { id: string }) => r.id)
+        if (ids.length) {
+          await db.from('webhook_deliveries')
+            .update({ status: 'pending', attempt: 0, error: null, next_attempt_at: new Date().toISOString() })
+            .in('id', ids)
+          queued = ids.length
+        }
+      } else {
+        const { data: events } = await db.from('webhook_events')
+          .select('id,type').eq('business_id', business_id).eq('mode', ep.mode)
+          .in('type', ep.events ?? []).gte('created_at', since)
+          .order('created_at', { ascending: false }).limit(CAP)
+        const list = events ?? []
+        if (list.length) {
+          const { data: existing } = await db.from('webhook_deliveries')
+            .select('event_id,status').eq('endpoint_id', endpoint_id)
+            .in('event_id', list.map((e: { id: string }) => e.id))
+          const seen = new Map<string, string>()
+          for (const row of existing ?? []) seen.set(String(row.event_id), String(row.status))
+
+          const rows = list
+            .filter((e: { id: string }) => {
+              const status = seen.get(e.id)
+              if (kind === 'missing') return status === undefined
+              return status !== 'pending'
+            })
+            .map((e: { id: string }) => ({
+              business_id, endpoint_id, event_id: e.id,
+              status: 'pending', attempt: 0,
+              next_attempt_at: new Date().toISOString(),
+            }))
+          if (rows.length) {
+            const { error } = await db.from('webhook_deliveries').insert(rows)
+            if (error) return json({ error: error.message }, 500)
+            queued = rows.length
+          }
+        }
+      }
+
+      if (queued) {
+        fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-dispatch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+          body: '{}',
+        }).catch(() => {})
+      }
+      return json({ queued, kind, hours, capped: queued >= CAP }, 200)
+    }
+
     if (action === 'retry' || action === 'resend') {
       const delivery_id = String(body?.delivery_id || '')
       if (!delivery_id) return json({ error: 'delivery_id required' }, 400)
