@@ -90,11 +90,12 @@ function AccountMenu({ user, isAdmin }) {
   )
 }
 
-function TopBar({ onSearch, onToggleNav }) {
+function TopBar({ onSearch, onToggleNav, onAskAI }) {
   const { user, loading: authLoading } = useAuth()
   const { isAdmin } = useAdminRole()
   const signedIn = !!user
   const dashboardTo = isAdmin ? '/admin' : '/merchant'
+
 
   return (
     <header className="sticky top-0 z-40 h-14 flex items-center border-b border-slate-200 bg-white/85 backdrop-blur">
