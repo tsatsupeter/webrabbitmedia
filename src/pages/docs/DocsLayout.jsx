@@ -212,10 +212,11 @@ function Sidebar({ activeSlug, mobileOpen, onClose }) {
   )
 }
 
-function OnThisPage({ headings, activeId }) {
+function OnThisPage({ headings, activeId, assistantOpen }) {
   if (!headings?.length) return null
   return (
-    <aside className="hidden xl:block w-56 shrink-0 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto pt-10 pl-6">
+    <aside className={`${assistantOpen ? 'hidden 2xl:block' : 'hidden xl:block'} w-56 shrink-0 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto pt-10 pl-6`}>
+
       <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">
         On this page
       </div>
