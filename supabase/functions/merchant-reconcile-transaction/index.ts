@@ -5,7 +5,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
 import { gatewayFor, gatewayLabel, statusCheck } from '../_shared/gateway.ts'
-import { settleCollection } from '../_shared/settlement.ts'
+import { reverseCollection, settleCollection } from '../_shared/settlement.ts'
 
 
 Deno.serve(async (req) => {
@@ -36,7 +36,11 @@ Deno.serve(async (req) => {
     if (!existing) throw new HttpError(404, 'transaction_not_found')
     if (existing.user_id !== user.id) throw new HttpError(403, 'Not your transaction')
 
-    if (existing.status !== 'pending') {
+    const gw = await gatewayFor(db, existing.business_id)
+
+    // An approved row can still be clawed back by the provider, so reconcile
+    // re-checks it for a reversal instead of short-circuiting.
+    if (existing.status !== 'pending' && existing.status !== 'approved') {
       return jsonResponse({
         transaction_id,
         resolved_status: existing.status,
@@ -46,18 +50,45 @@ Deno.serve(async (req) => {
       })
     }
 
-    const gw = await gatewayFor(db, existing.business_id)
     const check = await statusCheck(gw, existing.mode as 'test' | 'live', {
       reference: transaction_id,
       providerRef: existing.provider_reference,
     })
+
+    if (check.reversed) {
+      const rev = await reverseCollection(db, existing, {
+        code: check.code,
+        reason: check.message ?? 'Reversed by provider',
+        raw: check.data,
+      })
+      return jsonResponse({
+        transaction_id,
+        resolved_status: 'reversed',
+        changed: rev.changed,
+        code: check.code,
+        reason: check.message ?? 'This payment was reversed by the provider.',
+      })
+    }
+
+    if (existing.status === 'approved') {
+      return jsonResponse({
+        transaction_id,
+        resolved_status: 'approved',
+        changed: false,
+        code: existing.provider_code != null ? String(existing.provider_code) : null,
+        reason: existing.provider_reason,
+      })
+    }
+
     const result = await settleCollection(db, existing, {
       status: check.status,
       code: check.code,
       reason: check.message,
       providerTransactionId: check.providerTransactionId,
+      providerFee: check.fee,
       raw: check.data,
     })
+
 
     return jsonResponse({
       transaction_id,

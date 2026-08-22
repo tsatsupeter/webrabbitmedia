@@ -7,15 +7,30 @@
 // external_transaction_id, account_name, account_number, transaction_reference,
 // transaction_currency, amount, fee, institution_code, transaction_message,
 // date_created.
+//
+// 360Pay does not sign callbacks, so this endpoint NEVER settles from the
+// posted body. The body is only used to find the row; the outcome is re-read
+// from POST /v1/payments/status-check with our own credentials. The callback
+// URL also carries LIBERTE_CALLBACK_TOKEN as a path segment as a first filter.
 import { admin, corsHeaders, jsonResponse } from '../_shared/auth.ts'
-import { mapStatusCode } from '../_shared/liberte.ts'
-import { settleCollection } from '../_shared/settlement.ts'
+import { callbackToken, mapStatusCode, parseAmount, statusCheck, type Mode } from '../_shared/liberte.ts'
+import { reverseCollection, settleCollection } from '../_shared/settlement.ts'
 import { findTopup, settleTopup } from '../_shared/topup.ts'
 import { emitPayoutEvent } from '../_shared/webhooks.ts'
+
+const TX_COLUMNS = 'id, business_id, gross_amount, status, mode, provider_transaction_id'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
+
+  // /functions/v1/liberte-callback[/<token>] — when a token is configured and
+  // the caller supplies one, it has to match.
+  const token = callbackToken()
+  const supplied = new URL(req.url).pathname.split('/').filter(Boolean).pop()
+  if (token && supplied && supplied !== 'liberte-callback' && supplied !== token) {
+    return jsonResponse({ received: true, matched: false, reason: 'invalid callback token' }, 404)
+  }
 
   let payload: any = {}
   try { payload = await req.json() } catch { payload = {} }
@@ -42,18 +57,20 @@ Deno.serve(async (req) => {
 
   if (ours.length) {
     const { data } = await db.from('transactions')
-      .select('id, business_id, gross_amount, status')
+      .select(TX_COLUMNS)
+
       .in('provider_transaction_id', ours)
       .maybeSingle()
     row = data ?? null
   }
   if (!row && providerIds.length) {
     const { data } = await db.from('transactions')
-      .select('id, business_id, gross_amount, status')
+      .select(TX_COLUMNS)
       .in('provider_reference', providerIds)
       .maybeSingle()
     row = data ?? null
   }
+
 
   // Payout (disbursement) callbacks carry our payout reference instead.
   if (!row && providerIds.length) {
@@ -100,15 +117,45 @@ Deno.serve(async (req) => {
     return jsonResponse({ received: true, matched: false }, 200)
   }
 
-  // 00 SUCCESS · 01 FAILED · 02 PENDING · 03 PROCESSING (03 stays pending).
-  const status = mapStatusCode(payload?.status_code, payload?.status)
+  // Never settle from the posted body: re-read the outcome from 360Pay with
+  // our own credentials. 00 SUCCESS · 01 FAILED · 02 PENDING · 03 PROCESSING.
+  const mode = (row.mode === 'live' ? 'live' : 'test') as Mode
+  const reference = String(row.provider_transaction_id ?? ours[0] ?? '')
+  let verified: Awaited<ReturnType<typeof statusCheck>> | null = null
+  if (reference) {
+    try {
+      verified = await statusCheck(mode, reference)
+    } catch (e) {
+      console.log('liberte-callback: status-check failed', String(e))
+    }
+  }
+
+  if (!verified || verified.notFound) {
+    // Cannot confirm with the provider — do not touch the ledger. 360Pay
+    // retries, and the merchant reconcile path polls status-check too.
+    console.log('liberte-callback: unverified callback ignored', { reference, posted: payload?.status_code })
+    return jsonResponse({ received: true, matched: true, verified: false, changed: false }, 200)
+  }
+
+  if (verified.reversed) {
+    const out = await reverseCollection(db, row, {
+      code: verified.code,
+      reason: verified.message ?? 'Reversed by provider',
+      raw: { callback: payload, status_check: verified.data },
+    })
+    return jsonResponse({ received: true, matched: true, verified: true, kind: 'reversal', ...out }, 200)
+  }
+
   const result = await settleCollection(db, row, {
-    status,
-    code: payload?.status_code != null ? String(payload.status_code) : null,
-    reason: payload?.transaction_message ?? payload?.status ?? null,
+    status: verified.status,
+    code: verified.code,
+    reason: verified.message,
     providerTransactionId: payload?.transaction_id ? String(payload.transaction_id) : null,
-    raw: payload,
+    providerFee: verified.fee ?? parseAmount(payload?.fee),
+    accountName: verified.accountName,
+    raw: { callback: payload, status_check: verified.data },
   })
 
-  return jsonResponse({ received: true, matched: true, ...result }, 200)
+  return jsonResponse({ received: true, matched: true, verified: true, ...result }, 200)
+
 })

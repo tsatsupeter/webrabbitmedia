@@ -2460,11 +2460,13 @@ export type Database = {
           payout_id: string | null
           provider: string
           provider_code: string | null
+          provider_fee: number | null
           provider_reason: string | null
           provider_reference: string | null
           provider_transaction_id: string
           r_switch: string | null
           raw_response: Json | null
+          reversed_at: string | null
           status: string
           subscriber_number: string | null
           type: string
@@ -2489,11 +2491,13 @@ export type Database = {
           payout_id?: string | null
           provider?: string
           provider_code?: string | null
+          provider_fee?: number | null
           provider_reason?: string | null
           provider_reference?: string | null
           provider_transaction_id: string
           r_switch?: string | null
           raw_response?: Json | null
+          reversed_at?: string | null
           status?: string
           subscriber_number?: string | null
           type: string
@@ -2518,11 +2522,13 @@ export type Database = {
           payout_id?: string | null
           provider?: string
           provider_code?: string | null
+          provider_fee?: number | null
           provider_reason?: string | null
           provider_reference?: string | null
           provider_transaction_id?: string
           r_switch?: string | null
           raw_response?: Json | null
+          reversed_at?: string | null
           status?: string
           subscriber_number?: string | null
           type?: string

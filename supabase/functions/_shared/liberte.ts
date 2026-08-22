@@ -25,9 +25,19 @@ export function secretKey(mode: Mode) {
   return key
 }
 
-export function callbackUrl() {
-  return `${Deno.env.get('SUPABASE_URL')}/functions/v1/liberte-callback`
+// 360Pay callbacks are unsigned, so the callback URL carries a shared secret in
+// its path as a first filter. The callback itself never trusts the posted body:
+// it re-reads the outcome from /v1/payments/status-check before settling.
+export function callbackToken() {
+  return Deno.env.get('LIBERTE_CALLBACK_TOKEN') || ''
 }
+
+export function callbackUrl() {
+  const token = callbackToken()
+  const base = `${Deno.env.get('SUPABASE_URL')}/functions/v1/liberte-callback`
+  return token ? `${base}/${token}` : base
+}
+
 
 // ---- networks / institutions ----------------------------------------------
 export const NETWORKS = ['MTN', 'AT', 'TELECEL', 'GMONEY'] as const
@@ -217,8 +227,25 @@ export type StatusCheckResult = {
   status: LedgerStatus
   code: string | null
   message: string | null
+  /** True when 360Pay has clawed the collection back after settling it. */
+  reversed: boolean
+  /** Provider's own fee on the transaction, when reported. */
+  fee: number | null
+  accountName: string | null
+  notFound: boolean
   data: any
   httpStatus: number
+}
+
+export function parseBool(v: unknown): boolean {
+  if (typeof v === 'boolean') return v
+  const s = String(v ?? '').trim().toLowerCase()
+  return s === 'true' || s === '1' || s === 'yes'
+}
+
+export function parseAmount(v: unknown): number | null {
+  const n = Number(String(v ?? '').replace(/[^0-9.\-]/g, ''))
+  return Number.isFinite(n) ? n : null
 }
 
 export async function statusCheck(mode: Mode, transaction_id: string): Promise<StatusCheckResult> {
@@ -234,10 +261,15 @@ export async function statusCheck(mode: Mode, transaction_id: string): Promise<S
     status: notFound ? 'pending' : mapStatusCode(code, d.status ?? res.json?.status),
     code,
     message,
+    reversed: parseBool(d.is_reversed),
+    fee: parseAmount(d.fee),
+    accountName: d.account_name ? String(d.account_name) : null,
+    notFound,
     data: res.json,
     httpStatus: res.status,
   }
 }
+
 
 // ---- institutions --------------------------------------------------------------
 export type Institution = { code: string; currency: string; name: string; slug: string; type: string }
@@ -262,6 +294,22 @@ export async function resolveInstitutionCode(mode: Mode, network: Network): Prom
   const hit = list?.find((i) => norm(i.slug) === norm(slug))
   return hit?.code ? String(hit.code) : INSTITUTION_CODES[network]
 }
+
+// The docs list only mtn / telecel-cash / at-money as payment slugs, but the
+// live institution list is the source of truth per environment. Returns the
+// networks 360Pay actually serves, falling back to the static table when the
+// institution list is unavailable so an outage can never empty the picker.
+export async function supportedNetworks(mode: Mode): Promise<Network[]> {
+  const list = await getInstitutions(mode, 'MNO')
+  if (!list?.length) return [...NETWORKS]
+  const norm = (v: unknown) => String(v || '').toLowerCase().replace(/[^a-z]/g, '')
+  const slugs = new Set(list.map((i) => norm(i.slug)))
+  const codes = new Set(list.map((i) => String(i.code)))
+  const hits = NETWORKS.filter((n) => slugs.has(norm(PAYMENT_SLUGS[n])) || codes.has(INSTITUTION_CODES[n]))
+  return hits.length ? hits : [...NETWORKS]
+}
+
+
 
 // ---- disbursement ----------------------------------------------------------------
 export async function disbursementBalance(mode: Mode) {
