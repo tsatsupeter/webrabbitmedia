@@ -196,6 +196,11 @@ Deno.serve(async (req) => {
         patch.events = events
       }
       if (body?.description !== undefined) patch.description = String(body.description || '').slice(0, 200) || null
+      if (body?.throttle_per_minute !== undefined) {
+        const throttle = parseThrottle(body.throttle_per_minute)
+        if (throttle === 'invalid') return json({ error: 'Throttle must be between 1 and 600 events per minute' }, 400)
+        patch.throttle_per_minute = throttle
+      }
       if (body?.status !== undefined) {
         if (!['enabled', 'disabled'].includes(String(body.status))) return json({ error: 'Invalid status' }, 400)
         patch.status = body.status
@@ -203,7 +208,8 @@ Deno.serve(async (req) => {
         if (body.status === 'enabled') patch.failure_streak = 0
       }
       const { data, error } = await db.from('webhook_endpoints').update(patch).eq('id', endpoint_id)
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,last_delivery_at,last_status_code,created_at').single()
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at').single()
+
       if (error) return json({ error: error.message }, 500)
       return json({ endpoint: data }, 200)
     }
