@@ -69,17 +69,20 @@ function Bubble({ message }) {
 }
 
 const WIDTH_KEY = 'docsAssistantWidth'
-const MIN_W = 360
+const MIN_W = 288
 const MAX_W = 720
+const DEFAULT_W = 288
 
 export default function AssistantPanel({ open, threadId, onClose, initialQuestion, onConsumedQuestion }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [width, setWidth] = useState(() => {
-    if (typeof window === 'undefined') return 420
+    if (typeof window === 'undefined') return DEFAULT_W
     const v = Number(window.localStorage.getItem(WIDTH_KEY))
-    return Number.isFinite(v) && v >= MIN_W && v <= MAX_W ? v : 420
+    if (!Number.isFinite(v) || !v) return DEFAULT_W
+    return Math.min(MAX_W, Math.max(MIN_W, v))
   })
+
   const [resizing, setResizing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [input, setInput] = useState('')
