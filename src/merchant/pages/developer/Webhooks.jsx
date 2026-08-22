@@ -10,6 +10,7 @@ import EmptyState, { InlineSpinner } from '../../components/EmptyState'
 const EVENT_LABELS = {
   'collection.approved': 'Collection approved',
   'collection.failed': 'Collection failed',
+  'collection.reversed': 'Collection reversed',
   'payout.completed': 'Payout completed',
   'payout.failed': 'Payout failed',
   'sms_topup.approved': 'Messaging top-up credited',
