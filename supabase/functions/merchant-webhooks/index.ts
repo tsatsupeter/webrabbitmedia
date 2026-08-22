@@ -38,19 +38,90 @@ Deno.serve(async (req) => {
     if (!role) return json({ error: 'Business not found' }, 404)
     const canManage = role === 'owner' || role === 'admin'
 
+    const mode = body?.mode === 'live' ? 'live' : 'test'
+
     if (action === 'list') {
-      const mode = body?.mode === 'live' ? 'live' : 'test'
       const { data: endpoints } = await db.from('webhook_endpoints')
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,last_delivery_at,last_status_code,created_at')
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at')
         .eq('business_id', business_id).eq('mode', mode)
         .order('created_at', { ascending: false })
       const { data: deliveries } = await db.from('webhook_deliveries')
-        .select('id,endpoint_id,status,attempt,max_attempts,response_code,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events(type,mode,resource_id,payload,created_at)')
+        .select('id,endpoint_id,status,attempt,max_attempts,response_code,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)')
         .eq('business_id', business_id)
+        .eq('webhook_events.mode', mode)
         .order('created_at', { ascending: false })
         .limit(50)
       return json({ endpoints: endpoints ?? [], deliveries: deliveries ?? [], event_types: WEBHOOK_EVENT_TYPES }, 200)
     }
+
+    // Paged event log for the Logs tab.
+    if (action === 'events') {
+      const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
+      const offset = Math.max(Number(body?.offset) || 0, 0)
+      let q = db.from('webhook_events')
+        .select('id,type,resource_type,resource_id,payload,created_at', { count: 'exact' })
+        .eq('business_id', business_id).eq('mode', mode)
+      if (body?.type && isEventType(body.type)) q = q.eq('type', body.type)
+      if (body?.since) q = q.gte('created_at', String(body.since))
+      if (body?.message_id) q = q.eq('id', String(body.message_id))
+      const { data, count, error } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1)
+      if (error) return json({ error: error.message }, 500)
+      return json({ events: data ?? [], total: count ?? 0 }, 200)
+    }
+
+    // Delivery counters + time buckets for the Activity tab.
+    if (action === 'activity') {
+      const days = Math.min(Math.max(Number(body?.days) || 7, 1), 30)
+      const since = new Date(Date.now() - days * 86400000).toISOString()
+      const { data } = await db.from('webhook_deliveries')
+        .select('status,created_at,webhook_events!inner(mode)')
+        .eq('business_id', business_id)
+        .eq('webhook_events.mode', mode)
+        .gte('created_at', since)
+        .order('created_at', { ascending: true })
+        .limit(5000)
+      const rows = data ?? []
+      const counts = { succeeded: 0, failed: 0, canceled: 0, pending: 0 }
+      const buckets: Record<string, { succeeded: number; failed: number }> = {}
+      for (const r of rows) {
+        const key = String(r.created_at).slice(0, 10)
+        buckets[key] ??= { succeeded: 0, failed: 0 }
+        if (r.status === 'succeeded') { counts.succeeded++; buckets[key].succeeded++ }
+        else if (r.status === 'failed') { counts.failed++; buckets[key].failed++ }
+        else if (r.status === 'canceled') counts.canceled++
+        else counts.pending++
+      }
+      const series: { date: string; succeeded: number; failed: number }[] = []
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+        series.push({ date: d, ...(buckets[d] ?? { succeeded: 0, failed: 0 }) })
+      }
+      return json({ counts, series, days }, 200)
+    }
+
+    // Message attempts for a single endpoint.
+    if (action === 'attempts') {
+      const endpointId = String(body?.endpoint_id || '')
+      if (!endpointId) return json({ error: 'endpoint_id required' }, 400)
+      const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
+      const offset = Math.max(Number(body?.offset) || 0, 0)
+      const { data, count, error } = await db.from('webhook_deliveries')
+        .select('id,event_id,status,attempt,max_attempts,response_code,response_body,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
+        .eq('business_id', business_id)
+        .eq('endpoint_id', endpointId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+      if (error) return json({ error: error.message }, 500)
+      return json({ attempts: data ?? [], total: count ?? 0 }, 200)
+    }
+
+    if (action === 'settings_get') {
+      const { data } = await db.from('webhook_settings')
+        .select('alert_emails').eq('business_id', business_id).eq('mode', mode).maybeSingle()
+      return json({ alert_emails: data?.alert_emails ?? [] }, 200)
+    }
+
+
 
     if (!canManage) return json({ error: 'Only the workspace owner or an admin can manage webhooks' }, 403)
 
