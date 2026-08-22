@@ -29,11 +29,11 @@ export default function Webhooks() {
       <h2 id="events">Events</h2>
       <ParamTable
         rows={[
-          { name: 'collection.approved', type: 'transaction', required: false, description: 'A MoMo or checkout collection was approved and credited to your balance.' },
-          { name: 'collection.failed', type: 'transaction', required: false, description: 'A collection failed, was declined, or expired.' },
-          { name: 'payout.completed', type: 'payout', required: false, description: 'A withdrawal was disbursed to your bank or wallet.' },
-          { name: 'payout.failed', type: 'payout', required: false, description: 'A withdrawal failed; the balance is returned to your available funds.' },
-          { name: 'sms_topup.approved', type: 'sms_topup', required: false, description: 'A messaging wallet top-up was credited.' },
+          { name: 'collection.approved', type: 'transaction', required: false, desc: 'A MoMo or checkout collection was approved and credited to your balance.' },
+          { name: 'collection.failed', type: 'transaction', required: false, desc: 'A collection failed, was declined, or expired.' },
+          { name: 'payout.completed', type: 'payout', required: false, desc: 'A withdrawal was disbursed to your bank or wallet.' },
+          { name: 'payout.failed', type: 'payout', required: false, desc: 'A withdrawal failed; the balance is returned to your available funds.' },
+          { name: 'sms_topup.approved', type: 'sms_topup', required: false, desc: 'A messaging wallet top-up was credited.' },
         ]}
       />
 
@@ -81,11 +81,11 @@ export default function Webhooks() {
       <h2 id="headers">Headers</h2>
       <ParamTable
         rows={[
-          { name: 'Webrabbit-Signature', type: 'string', required: true, description: 't=<unix seconds>,v1=<hex HMAC-SHA256>' },
-          { name: 'Webrabbit-Event-Id', type: 'string', required: true, description: 'Stable event id — use it to de-duplicate.' },
-          { name: 'Webrabbit-Event-Type', type: 'string', required: true, description: 'e.g. collection.approved' },
-          { name: 'Webrabbit-Delivery-Id', type: 'string', required: true, description: 'Unique per delivery attempt chain.' },
-          { name: 'Webrabbit-Attempt', type: 'integer', required: true, description: 'Attempt number, starting at 1.' },
+          { name: 'Webrabbit-Signature', type: 'string', required: true, desc: 't=<unix seconds>,v1=<hex HMAC-SHA256>' },
+          { name: 'Webrabbit-Event-Id', type: 'string', required: true, desc: 'Stable event id — use it to de-duplicate.' },
+          { name: 'Webrabbit-Event-Type', type: 'string', required: true, desc: 'e.g. collection.approved' },
+          { name: 'Webrabbit-Delivery-Id', type: 'string', required: true, desc: 'Unique per delivery attempt chain.' },
+          { name: 'Webrabbit-Attempt', type: 'integer', required: true, desc: 'Attempt number, starting at 1.' },
         ]}
       />
 
