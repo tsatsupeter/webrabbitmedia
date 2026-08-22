@@ -100,6 +100,7 @@ export async function settleTopup(
       await db.from('sms_topups').update({ credited_at: null, status: 'pending' }).eq('id', row.id)
       return { changed: false, credited: false, status: 'pending', error: error.message }
     }
+    await emitTopupEvent(db, row.id)
   }
 
   return { changed: true, credited: approved, status: approved ? 'success' : 'failed' }
