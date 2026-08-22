@@ -15,8 +15,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const auth = req.headers.get('authorization') || ''
-  if (auth.replace(/^Bearer\s+/i, '') !== serviceKey) {
+  const cronSecret = Deno.env.get('WEBHOOK_CRON_SECRET') || ''
+  const auth = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '')
+  if (auth !== serviceKey && !(cronSecret && auth === cronSecret)) {
     return json({ error: 'Unauthorized' }, 401)
   }
 
