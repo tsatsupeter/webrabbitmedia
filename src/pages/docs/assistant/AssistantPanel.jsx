@@ -217,7 +217,7 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
         </button>
         <button
           type="button"
-          onClick={() => applyWidth(width >= 600 ? 420 : 700)}
+          onClick={() => applyWidth(width >= 600 ? DEFAULT_W : 700)}
           className="hidden rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:block"
           aria-label={width >= 600 ? 'Collapse panel' : 'Expand panel'}
         >
@@ -301,7 +301,7 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
 
       {user && messages.length === 0 && (
         <div className="px-4 pb-2">
-          <div className="mb-2 text-[13px] font-medium text-slate-700">Suggestions</div>
+          <div className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Suggestions</div>
           <div className="space-y-1.5">
             {SUGGESTIONS.map((s) => (
               <button
