@@ -125,11 +125,27 @@ Deno.serve(async (req) => {
 
     if (!canManage) return json({ error: 'Only the workspace owner or an admin can manage webhooks' }, 403)
 
+    if (action === 'settings_save') {
+      const raw = Array.isArray(body?.alert_emails) ? body.alert_emails : []
+      const emails = raw
+        .map((e: unknown) => String(e || '').trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 10)
+      for (const e of emails) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return json({ error: `"${e}" is not a valid email address` }, 400)
+      }
+      const { error } = await db.from('webhook_settings')
+        .upsert({ business_id, mode, alert_emails: emails }, { onConflict: 'business_id,mode' })
+      if (error) return json({ error: error.message }, 500)
+      return json({ alert_emails: emails }, 200)
+    }
+
     if (action === 'create') {
       const url = String(body?.url || '').trim()
-      const mode = body?.mode === 'live' ? 'live' : 'test'
       const events = Array.isArray(body?.events) ? body.events.filter(isEventType) : []
       const description = body?.description ? String(body.description).slice(0, 200) : null
+      const throttle = parseThrottle(body?.throttle_per_minute)
+      if (throttle === 'invalid') return json({ error: 'Throttle must be between 1 and 600 events per minute' }, 400)
       const urlErr = validateUrl(url, mode)
       if (urlErr) return json({ error: urlErr }, 400)
       if (!events.length) return json({ error: 'Select at least one event' }, 400)
@@ -142,10 +158,12 @@ Deno.serve(async (req) => {
       const secret = newWebhookSecret()
       const { data: created, error } = await db.from('webhook_endpoints').insert({
         business_id, url, mode, events, description,
+        throttle_per_minute: throttle,
+        status: body?.status === 'disabled' ? 'disabled' : 'enabled',
         secret_hash: await sha256Hex(secret),
         secret_last4: secret.slice(-4),
         created_by: userId,
-      }).select('id,url,mode,events,description,secret_last4,status,created_at').single()
+      }).select('id,url,mode,events,description,secret_last4,status,throttle_per_minute,created_at').single()
       if (error) return json({ error: error.message }, 500)
 
       const { error: sErr } = await db.from('webhook_endpoint_secrets')
@@ -156,6 +174,7 @@ Deno.serve(async (req) => {
       }
       return json({ endpoint: created, secret }, 201)
     }
+
 
     const endpoint_id = String(body?.endpoint_id || '')
     if (!endpoint_id) return json({ error: 'endpoint_id required' }, 400)
