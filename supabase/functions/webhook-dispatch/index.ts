@@ -81,13 +81,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    const body = JSON.stringify({
+    const envelope = {
       id: event.id,
       type: event.type,
       mode: event.mode,
       created_at: event.created_at,
       data: { object: event.payload, resource_type: event.resource_type, resource_id: event.resource_id },
-    })
+    }
+
+    let body = JSON.stringify(envelope)
+    let targetUrl: string = endpoint.url
+    let method = 'POST'
+    let transformError: string | null = null
+    const extraHeaders = headersToObject(endpoint.custom_headers)
+
+    // Merchant transformation: sandboxed, best-effort. On any failure we deliver
+    // the untransformed event and record why on the attempt.
+    if (endpoint.transformation_enabled && endpoint.transformation_code) {
+      const out = runTransform(endpoint.transformation_code, {
+        url: endpoint.url, method: 'POST', payload: envelope, headers: extraHeaders,
+      })
+      if (out.ok) {
+        body = JSON.stringify(out.result.payload)
+        targetUrl = out.result.url ?? endpoint.url
+        method = out.result.method ?? 'POST'
+      } else {
+        transformError = out.error
+      }
+    }
+
     const t = Math.floor(Date.now() / 1000)
     const sig = await signPayload(secretRow.secret, t, body)
 
@@ -99,9 +121,10 @@ Deno.serve(async (req) => {
     try {
       const ctrl = new AbortController()
       const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
-      const res = await fetch(endpoint.url, {
-        method: 'POST',
+      const res = await fetch(targetUrl, {
+        method,
         headers: {
+          ...extraHeaders,
           'Content-Type': 'application/json',
           'User-Agent': 'WebRabbit-Webhooks/1',
           'Webrabbit-Signature': `t=${t},v1=${sig}`,
@@ -113,6 +136,12 @@ Deno.serve(async (req) => {
         body,
         signal: ctrl.signal,
       })
+      clearTimeout(timer)
+      code = res.status
+      text = (await res.text().catch(() => '')).slice(0, 2000)
+    } catch (e) {
+      error = String((e as Error).message || e)
+
       clearTimeout(timer)
       code = res.status
       text = (await res.text().catch(() => '')).slice(0, 2000)
