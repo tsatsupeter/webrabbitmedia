@@ -239,7 +239,11 @@ function OnThisPage({ headings, activeId }) {
 }
 
 export default function DocsLayout() {
-  const { section } = useParams()
+  const { section, threadId } = useParams()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const assistantRoute = pathname.startsWith('/docs/assistant')
   const slug = section || 'introduction'
   const page = findBySlug(slug) || findBySlug('introduction')
   const Comp = page.Component
@@ -248,7 +252,29 @@ export default function DocsLayout() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
   const [activeId, setActiveId] = useState(page.headings[0]?.id || '')
+  const [pendingQuestion, setPendingQuestion] = useState('')
   const mainRef = useRef(null)
+  const creatingRef = useRef(false)
+
+  // A thread URL is the source of truth for the open conversation.
+  useEffect(() => {
+    if (!assistantRoute || threadId || !user || creatingRef.current) return
+    creatingRef.current = true
+    ;(async () => {
+      try {
+        const t = await createThread(user.id)
+        navigate(`/docs/assistant/${t.id}`, { replace: true })
+      } finally {
+        creatingRef.current = false
+      }
+    })()
+  }, [assistantRoute, threadId, user, navigate])
+
+  const openAssistant = (question) => {
+    if (question) setPendingQuestion(question)
+    if (!assistantRoute) navigate('/docs/assistant')
+  }
+
 
   // Cmd+K
   useEffect(() => {
