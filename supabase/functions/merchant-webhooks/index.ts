@@ -38,27 +38,140 @@ Deno.serve(async (req) => {
     if (!role) return json({ error: 'Business not found' }, 404)
     const canManage = role === 'owner' || role === 'admin'
 
+    const mode = body?.mode === 'live' ? 'live' : 'test'
+
     if (action === 'list') {
-      const mode = body?.mode === 'live' ? 'live' : 'test'
       const { data: endpoints } = await db.from('webhook_endpoints')
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,last_delivery_at,last_status_code,created_at')
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at')
         .eq('business_id', business_id).eq('mode', mode)
         .order('created_at', { ascending: false })
       const { data: deliveries } = await db.from('webhook_deliveries')
-        .select('id,endpoint_id,status,attempt,max_attempts,response_code,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events(type,mode,resource_id,payload,created_at)')
+        .select('id,endpoint_id,status,attempt,max_attempts,response_code,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)')
         .eq('business_id', business_id)
+        .eq('webhook_events.mode', mode)
         .order('created_at', { ascending: false })
         .limit(50)
       return json({ endpoints: endpoints ?? [], deliveries: deliveries ?? [], event_types: WEBHOOK_EVENT_TYPES }, 200)
     }
 
+    // Paged event log for the Logs tab.
+    if (action === 'events') {
+      const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
+      const offset = Math.max(Number(body?.offset) || 0, 0)
+      let q = db.from('webhook_events')
+        .select('id,type,resource_type,resource_id,payload,created_at', { count: 'exact' })
+        .eq('business_id', business_id).eq('mode', mode)
+      if (body?.type && isEventType(body.type)) q = q.eq('type', body.type)
+      if (body?.since) q = q.gte('created_at', String(body.since))
+      if (body?.message_id) q = q.eq('id', String(body.message_id))
+      const { data, count, error } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1)
+      if (error) return json({ error: error.message }, 500)
+      return json({ events: data ?? [], total: count ?? 0 }, 200)
+    }
+
+    // Delivery counters + time buckets for the Activity tab.
+    if (action === 'activity') {
+      const days = body?.since
+        ? Math.min(Math.max(Math.ceil((Date.now() - new Date(String(body.since)).getTime()) / 86400000), 1), 30)
+        : Math.min(Math.max(Number(body?.days) || 7, 1), 30)
+      const since = new Date(Date.now() - days * 86400000).toISOString()
+      const { data } = await db.from('webhook_deliveries')
+        .select('status,created_at,webhook_events!inner(mode)')
+        .eq('business_id', business_id)
+        .eq('webhook_events.mode', mode)
+        .gte('created_at', since)
+        .order('created_at', { ascending: true })
+        .limit(5000)
+      const rows = data ?? []
+      const counts = { succeeded: 0, failed: 0, canceled: 0, pending: 0 }
+      const buckets: Record<string, { succeeded: number; failed: number }> = {}
+      for (const r of rows) {
+        const key = String(r.created_at).slice(0, 10)
+        buckets[key] ??= { succeeded: 0, failed: 0 }
+        if (r.status === 'succeeded') { counts.succeeded++; buckets[key].succeeded++ }
+        else if (r.status === 'failed') { counts.failed++; buckets[key].failed++ }
+        else if (r.status === 'canceled') counts.canceled++
+        else counts.pending++
+      }
+      const series: { date: string; bucket: string; succeeded: number; failed: number }[] = []
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+        series.push({ date: d, bucket: d, ...(buckets[d] ?? { succeeded: 0, failed: 0 }) })
+      }
+
+      const { count: eventCount } = await db.from('webhook_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', business_id).eq('mode', mode).gte('created_at', since)
+
+      const { data: failures } = await db.from('webhook_deliveries')
+        .select('id,attempt,max_attempts,response_code,error,created_at,webhook_events!inner(type,mode)')
+        .eq('business_id', business_id)
+        .eq('webhook_events.mode', mode)
+        .eq('status', 'failed')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      const recent_failures = (failures ?? []).map((f: Record<string, unknown>) => ({
+        id: f.id, attempt: f.attempt, max_attempts: f.max_attempts,
+        response_code: f.response_code, error: f.error, created_at: f.created_at,
+        type: (f.webhook_events as { type?: string } | null)?.type ?? null,
+      }))
+
+      const totals = { ...counts, events: eventCount ?? 0 }
+      return json({ counts, totals, series, days, recent_failures }, 200)
+    }
+
+    // Message attempts for a single endpoint or a single event.
+    if (action === 'attempts') {
+      const endpointId = String(body?.endpoint_id || '')
+      const eventId = String(body?.event_id || '')
+      if (!endpointId && !eventId) return json({ error: 'endpoint_id or event_id required' }, 400)
+      const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
+      const offset = Math.max(Number(body?.offset) || 0, 0)
+      let aq = db.from('webhook_deliveries')
+        .select('id,event_id,status,attempt,max_attempts,response_code,response_body,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
+        .eq('business_id', business_id)
+      if (endpointId) aq = aq.eq('endpoint_id', endpointId)
+      if (eventId) aq = aq.eq('event_id', eventId)
+      const { data, count, error } = await aq
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+      if (error) return json({ error: error.message }, 500)
+      return json({ attempts: data ?? [], total: count ?? 0 }, 200)
+    }
+
+    if (action === 'settings_get') {
+      const { data } = await db.from('webhook_settings')
+        .select('alert_emails').eq('business_id', business_id).eq('mode', mode).maybeSingle()
+      return json({ alert_emails: data?.alert_emails ?? [] }, 200)
+    }
+
+
+
     if (!canManage) return json({ error: 'Only the workspace owner or an admin can manage webhooks' }, 403)
+
+    if (action === 'settings_save') {
+      const raw = Array.isArray(body?.alert_emails) ? body.alert_emails : []
+      const emails = raw
+        .map((e: unknown) => String(e || '').trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 10)
+      for (const e of emails) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return json({ error: `"${e}" is not a valid email address` }, 400)
+      }
+      const { error } = await db.from('webhook_settings')
+        .upsert({ business_id, mode, alert_emails: emails }, { onConflict: 'business_id,mode' })
+      if (error) return json({ error: error.message }, 500)
+      return json({ alert_emails: emails }, 200)
+    }
 
     if (action === 'create') {
       const url = String(body?.url || '').trim()
-      const mode = body?.mode === 'live' ? 'live' : 'test'
       const events = Array.isArray(body?.events) ? body.events.filter(isEventType) : []
       const description = body?.description ? String(body.description).slice(0, 200) : null
+      const throttle = parseThrottle(body?.throttle_per_minute)
+      if (throttle === 'invalid') return json({ error: 'Throttle must be between 1 and 600 events per minute' }, 400)
       const urlErr = validateUrl(url, mode)
       if (urlErr) return json({ error: urlErr }, 400)
       if (!events.length) return json({ error: 'Select at least one event' }, 400)
@@ -71,10 +184,12 @@ Deno.serve(async (req) => {
       const secret = newWebhookSecret()
       const { data: created, error } = await db.from('webhook_endpoints').insert({
         business_id, url, mode, events, description,
+        throttle_per_minute: throttle,
+        status: body?.status === 'disabled' ? 'disabled' : 'enabled',
         secret_hash: await sha256Hex(secret),
         secret_last4: secret.slice(-4),
         created_by: userId,
-      }).select('id,url,mode,events,description,secret_last4,status,created_at').single()
+      }).select('id,url,mode,events,description,secret_last4,status,throttle_per_minute,created_at').single()
       if (error) return json({ error: error.message }, 500)
 
       const { error: sErr } = await db.from('webhook_endpoint_secrets')
@@ -85,6 +200,7 @@ Deno.serve(async (req) => {
       }
       return json({ endpoint: created, secret }, 201)
     }
+
 
     const endpoint_id = String(body?.endpoint_id || '')
     if (!endpoint_id) return json({ error: 'endpoint_id required' }, 400)
@@ -106,6 +222,11 @@ Deno.serve(async (req) => {
         patch.events = events
       }
       if (body?.description !== undefined) patch.description = String(body.description || '').slice(0, 200) || null
+      if (body?.throttle_per_minute !== undefined) {
+        const throttle = parseThrottle(body.throttle_per_minute)
+        if (throttle === 'invalid') return json({ error: 'Throttle must be between 1 and 600 events per minute' }, 400)
+        patch.throttle_per_minute = throttle
+      }
       if (body?.status !== undefined) {
         if (!['enabled', 'disabled'].includes(String(body.status))) return json({ error: 'Invalid status' }, 400)
         patch.status = body.status
@@ -113,7 +234,8 @@ Deno.serve(async (req) => {
         if (body.status === 'enabled') patch.failure_streak = 0
       }
       const { data, error } = await db.from('webhook_endpoints').update(patch).eq('id', endpoint_id)
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,last_delivery_at,last_status_code,created_at').single()
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at').single()
+
       if (error) return json({ error: error.message }, 500)
       return json({ endpoint: data }, 200)
     }
@@ -191,7 +313,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (action === 'retry') {
+    if (action === 'retry' || action === 'resend') {
       const delivery_id = String(body?.delivery_id || '')
       if (!delivery_id) return json({ error: 'delivery_id required' }, 400)
       await db.from('webhook_deliveries')
@@ -214,7 +336,15 @@ Deno.serve(async (req) => {
   }
 })
 
+function parseThrottle(v: unknown): number | null | 'invalid' {
+  if (v === null || v === undefined || v === '' || v === false) return null
+  const n = Number(v)
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1 || n > 600) return 'invalid'
+  return n
+}
+
 function validateUrl(url: string, mode: string): string | null {
+
   let u: URL
   try { u = new URL(url) } catch { return 'Enter a valid URL' }
   if (u.protocol !== 'https:') {

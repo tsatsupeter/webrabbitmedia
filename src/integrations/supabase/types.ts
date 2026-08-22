@@ -2986,6 +2986,7 @@ export type Database = {
           secret_hash: string
           secret_last4: string
           status: string
+          throttle_per_minute: number | null
           updated_at: string
           url: string
         }
@@ -3004,6 +3005,7 @@ export type Database = {
           secret_hash: string
           secret_last4: string
           status?: string
+          throttle_per_minute?: number | null
           updated_at?: string
           url: string
         }
@@ -3022,6 +3024,7 @@ export type Database = {
           secret_hash?: string
           secret_last4?: string
           status?: string
+          throttle_per_minute?: number | null
           updated_at?: string
           url?: string
         }
@@ -3069,6 +3072,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "webhook_events_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_settings: {
+        Row: {
+          alert_emails: string[]
+          business_id: string
+          created_at: string
+          id: string
+          mode: string
+          updated_at: string
+        }
+        Insert: {
+          alert_emails?: string[]
+          business_id: string
+          created_at?: string
+          id?: string
+          mode: string
+          updated_at?: string
+        }
+        Update: {
+          alert_emails?: string[]
+          business_id?: string
+          created_at?: string
+          id?: string
+          mode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_settings_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
