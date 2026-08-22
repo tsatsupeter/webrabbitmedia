@@ -31,6 +31,7 @@ export default function Webhooks() {
         rows={[
           { name: 'collection.approved', type: 'transaction', required: false, desc: 'A MoMo or checkout collection was approved and credited to your balance.' },
           { name: 'collection.failed', type: 'transaction', required: false, desc: 'A collection failed, was declined, or expired.' },
+          { name: 'collection.reversed', type: 'transaction', required: false, desc: 'A previously approved collection was clawed back by the provider. The amount and our commission are removed from your balance.' },
           { name: 'payout.completed', type: 'payout', required: false, desc: 'A withdrawal was disbursed to your bank or wallet.' },
           { name: 'payout.failed', type: 'payout', required: false, desc: 'A withdrawal failed; the balance is returned to your available funds.' },
           { name: 'sms_topup.approved', type: 'sms_topup', required: false, desc: 'A messaging wallet top-up was credited.' },
