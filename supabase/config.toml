@@ -60,3 +60,9 @@ verify_jwt = true
 
 [functions.messaging-cancel]
 verify_jwt = true
+
+[functions.webhook-dispatch]
+verify_jwt = false
+
+[functions.merchant-webhooks]
+verify_jwt = true
