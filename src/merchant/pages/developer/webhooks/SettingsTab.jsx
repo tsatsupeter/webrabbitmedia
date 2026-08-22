@@ -94,7 +94,7 @@ export default function SettingsTab({ api, mode }) {
       <Card className="p-5">
         <div className="text-[0.95rem] text-white font-medium">Delivery behaviour</div>
         <ul className="mt-3 space-y-2 text-[0.8rem] text-white/55 list-disc pl-4">
-          <li>Every request carries an <span className="font-mono text-white/75">X-WebRabbit-Signature</span> header — an HMAC-SHA256 of the raw body using your endpoint secret.</li>
+          <li>Every request carries an <span className="font-mono text-white/75">Webrabbit-Signature</span> header — an HMAC-SHA256 of the raw body using your endpoint secret.</li>
           <li>Respond with any 2xx status within 10 seconds to acknowledge an event.</li>
           <li>Failed deliveries are retried up to 5 times with exponential backoff.</li>
           <li>An endpoint is disabled automatically after 10 consecutive failures.</li>

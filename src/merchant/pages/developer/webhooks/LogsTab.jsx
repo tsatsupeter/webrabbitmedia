@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import Icon from '../../../Icon'
 import EmptyState from '../../../components/EmptyState'
 import { ALL_EVENTS } from './catalog'
@@ -94,12 +94,12 @@ export default function LogsTab({ api, mode }) {
           ) : events.length === 0 ? (
             <tr>
               <td colSpan={4} className="px-5 py-6">
-                <EmptyState icon="activity" title="No events in this window" description="Events appear here as soon as a payment, payout or top-up reaches a final state." />
+                <EmptyState icon="clock" title="No events in this window" description="Events appear here as soon as a payment, payout or top-up reaches a final state." />
               </td>
             </tr>
           ) : events.map((ev) => (
-            <>
-              <tr key={ev.id} onClick={() => openRow(ev)} className="border-t border-white/[0.05] hover:bg-white/[0.03] cursor-pointer">
+            <Fragment key={ev.id}>
+              <tr onClick={() => openRow(ev)} className="border-t border-white/[0.05] hover:bg-white/[0.03] cursor-pointer">
                 <td className="px-5 py-3.5">
                   <span className="text-[0.78rem] font-mono text-white/80">{String(ev.id).slice(0, 8)}…</span>
                 </td>
@@ -108,7 +108,7 @@ export default function LogsTab({ api, mode }) {
                 <td className="px-5 py-3.5 text-[0.8rem] text-white/55">{fmtWhen(ev.created_at)}</td>
               </tr>
               {expanded === ev.id && (
-                <tr key={`${ev.id}-x`} className="border-t border-white/[0.05] bg-black/20">
+                <tr className="border-t border-white/[0.05] bg-black/20">
                   <td colSpan={4} className="px-5 py-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       <div>
@@ -152,7 +152,7 @@ export default function LogsTab({ api, mode }) {
                   </td>
                 </tr>
               )}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
