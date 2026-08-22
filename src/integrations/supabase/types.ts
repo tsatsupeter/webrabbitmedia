@@ -2938,6 +2938,32 @@ export type Database = {
           },
         ]
       }
+      webhook_endpoint_secrets: {
+        Row: {
+          created_at: string
+          endpoint_id: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint_id: string
+          secret: string
+        }
+        Update: {
+          created_at?: string
+          endpoint_id?: string
+          secret?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoint_secrets_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: true
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_endpoints: {
         Row: {
           business_id: string
