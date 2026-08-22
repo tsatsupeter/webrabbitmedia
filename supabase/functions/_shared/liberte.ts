@@ -295,6 +295,22 @@ export async function resolveInstitutionCode(mode: Mode, network: Network): Prom
   return hit?.code ? String(hit.code) : INSTITUTION_CODES[network]
 }
 
+// The docs list only mtn / telecel-cash / at-money as payment slugs, but the
+// live institution list is the source of truth per environment. Returns the
+// networks 360Pay actually serves, falling back to the static table when the
+// institution list is unavailable so an outage can never empty the picker.
+export async function supportedNetworks(mode: Mode): Promise<Network[]> {
+  const list = await getInstitutions(mode, 'MNO')
+  if (!list?.length) return [...NETWORKS]
+  const norm = (v: unknown) => String(v || '').toLowerCase().replace(/[^a-z]/g, '')
+  const slugs = new Set(list.map((i) => norm(i.slug)))
+  const codes = new Set(list.map((i) => String(i.code)))
+  const hits = NETWORKS.filter((n) => slugs.has(norm(PAYMENT_SLUGS[n])) || codes.has(INSTITUTION_CODES[n]))
+  return hits.length ? hits : [...NETWORKS]
+}
+
+
+
 // ---- disbursement ----------------------------------------------------------------
 export async function disbursementBalance(mode: Mode) {
   const res = await liberteGet(mode, '/v1/payments/disbursement-balance')
