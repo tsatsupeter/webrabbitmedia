@@ -2859,6 +2859,217 @@ export type Database = {
           },
         ]
       }
+      webhook_deliveries: {
+        Row: {
+          attempt: number
+          business_id: string
+          claimed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          duration_ms: number | null
+          endpoint_id: string
+          error: string | null
+          event_id: string
+          id: string
+          max_attempts: number
+          next_attempt_at: string
+          response_body: string | null
+          response_code: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt?: number
+          business_id: string
+          claimed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          duration_ms?: number | null
+          endpoint_id: string
+          error?: string | null
+          event_id: string
+          id?: string
+          max_attempts?: number
+          next_attempt_at?: string
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt?: number
+          business_id?: string
+          claimed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          duration_ms?: number | null
+          endpoint_id?: string
+          error?: string | null
+          event_id?: string
+          id?: string
+          max_attempts?: number
+          next_attempt_at?: string
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_endpoint_secrets: {
+        Row: {
+          created_at: string
+          endpoint_id: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint_id: string
+          secret: string
+        }
+        Update: {
+          created_at?: string
+          endpoint_id?: string
+          secret?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoint_secrets_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: true
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_endpoints: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          disabled_reason: string | null
+          events: string[]
+          failure_streak: number
+          id: string
+          last_delivery_at: string | null
+          last_status_code: number | null
+          mode: string
+          secret_hash: string
+          secret_last4: string
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          disabled_reason?: string | null
+          events?: string[]
+          failure_streak?: number
+          id?: string
+          last_delivery_at?: string | null
+          last_status_code?: number | null
+          mode?: string
+          secret_hash: string
+          secret_last4: string
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          disabled_reason?: string | null
+          events?: string[]
+          failure_streak?: number
+          id?: string
+          last_delivery_at?: string | null
+          last_status_code?: number | null
+          mode?: string
+          secret_hash?: string
+          secret_last4?: string
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_events: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          mode: string
+          payload: Json
+          resource_id: string | null
+          resource_type: string | null
+          type: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          mode: string
+          payload?: Json
+          resource_id?: string | null
+          resource_type?: string | null
+          type: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          mode?: string
+          payload?: Json
+          resource_id?: string | null
+          resource_type?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_events_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_activity: {
         Row: {
           action: string

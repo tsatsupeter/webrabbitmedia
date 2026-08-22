@@ -5,6 +5,7 @@
 // once — `credited_at` is the idempotency guard shared by the status poller and
 // the two provider callbacks.
 import type { LedgerStatus } from './liberte.ts'
+import { emitTopupEvent } from './webhooks.ts'
 
 export type TopupRow = {
   id: string
@@ -100,6 +101,7 @@ export async function settleTopup(
       await db.from('sms_topups').update({ credited_at: null, status: 'pending' }).eq('id', row.id)
       return { changed: false, credited: false, status: 'pending', error: error.message }
     }
+    await emitTopupEvent(db, row.id)
   }
 
   return { changed: true, credited: approved, status: approved ? 'success' : 'failed' }
