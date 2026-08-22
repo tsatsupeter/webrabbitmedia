@@ -27,7 +27,7 @@ function score(item, q) {
   return sc
 }
 
-export default function SearchDialog({ open, onClose }) {
+export default function SearchDialog({ open, onClose, onAsk }) {
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
   const nav = useNavigate()
@@ -43,6 +43,13 @@ export default function SearchDialog({ open, onClose }) {
       .map((x) => x.it)
   }, [q])
 
+  const ask = () => {
+    const question = q.trim()
+    if (!question) return
+    onAsk?.(`Can you tell me about ${question}?`)
+    onClose()
+  }
+
   useEffect(() => { setI(0) }, [q])
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 10) }, [open])
 
@@ -53,13 +60,14 @@ export default function SearchDialog({ open, onClose }) {
       if (e.key === 'ArrowDown') { e.preventDefault(); setI((x) => Math.min(x + 1, results.length - 1)) }
       if (e.key === 'ArrowUp') { e.preventDefault(); setI((x) => Math.max(x - 1, 0)) }
       if (e.key === 'Enter') {
+        if (e.altKey) { e.preventDefault(); ask(); return }
         const r = results[i]
         if (r) { nav(`/docs/${r.slug}${r.hash ? '#' + r.hash : ''}`); onClose() }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, results, i, nav, onClose])
+  })
 
   if (!open) return null
   return (
