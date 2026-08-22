@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
       'sender_id_approved', 'sender_id_rejected',
       'wallet_topup', 'wallet_low_balance',
       'campaign_sent', 'campaign_failed',
+      'webhook_endpoint_disabled',
     ]
     if (!event || !validEvents.includes(event)) return json({ error: 'invalid_event' }, 400)
     if (!userId && !toEmailOverride) return json({ error: 'user_id_or_to_email_required' }, 400)

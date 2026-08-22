@@ -19,6 +19,7 @@ export type EmailEvent =
   | 'wallet_low_balance'
   | 'campaign_sent'
   | 'campaign_failed'
+  | 'webhook_endpoint_disabled'
 
 
 export type EmailData = Record<string, unknown>
@@ -404,6 +405,24 @@ function buildContent(event: EmailEvent, d: EmailData, businessName: string): Co
           { label: 'Date', value: fmtDate() },
         ],
         cta: { label: 'Review campaign', href: `${BRAND.site}/sms/campaigns` },
+      }
+    }
+    case 'webhook_endpoint_disabled': {
+      const url = String(d.url || 'your endpoint')
+      const reason = String(d.reason || 'Too many consecutive failed deliveries.')
+      return {
+        subject: 'Webhook endpoint disabled',
+        preheader: reason,
+        headline: 'Webhook endpoint disabled',
+        intro: `We stopped sending events to ${url} for ${businessName} because deliveries kept failing.`,
+        pill: { label: 'Disabled', tone: 'danger' },
+        quote: reason,
+        rows: [
+          { label: 'Endpoint', value: url },
+          { label: 'Mode', value: String(d.mode || 'live') },
+          { label: 'Date', value: fmtDate() },
+        ],
+        cta: { label: 'Review webhooks', href: `${BRAND.site}/merchant/developer/webhooks` },
       }
     }
   }
