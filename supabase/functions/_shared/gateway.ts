@@ -241,6 +241,10 @@ export type GwStatus = {
   code: string | null
   message: string | null
   providerTransactionId: string | null
+  /** True when the provider has clawed back an already-settled collection. */
+  reversed: boolean
+  /** The provider's own fee, when reported. */
+  fee: number | null
   data: any
 }
 
@@ -252,7 +256,7 @@ export async function statusCheck(gw: GatewayId, mode: Mode, params: {
 }): Promise<GwStatus> {
   if (gw === 'junipay') {
     if (!params.providerRef) {
-      return { status: 'pending', code: null, message: 'Awaiting JuniPay transaction id', providerTransactionId: null, data: null }
+      return { status: 'pending', code: null, message: 'Awaiting JuniPay transaction id', providerTransactionId: null, reversed: false, fee: null, data: null }
     }
     const res = await junipay.checkStatus(mode, params.providerRef)
     return {
@@ -260,6 +264,8 @@ export async function statusCheck(gw: GatewayId, mode: Mode, params: {
       code: res.code,
       message: res.message,
       providerTransactionId: params.providerRef,
+      reversed: false,
+      fee: null,
       data: res.data,
     }
   }
@@ -269,9 +275,12 @@ export async function statusCheck(gw: GatewayId, mode: Mode, params: {
     code: res.code,
     message: res.message,
     providerTransactionId: res.data?.data?.transaction_id ? String(res.data.data.transaction_id) : null,
+    reversed: res.reversed,
+    fee: res.fee,
     data: res.data,
   }
 }
+
 
 // ---- float ----------------------------------------------------------------------------
 export async function disbursementBalance(gw: GatewayId, mode: Mode) {
