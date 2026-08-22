@@ -290,7 +290,7 @@ export default function Webhooks() {
                       <div className="flex items-center justify-end gap-1">
                         <button type="button" title="Send test event" onClick={() => sendTest(ep)}
                           className="w-8 h-8 inline-flex items-center justify-center rounded-md text-white/45 hover:text-white hover:bg-white/[0.05]">
-                          <Icon name="send" size={15} />
+                          <Icon name="bolt" size={15} />
                         </button>
                         <button type="button" title="Edit" onClick={() => openEdit(ep)}
                           className="w-8 h-8 inline-flex items-center justify-center rounded-md text-white/45 hover:text-white hover:bg-white/[0.05]">
