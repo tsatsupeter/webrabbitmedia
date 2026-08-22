@@ -49,6 +49,7 @@ export const navGroups = [
           icon: 'code',
           children: [
             { key: 'dev-keys', label: 'API Keys', to: '/merchant/developer/api-keys' },
+            { key: 'dev-webhooks', label: 'Webhooks', to: '/merchant/developer/webhooks' },
           ],
         },
         {

@@ -22,6 +22,7 @@ import MerchantHome from './merchant/pages/MerchantHome'
 import Analytics from './merchant/pages/Analytics'
 import Docs from './pages/Docs'
 import ApiKeys from './merchant/pages/developer/ApiKeys'
+import MerchantWebhooks from './merchant/pages/developer/Webhooks'
 import Payments from './merchant/pages/transactions/Payments'
 import Payouts from './merchant/pages/payouts/Payouts'
 import Balances from './merchant/pages/payouts/Balances'
@@ -140,6 +141,7 @@ function App() {
           <Route path="analytics" element={<Analytics />} />
           
           <Route path="developer/api-keys" element={<ApiKeys />} />
+          <Route path="developer/webhooks" element={<MerchantWebhooks />} />
           <Route path="transactions/payments" element={<Payments />} />
           <Route path="sales/collect" element={<Collect />} />
           <Route path="payouts" element={<Payouts />} />
