@@ -143,3 +143,69 @@ export function transactionPayload(row: any) {
     created_at: row.created_at ?? null,
   }
 }
+
+/** Emits payout.completed / payout.failed for a payout row id. */
+// deno-lint-ignore no-explicit-any
+export async function emitPayoutEvent(db: any, payoutId: string, approved: boolean) {
+  try {
+    const { data: p } = await db.from('payouts')
+      .select('id, business_id, mode, name, payment_method, gross_amount, fees, net_amount, currency, status, provider_reference, notes, initiated_at, completed_at')
+      .eq('id', payoutId)
+      .maybeSingle()
+    if (!p) return
+    await emitEvent(db, {
+      business_id: p.business_id,
+      mode: p.mode,
+      type: approved ? 'payout.completed' : 'payout.failed',
+      resource_type: 'payout',
+      resource_id: p.id,
+      data: {
+        payout_id: p.id,
+        status: p.status,
+        destination: p.name,
+        payment_method: p.payment_method,
+        gross_amount: Number(p.gross_amount ?? 0),
+        fee_amount: Number(p.fees ?? 0),
+        net_amount: Number(p.net_amount ?? 0),
+        currency: p.currency ?? 'GHS',
+        provider_reference: p.provider_reference ?? null,
+        reason: p.notes ?? null,
+        initiated_at: p.initiated_at ?? null,
+        completed_at: p.completed_at ?? null,
+      },
+    })
+  } catch (e) {
+    console.log('emitPayoutEvent failed', String(e))
+  }
+}
+
+/** Emits sms_topup.approved once a messaging wallet top-up is credited. */
+// deno-lint-ignore no-explicit-any
+export async function emitTopupEvent(db: any, topupId: string) {
+  try {
+    const { data: t } = await db.from('sms_topups')
+      .select('id, business_id, mode, amount, currency, reference, provider_reference, msisdn, network, credited_at')
+      .eq('id', topupId)
+      .maybeSingle()
+    if (!t) return
+    await emitEvent(db, {
+      business_id: t.business_id,
+      mode: t.mode,
+      type: 'sms_topup.approved',
+      resource_type: 'sms_topup',
+      resource_id: t.reference ?? t.id,
+      data: {
+        topup_id: t.id,
+        reference: t.reference,
+        provider_reference: t.provider_reference ?? null,
+        amount: Number(t.amount ?? 0),
+        currency: t.currency ?? 'GHS',
+        msisdn: t.msisdn,
+        network: t.network,
+        credited_at: t.credited_at,
+      },
+    })
+  } catch (e) {
+    console.log('emitTopupEvent failed', String(e))
+  }
+}
