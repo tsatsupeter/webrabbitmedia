@@ -310,7 +310,15 @@ Deno.serve(async (req) => {
   }
 })
 
+function parseThrottle(v: unknown): number | null | 'invalid' {
+  if (v === null || v === undefined || v === '' || v === false) return null
+  const n = Number(v)
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1 || n > 600) return 'invalid'
+  return n
+}
+
 function validateUrl(url: string, mode: string): string | null {
+
   let u: URL
   try { u = new URL(url) } catch { return 'Enter a valid URL' }
   if (u.protocol !== 'https:') {
