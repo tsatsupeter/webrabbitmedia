@@ -680,6 +680,68 @@ export type Database = {
         }
         Relationships: []
       }
+      docs_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          sources: Json
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          role: string
+          sources?: Json
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          sources?: Json
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "docs_chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "docs_chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      docs_chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           api_key_id: string
