@@ -213,12 +213,13 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
         </button>
         <button
           type="button"
-          onClick={() => setWide((v) => !v)}
-          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-          aria-label={wide ? 'Collapse panel' : 'Expand panel'}
+          onClick={() => applyWidth(width >= 600 ? 420 : 700)}
+          className="hidden rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:block"
+          aria-label={width >= 600 ? 'Collapse panel' : 'Expand panel'}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 15 4 20m0 0h5m-5 0v-5M15 9l5-5m0 0h-5m5 0v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>
+
         <button
           type="button"
           onClick={onClose}
