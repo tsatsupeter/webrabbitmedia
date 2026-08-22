@@ -21,9 +21,10 @@ export async function settleCollection(
   row: { id: string; business_id: string; gross_amount: number | string; status: string },
   input: SettleInput,
 ): Promise<SettleOutcome> {
-  if (row.status === 'approved' || row.status === 'failed') {
-    return { changed: false, status: row.status as LedgerStatus }
+  if (row.status === 'approved' || row.status === 'failed' || row.status === 'reversed') {
+    return { changed: false, status: (row.status === 'reversed' ? 'failed' : row.status) as LedgerStatus }
   }
+
   if (input.status === 'pending') return { changed: false, status: 'pending' }
 
   const { data: settings } = await db.from('platform_settings')
