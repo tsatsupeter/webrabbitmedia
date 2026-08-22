@@ -25,9 +25,19 @@ export function secretKey(mode: Mode) {
   return key
 }
 
-export function callbackUrl() {
-  return `${Deno.env.get('SUPABASE_URL')}/functions/v1/liberte-callback`
+// 360Pay callbacks are unsigned, so the callback URL carries a shared secret in
+// its path as a first filter. The callback itself never trusts the posted body:
+// it re-reads the outcome from /v1/payments/status-check before settling.
+export function callbackToken() {
+  return Deno.env.get('LIBERTE_CALLBACK_TOKEN') || ''
 }
+
+export function callbackUrl() {
+  const token = callbackToken()
+  const base = `${Deno.env.get('SUPABASE_URL')}/functions/v1/liberte-callback`
+  return token ? `${base}/${token}` : base
+}
+
 
 // ---- networks / institutions ----------------------------------------------
 export const NETWORKS = ['MTN', 'AT', 'TELECEL', 'GMONEY'] as const
