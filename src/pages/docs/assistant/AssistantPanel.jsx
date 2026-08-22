@@ -169,11 +169,26 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
 
   return (
     <aside
-      className={`fixed right-0 top-14 z-40 flex h-[calc(100vh-3.5rem)] flex-col border-l border-slate-200 bg-white shadow-[-24px_0_48px_-40px_rgba(15,23,42,0.4)] transition-[width] ${
-        wide ? 'w-full max-w-[720px]' : 'w-full max-w-[420px]'
-      }`}
+      style={{ '--docs-assistant-w': `${width}px` }}
+      className={`fixed inset-x-0 bottom-0 top-14 z-40 flex flex-col border-l border-slate-200 bg-white shadow-[-24px_0_48px_-40px_rgba(15,23,42,0.4)]
+        lg:sticky lg:inset-auto lg:top-14 lg:z-10 lg:h-[calc(100vh-3.5rem)] lg:w-[var(--docs-assistant-w)] lg:shrink-0 lg:self-start
+        ${resizing ? '' : 'lg:transition-[width] lg:duration-300 lg:ease-out'}`}
       aria-label="Documentation assistant"
     >
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize assistant"
+        onMouseDown={(e) => {
+          e.preventDefault()
+          setResizing(true)
+        }}
+        onTouchStart={() => setResizing(true)}
+        className="absolute left-0 top-0 hidden h-full w-1.5 -translate-x-1/2 cursor-col-resize lg:block"
+      >
+        <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent hover:bg-emerald-400" />
+      </div>
+
       <header className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
         <Spark className="text-emerald-600" />
         <span className="text-[15px] font-semibold text-slate-900">Assistant</span>
