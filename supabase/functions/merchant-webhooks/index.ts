@@ -3,7 +3,8 @@
 // signing secret is returned exactly once, on create and on rotate.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { WEBHOOK_EVENT_TYPES, isEventType, newWebhookSecret, sha256Hex, signPayload } from '../_shared/webhooks.ts'
+import { WEBHOOK_EVENT_TYPES, isEventType, newWebhookSecret, sampleEventPayload, sha256Hex, signPayload } from '../_shared/webhooks.ts'
+import { headersToObject, parseCustomHeaders, runTransform, validateTransformCode } from '../_shared/webhook-transform.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
 
     if (action === 'list') {
       const { data: endpoints } = await db.from('webhook_endpoints')
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at')
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at,custom_headers,transformation_code,transformation_enabled')
         .eq('business_id', business_id).eq('mode', mode)
         .order('created_at', { ascending: false })
       const { data: deliveries } = await db.from('webhook_deliveries')
@@ -130,10 +131,20 @@ Deno.serve(async (req) => {
       const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
       const offset = Math.max(Number(body?.offset) || 0, 0)
       let aq = db.from('webhook_deliveries')
-        .select('id,event_id,status,attempt,max_attempts,response_code,response_body,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
+        .select('id,event_id,endpoint_id,status,attempt,max_attempts,response_code,response_body,error,transform_error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
         .eq('business_id', business_id)
       if (endpointId) aq = aq.eq('endpoint_id', endpointId)
       if (eventId) aq = aq.eq('event_id', eventId)
+      if (body?.status && ['pending', 'succeeded', 'failed', 'canceled'].includes(String(body.status))) {
+        aq = aq.eq('status', String(body.status))
+      }
+      if (body?.response_code) {
+        const rc = Number(body.response_code)
+        if (Number.isFinite(rc)) aq = aq.eq('response_code', rc)
+      }
+      if (body?.type && isEventType(body.type)) aq = aq.eq('webhook_events.type', String(body.type))
+      if (body?.since) aq = aq.gte('created_at', String(body.since))
+      if (body?.until) aq = aq.lte('created_at', String(body.until))
       const { data, count, error } = await aq
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -234,7 +245,7 @@ Deno.serve(async (req) => {
         if (body.status === 'enabled') patch.failure_streak = 0
       }
       const { data, error } = await db.from('webhook_endpoints').update(patch).eq('id', endpoint_id)
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at').single()
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at,custom_headers,transformation_code,transformation_enabled').single()
 
       if (error) return json({ error: error.message }, 500)
       return json({ endpoint: data }, 200)
@@ -259,47 +270,47 @@ Deno.serve(async (req) => {
         .select('secret').eq('endpoint_id', endpoint_id).maybeSingle()
       if (!secretRow?.secret) return json({ error: 'No signing secret on this endpoint' }, 400)
 
+      const eventType = isEventType(body?.event_type) ? String(body.event_type) : 'collection.approved'
+      const sample = sampleEventPayload(eventType)
       const payload = {
         id: crypto.randomUUID(),
-        type: 'collection.approved',
+        type: eventType,
         mode: ep.mode,
         created_at: new Date().toISOString(),
         livemode: ep.mode === 'live',
         test_event: true,
-        data: {
-          object: {
-            transaction_id: '521888807466',
-            provider_transaction_id: 'TEST-REF-001',
-            status: 'approved',
-            resolved_status: 'approved',
-            code: '000',
-            reason: 'Test event from Web Rabbit',
-            subscriber_number: '0248980332',
-            channel: 'momo',
-            gross_amount: 10,
-            fee_amount: 1.5,
-            net_amount: 8.5,
-            currency: 'GHS',
-            created_at: new Date().toISOString(),
-          },
-          resource_type: 'transaction',
-          resource_id: '521888807466',
-        },
+        data: sample,
       }
-      const raw = JSON.stringify(payload)
+      let raw = JSON.stringify(payload)
+      let targetUrl: string = ep.url
+      let method = 'POST'
+      let transformError: string | null = null
+      const extraHeaders = headersToObject(ep.custom_headers)
+      if (ep.transformation_enabled && ep.transformation_code) {
+        const out = runTransform(ep.transformation_code, { url: ep.url, method: 'POST', payload, headers: extraHeaders })
+        if (out.ok) {
+          raw = JSON.stringify(out.result.payload)
+          targetUrl = out.result.url ?? ep.url
+          method = out.result.method ?? 'POST'
+        } else {
+          transformError = out.error
+        }
+      }
       const t = Math.floor(Date.now() / 1000)
       const sig = await signPayload(secretRow.secret, t, raw)
       const started = Date.now()
       try {
         const ctrl = new AbortController()
         const timer = setTimeout(() => ctrl.abort(), 10_000)
-        const res = await fetch(ep.url, {
-          method: 'POST',
+        const res = await fetch(targetUrl, {
+          method,
           headers: {
+            ...extraHeaders,
             'Content-Type': 'application/json',
             'User-Agent': 'WebRabbit-Webhooks/1',
             'Webrabbit-Signature': `t=${t},v1=${sig}`,
-            'Webrabbit-Event-Type': 'collection.approved',
+            'Webrabbit-Event-Id': String(payload.id),
+            'Webrabbit-Event-Type': eventType,
             'Webrabbit-Test': 'true',
           },
           body: raw,
@@ -307,9 +318,9 @@ Deno.serve(async (req) => {
         })
         clearTimeout(timer)
         const text = (await res.text().catch(() => '')).slice(0, 1000)
-        return json({ ok: res.ok, response_code: res.status, response_body: text, duration_ms: Date.now() - started }, 200)
+        return json({ ok: res.ok, response_code: res.status, response_body: text, transform_error: transformError, event_type: eventType, duration_ms: Date.now() - started }, 200)
       } catch (e) {
-        return json({ ok: false, error: String((e as Error).message || e), duration_ms: Date.now() - started }, 200)
+        return json({ ok: false, error: String((e as Error).message || e), transform_error: transformError, event_type: eventType, duration_ms: Date.now() - started }, 200)
       }
     }
 
