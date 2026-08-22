@@ -27,7 +27,7 @@ function score(item, q) {
   return sc
 }
 
-export default function SearchDialog({ open, onClose }) {
+export default function SearchDialog({ open, onClose, onAsk }) {
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
   const nav = useNavigate()
@@ -43,6 +43,13 @@ export default function SearchDialog({ open, onClose }) {
       .map((x) => x.it)
   }, [q])
 
+  const ask = () => {
+    const question = q.trim()
+    if (!question) return
+    onAsk?.(`Can you tell me about ${question}?`)
+    onClose()
+  }
+
   useEffect(() => { setI(0) }, [q])
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 10) }, [open])
 
@@ -53,13 +60,14 @@ export default function SearchDialog({ open, onClose }) {
       if (e.key === 'ArrowDown') { e.preventDefault(); setI((x) => Math.min(x + 1, results.length - 1)) }
       if (e.key === 'ArrowUp') { e.preventDefault(); setI((x) => Math.max(x - 1, 0)) }
       if (e.key === 'Enter') {
+        if (e.altKey) { e.preventDefault(); ask(); return }
         const r = results[i]
         if (r) { nav(`/docs/${r.slug}${r.hash ? '#' + r.hash : ''}`); onClose() }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, results, i, nav, onClose])
+  })
 
   if (!open) return null
   return (
@@ -77,10 +85,40 @@ export default function SearchDialog({ open, onClose }) {
             placeholder="Search docs…"
             className="flex-1 py-3 text-[15px] outline-none placeholder:text-slate-400 bg-transparent"
           />
-          <kbd className="text-[10px] font-mono text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">ESC</kbd>
+          {q.trim() ? (
+            <button
+              type="button"
+              onClick={ask}
+              className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-[12.5px] font-medium text-slate-700 hover:bg-slate-200"
+            >
+              Ask Assistant
+              <kbd className="font-mono text-[10px] text-slate-500">⌥↵</kbd>
+            </button>
+          ) : (
+            <kbd className="text-[10px] font-mono text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">ESC</kbd>
+          )}
         </div>
         <ul className="max-h-[50vh] overflow-y-auto py-2">
-          {results.length === 0 && (
+          {q.trim() && (
+            <li>
+              <div className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                Ask Assistant
+              </div>
+              <button
+                type="button"
+                onClick={ask}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-emerald-50"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-emerald-600">
+                  <path d="M12 3l1.9 4.9L19 9.8l-5.1 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9L12 3Z" fill="currentColor" />
+                </svg>
+                <span className="text-[13.5px] text-slate-900">
+                  Can you tell me about <span className="text-emerald-700">{q.trim()}</span>?
+                </span>
+              </button>
+            </li>
+          )}
+          {results.length === 0 && !q.trim() && (
             <li className="px-4 py-6 text-center text-sm text-slate-500">No results for “{q}”</li>
           )}
           {results.map((r, idx) => (

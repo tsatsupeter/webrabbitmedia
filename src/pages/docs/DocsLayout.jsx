@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useParams, useLocation, useNavigate } from 'react-router-dom'
 import { groups, findBySlug, flat } from './registry'
 import SearchDialog from './ui/SearchDialog'
 import Pager from './ui/Pager'
+import AssistantPanel from './assistant/AssistantPanel'
+import { createThread } from './assistant/useDocsAssistant'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminRole } from '../../admin/useAdmin'
 import { supabase } from '../../integrations/supabase/client'
@@ -90,11 +92,12 @@ function AccountMenu({ user, isAdmin }) {
   )
 }
 
-function TopBar({ onSearch, onToggleNav }) {
+function TopBar({ onSearch, onToggleNav, onAskAI }) {
   const { user, loading: authLoading } = useAuth()
   const { isAdmin } = useAdminRole()
   const signedIn = !!user
   const dashboardTo = isAdmin ? '/admin' : '/merchant'
+
 
   return (
     <header className="sticky top-0 z-40 h-14 flex items-center border-b border-slate-200 bg-white/85 backdrop-blur">
@@ -120,6 +123,17 @@ function TopBar({ onSearch, onToggleNav }) {
           <span className="flex-1 text-left">Search docs…</span>
           <kbd className="text-[10px] font-mono border border-slate-200 bg-white rounded px-1.5 py-0.5">⌘K</kbd>
         </button>
+        <button
+          onClick={onAskAI}
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:border-emerald-300 hover:text-emerald-700 transition"
+          aria-label="Ask AI"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-emerald-600">
+            <path d="M12 3l1.9 4.9L19 9.8l-5.1 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9L12 3Z" fill="currentColor" />
+          </svg>
+          <span className="hidden sm:inline">Ask AI</span>
+        </button>
+
 
         {authLoading ? (
           <div className="h-9 w-[132px] rounded-lg bg-slate-100 animate-pulse" aria-hidden="true" />
@@ -227,7 +241,11 @@ function OnThisPage({ headings, activeId }) {
 }
 
 export default function DocsLayout() {
-  const { section } = useParams()
+  const { section, threadId } = useParams()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const assistantRoute = pathname.startsWith('/docs/assistant')
   const slug = section || 'introduction'
   const page = findBySlug(slug) || findBySlug('introduction')
   const Comp = page.Component
@@ -236,7 +254,29 @@ export default function DocsLayout() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
   const [activeId, setActiveId] = useState(page.headings[0]?.id || '')
+  const [pendingQuestion, setPendingQuestion] = useState('')
   const mainRef = useRef(null)
+  const creatingRef = useRef(false)
+
+  // A thread URL is the source of truth for the open conversation.
+  useEffect(() => {
+    if (!assistantRoute || threadId || !user || creatingRef.current) return
+    creatingRef.current = true
+    ;(async () => {
+      try {
+        const t = await createThread(user.id)
+        navigate(`/docs/assistant/${t.id}`, { replace: true })
+      } finally {
+        creatingRef.current = false
+      }
+    })()
+  }, [assistantRoute, threadId, user, navigate])
+
+  const openAssistant = (question) => {
+    if (question) setPendingQuestion(question)
+    if (!assistantRoute) navigate('/docs/assistant')
+  }
+
 
   // Cmd+K
   useEffect(() => {
@@ -284,8 +324,12 @@ export default function DocsLayout() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 docs-root">
-      <TopBar onSearch={() => setSearchOpen(true)} onToggleNav={() => setNavOpen((v) => !v)} />
-      <div className="mx-auto max-w-[1400px] flex">
+      <TopBar
+        onSearch={() => setSearchOpen(true)}
+        onToggleNav={() => setNavOpen((v) => !v)}
+        onAskAI={() => openAssistant()}
+      />
+      <div className={`mx-auto max-w-[1400px] flex ${assistantRoute ? 'lg:pr-[420px]' : ''}`}>
         <Sidebar activeSlug={slug} mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
         <main ref={mainRef} className="flex-1 min-w-0 px-6 lg:px-12 py-10 lg:py-14">
           <div className="max-w-2xl">
@@ -306,7 +350,15 @@ export default function DocsLayout() {
         </main>
         <OnThisPage headings={page.headings} activeId={activeId} />
       </div>
-      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onAsk={openAssistant} />
+      <AssistantPanel
+        open={assistantRoute}
+        threadId={threadId}
+        initialQuestion={pendingQuestion}
+        onConsumedQuestion={() => setPendingQuestion('')}
+        onClose={() => navigate(`/docs/${slug}`)}
+      />
+
     </div>
   )
 }

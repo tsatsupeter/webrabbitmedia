@@ -98,6 +98,8 @@ function App() {
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/docs" element={<Docs />} />
+        <Route path="/docs/assistant" element={<Docs />} />
+        <Route path="/docs/assistant/:threadId" element={<Docs />} />
         <Route path="/docs/:section" element={<Docs />} />
         <Route path="/team/accept" element={<AcceptInvite />} />
         <Route path="/transfer/:token" element={<AcceptTransfer />} />
