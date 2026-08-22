@@ -3,7 +3,8 @@
 // signing secret is returned exactly once, on create and on rotate.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { WEBHOOK_EVENT_TYPES, isEventType, newWebhookSecret, sha256Hex, signPayload } from '../_shared/webhooks.ts'
+import { WEBHOOK_EVENT_TYPES, isEventType, newWebhookSecret, sampleEventPayload, sha256Hex, signPayload } from '../_shared/webhooks.ts'
+import { headersToObject, parseCustomHeaders, runTransform, validateTransformCode } from '../_shared/webhook-transform.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
 
     if (action === 'list') {
       const { data: endpoints } = await db.from('webhook_endpoints')
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at')
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at,custom_headers,transformation_code,transformation_enabled')
         .eq('business_id', business_id).eq('mode', mode)
         .order('created_at', { ascending: false })
       const { data: deliveries } = await db.from('webhook_deliveries')
@@ -130,10 +131,20 @@ Deno.serve(async (req) => {
       const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
       const offset = Math.max(Number(body?.offset) || 0, 0)
       let aq = db.from('webhook_deliveries')
-        .select('id,event_id,status,attempt,max_attempts,response_code,response_body,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
+        .select('id,event_id,endpoint_id,status,attempt,max_attempts,response_code,response_body,error,transform_error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
         .eq('business_id', business_id)
       if (endpointId) aq = aq.eq('endpoint_id', endpointId)
       if (eventId) aq = aq.eq('event_id', eventId)
+      if (body?.status && ['pending', 'succeeded', 'failed', 'canceled'].includes(String(body.status))) {
+        aq = aq.eq('status', String(body.status))
+      }
+      if (body?.response_code) {
+        const rc = Number(body.response_code)
+        if (Number.isFinite(rc)) aq = aq.eq('response_code', rc)
+      }
+      if (body?.type && isEventType(body.type)) aq = aq.eq('webhook_events.type', String(body.type))
+      if (body?.since) aq = aq.gte('created_at', String(body.since))
+      if (body?.until) aq = aq.lte('created_at', String(body.until))
       const { data, count, error } = await aq
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -234,7 +245,7 @@ Deno.serve(async (req) => {
         if (body.status === 'enabled') patch.failure_streak = 0
       }
       const { data, error } = await db.from('webhook_endpoints').update(patch).eq('id', endpoint_id)
-        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at').single()
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at,custom_headers,transformation_code,transformation_enabled').single()
 
       if (error) return json({ error: error.message }, 500)
       return json({ endpoint: data }, 200)
@@ -259,47 +270,47 @@ Deno.serve(async (req) => {
         .select('secret').eq('endpoint_id', endpoint_id).maybeSingle()
       if (!secretRow?.secret) return json({ error: 'No signing secret on this endpoint' }, 400)
 
+      const eventType = isEventType(body?.event_type) ? String(body.event_type) : 'collection.approved'
+      const sample = sampleEventPayload(eventType)
       const payload = {
         id: crypto.randomUUID(),
-        type: 'collection.approved',
+        type: eventType,
         mode: ep.mode,
         created_at: new Date().toISOString(),
         livemode: ep.mode === 'live',
         test_event: true,
-        data: {
-          object: {
-            transaction_id: '521888807466',
-            provider_transaction_id: 'TEST-REF-001',
-            status: 'approved',
-            resolved_status: 'approved',
-            code: '000',
-            reason: 'Test event from Web Rabbit',
-            subscriber_number: '0248980332',
-            channel: 'momo',
-            gross_amount: 10,
-            fee_amount: 1.5,
-            net_amount: 8.5,
-            currency: 'GHS',
-            created_at: new Date().toISOString(),
-          },
-          resource_type: 'transaction',
-          resource_id: '521888807466',
-        },
+        data: sample,
       }
-      const raw = JSON.stringify(payload)
+      let raw = JSON.stringify(payload)
+      let targetUrl: string = ep.url
+      let method = 'POST'
+      let transformError: string | null = null
+      const extraHeaders = headersToObject(ep.custom_headers)
+      if (ep.transformation_enabled && ep.transformation_code) {
+        const out = runTransform(ep.transformation_code, { url: ep.url, method: 'POST', payload, headers: extraHeaders })
+        if (out.ok) {
+          raw = JSON.stringify(out.result.payload)
+          targetUrl = out.result.url ?? ep.url
+          method = out.result.method ?? 'POST'
+        } else {
+          transformError = out.error
+        }
+      }
       const t = Math.floor(Date.now() / 1000)
       const sig = await signPayload(secretRow.secret, t, raw)
       const started = Date.now()
       try {
         const ctrl = new AbortController()
         const timer = setTimeout(() => ctrl.abort(), 10_000)
-        const res = await fetch(ep.url, {
-          method: 'POST',
+        const res = await fetch(targetUrl, {
+          method,
           headers: {
+            ...extraHeaders,
             'Content-Type': 'application/json',
             'User-Agent': 'WebRabbit-Webhooks/1',
             'Webrabbit-Signature': `t=${t},v1=${sig}`,
-            'Webrabbit-Event-Type': 'collection.approved',
+            'Webrabbit-Event-Id': String(payload.id),
+            'Webrabbit-Event-Type': eventType,
             'Webrabbit-Test': 'true',
           },
           body: raw,
@@ -307,10 +318,134 @@ Deno.serve(async (req) => {
         })
         clearTimeout(timer)
         const text = (await res.text().catch(() => '')).slice(0, 1000)
-        return json({ ok: res.ok, response_code: res.status, response_body: text, duration_ms: Date.now() - started }, 200)
+        return json({ ok: res.ok, response_code: res.status, response_body: text, transform_error: transformError, event_type: eventType, duration_ms: Date.now() - started }, 200)
       } catch (e) {
-        return json({ ok: false, error: String((e as Error).message || e), duration_ms: Date.now() - started }, 200)
+        return json({ ok: false, error: String((e as Error).message || e), transform_error: transformError, event_type: eventType, duration_ms: Date.now() - started }, 200)
       }
+    }
+
+    // Advanced settings: custom headers, throttling and transformation.
+    if (action === 'advanced_save') {
+      const patch: Record<string, unknown> = {}
+      if (body?.custom_headers !== undefined) {
+        const parsed = parseCustomHeaders(body.custom_headers)
+        if ('error' in parsed) return json({ error: parsed.error }, 400)
+        patch.custom_headers = parsed.headers
+      }
+      if (body?.throttle_per_minute !== undefined) {
+        const throttle = parseThrottle(body.throttle_per_minute)
+        if (throttle === 'invalid') return json({ error: 'Throttle must be between 1 and 600 events per minute' }, 400)
+        patch.throttle_per_minute = throttle
+      }
+      if (body?.transformation_code !== undefined) {
+        const code = String(body.transformation_code || '')
+        if (code.trim()) {
+          const err = validateTransformCode(code)
+          if (err) return json({ error: err }, 400)
+          patch.transformation_code = code
+        } else {
+          patch.transformation_code = null
+          patch.transformation_enabled = false
+        }
+      }
+      if (body?.transformation_enabled !== undefined) {
+        const enabled = Boolean(body.transformation_enabled)
+        const code = String(patch.transformation_code ?? ep.transformation_code ?? '')
+        if (enabled && !code.trim()) return json({ error: 'Add transformation code before enabling it' }, 400)
+        patch.transformation_enabled = enabled
+      }
+      const { data, error } = await db.from('webhook_endpoints').update(patch).eq('id', endpoint_id)
+        .select('id,url,mode,events,description,secret_last4,status,disabled_reason,failure_streak,throttle_per_minute,last_delivery_at,last_status_code,created_at,updated_at,custom_headers,transformation_code,transformation_enabled').single()
+      if (error) return json({ error: error.message }, 500)
+      return json({ endpoint: data }, 200)
+    }
+
+    // Dry-run a transformation against a sample payload without saving it.
+    if (action === 'simulate') {
+      const code = String(body?.transformation_code ?? ep.transformation_code ?? '')
+      if (!code.trim()) return json({ error: 'No transformation code to simulate' }, 400)
+      let payload: unknown
+      if (body?.payload !== undefined) {
+        if (typeof body.payload === 'string') {
+          try { payload = JSON.parse(body.payload) } catch { return json({ error: 'Sample payload is not valid JSON' }, 400) }
+        } else payload = body.payload
+      } else {
+        const type = isEventType(body?.event_type) ? String(body.event_type) : (ep.events?.[0] ?? 'collection.approved')
+        payload = {
+          id: crypto.randomUUID(), type, mode: ep.mode,
+          created_at: new Date().toISOString(), data: sampleEventPayload(type),
+        }
+      }
+      const started = Date.now()
+      const out = runTransform(code, { url: ep.url, method: 'POST', payload, headers: headersToObject(ep.custom_headers) })
+      if (!out.ok) return json({ ok: false, error: out.error, duration_ms: Date.now() - started }, 200)
+      return json({
+        ok: true, duration_ms: Date.now() - started,
+        result: { payload: out.result.payload, url: out.result.url, method: out.result.method },
+      }, 200)
+    }
+
+    // Bulk replay: recover failed deliveries, backfill missing ones, or resend
+    // everything in a window. Always bounded so a click cannot storm an endpoint.
+    if (action === 'replay') {
+      const kind = ['failed', 'missing', 'all'].includes(String(body?.kind)) ? String(body.kind) : 'failed'
+      const hours = Math.min(Math.max(Number(body?.hours) || 24, 1), 24 * 30)
+      const since = new Date(Date.now() - hours * 3600_000).toISOString()
+      const CAP = 200
+      let queued = 0
+
+      if (kind === 'failed') {
+        const { data: rows } = await db.from('webhook_deliveries')
+          .select('id').eq('business_id', business_id).eq('endpoint_id', endpoint_id)
+          .eq('status', 'failed').gte('created_at', since)
+          .order('created_at', { ascending: false }).limit(CAP)
+        const ids = (rows ?? []).map((r: { id: string }) => r.id)
+        if (ids.length) {
+          await db.from('webhook_deliveries')
+            .update({ status: 'pending', attempt: 0, error: null, next_attempt_at: new Date().toISOString() })
+            .in('id', ids)
+          queued = ids.length
+        }
+      } else {
+        const { data: events } = await db.from('webhook_events')
+          .select('id,type').eq('business_id', business_id).eq('mode', ep.mode)
+          .in('type', ep.events ?? []).gte('created_at', since)
+          .order('created_at', { ascending: false }).limit(CAP)
+        const list = events ?? []
+        if (list.length) {
+          const { data: existing } = await db.from('webhook_deliveries')
+            .select('event_id,status').eq('endpoint_id', endpoint_id)
+            .in('event_id', list.map((e: { id: string }) => e.id))
+          const seen = new Map<string, string>()
+          for (const row of existing ?? []) seen.set(String(row.event_id), String(row.status))
+
+          const rows = list
+            .filter((e: { id: string }) => {
+              const status = seen.get(e.id)
+              if (kind === 'missing') return status === undefined
+              return status !== 'pending'
+            })
+            .map((e: { id: string }) => ({
+              business_id, endpoint_id, event_id: e.id,
+              status: 'pending', attempt: 0,
+              next_attempt_at: new Date().toISOString(),
+            }))
+          if (rows.length) {
+            const { error } = await db.from('webhook_deliveries').insert(rows)
+            if (error) return json({ error: error.message }, 500)
+            queued = rows.length
+          }
+        }
+      }
+
+      if (queued) {
+        fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-dispatch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+          body: '{}',
+        }).catch(() => {})
+      }
+      return json({ queued, kind, hours, capped: queued >= CAP }, 200)
     }
 
     if (action === 'retry' || action === 'resend') {

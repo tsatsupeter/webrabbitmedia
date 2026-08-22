@@ -210,3 +210,60 @@ export async function emitTopupEvent(db: any, topupId: string) {
     console.log('emitTopupEvent failed', String(e))
   }
 }
+
+/** Realistic sample resource for each event type — used by test sends and the
+ * transformation simulator so merchants see the real envelope shape. */
+export function sampleEventPayload(type: string) {
+  const now = new Date().toISOString()
+  if (type.startsWith('collection.')) {
+    const approved = type === 'collection.approved'
+    return {
+      resource_type: 'transaction',
+      resource_id: '521888807466',
+      object: {
+        transaction_id: '521888807466',
+        provider_transaction_id: 'TEST-REF-001',
+        status: approved ? 'approved' : type === 'collection.reversed' ? 'reversed' : 'failed',
+        resolved_status: approved ? 'approved' : type === 'collection.reversed' ? 'reversed' : 'failed',
+        code: approved ? '000' : '100',
+        reason: approved ? 'Test event from Web Rabbit' : 'Insufficient funds',
+        subscriber_number: '0248980332',
+        channel: 'momo',
+        gross_amount: 10,
+        fee_amount: 1.5,
+        net_amount: 8.5,
+        currency: 'GHS',
+        created_at: now,
+      },
+    }
+  }
+  if (type.startsWith('payout.')) {
+    return {
+      resource_type: 'payout',
+      resource_id: 'po_9f21c0a4',
+      object: {
+        payout_id: 'po_9f21c0a4',
+        status: type === 'payout.completed' ? 'success' : 'failed',
+        amount: 250,
+        net_amount: 250,
+        currency: 'GHS',
+        payment_method: 'momo',
+        destination: 'MTN ••0332',
+        reason: type === 'payout.completed' ? null : 'Beneficiary account invalid',
+        created_at: now,
+      },
+    }
+  }
+  return {
+    resource_type: 'sms_topup',
+    resource_id: 'tp_4a17bd90',
+    object: {
+      topup_id: 'tp_4a17bd90',
+      status: 'approved',
+      amount: 100,
+      currency: 'GHS',
+      balance_after: 214.5,
+      created_at: now,
+    },
+  }
+}

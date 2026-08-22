@@ -7,6 +7,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { MAX_ATTEMPTS, RETRY_BACKOFF_SECONDS, signPayload } from '../_shared/webhooks.ts'
+import { headersToObject, runTransform } from '../_shared/webhook-transform.ts'
 
 const BATCH = 25
 const TIMEOUT_MS = 10_000
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
     if (!claimed) continue
 
     const [{ data: endpoint }, { data: event }, { data: secretRow }] = await Promise.all([
-      db.from('webhook_endpoints').select('id, url, mode, status, failure_streak, throttle_per_minute, business_id').eq('id', d.endpoint_id).maybeSingle(),
+      db.from('webhook_endpoints').select('id, url, mode, status, failure_streak, throttle_per_minute, business_id, custom_headers, transformation_code, transformation_enabled').eq('id', d.endpoint_id).maybeSingle(),
       db.from('webhook_events').select('id, type, mode, created_at, payload, resource_id, resource_type').eq('id', d.event_id).maybeSingle(),
       db.from('webhook_endpoint_secrets').select('secret').eq('endpoint_id', d.endpoint_id).maybeSingle(),
     ])
@@ -81,13 +82,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    const body = JSON.stringify({
+    const envelope = {
       id: event.id,
       type: event.type,
       mode: event.mode,
       created_at: event.created_at,
       data: { object: event.payload, resource_type: event.resource_type, resource_id: event.resource_id },
-    })
+    }
+
+    let body = JSON.stringify(envelope)
+    let targetUrl: string = endpoint.url
+    let method = 'POST'
+    let transformError: string | null = null
+    const extraHeaders = headersToObject(endpoint.custom_headers)
+
+    // Merchant transformation: sandboxed, best-effort. On any failure we deliver
+    // the untransformed event and record why on the attempt.
+    if (endpoint.transformation_enabled && endpoint.transformation_code) {
+      const out = runTransform(endpoint.transformation_code, {
+        url: endpoint.url, method: 'POST', payload: envelope, headers: extraHeaders,
+      })
+      if (out.ok) {
+        body = JSON.stringify(out.result.payload)
+        targetUrl = out.result.url ?? endpoint.url
+        method = out.result.method ?? 'POST'
+      } else {
+        transformError = out.error
+      }
+    }
+
     const t = Math.floor(Date.now() / 1000)
     const sig = await signPayload(secretRow.secret, t, body)
 
@@ -99,9 +122,10 @@ Deno.serve(async (req) => {
     try {
       const ctrl = new AbortController()
       const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
-      const res = await fetch(endpoint.url, {
-        method: 'POST',
+      const res = await fetch(targetUrl, {
+        method,
         headers: {
+          ...extraHeaders,
           'Content-Type': 'application/json',
           'User-Agent': 'WebRabbit-Webhooks/1',
           'Webrabbit-Signature': `t=${t},v1=${sig}`,
@@ -120,6 +144,7 @@ Deno.serve(async (req) => {
       error = String((e as Error).message || e)
     }
 
+
     const duration = Date.now() - started
     const attempt = d.attempt + 1
     const ok = code !== null && code >= 200 && code < 300
@@ -127,7 +152,8 @@ Deno.serve(async (req) => {
     if (ok) {
       await db.from('webhook_deliveries').update({
         status: 'succeeded', attempt, response_code: code, response_body: text,
-        error: null, duration_ms: duration, delivered_at: new Date().toISOString(),
+        error: null, transform_error: transformError, duration_ms: duration,
+        delivered_at: new Date().toISOString(),
       }).eq('id', d.id)
       await db.from('webhook_endpoints').update({
         failure_streak: 0, last_delivery_at: new Date().toISOString(), last_status_code: code,
@@ -144,6 +170,7 @@ Deno.serve(async (req) => {
       response_code: code,
       response_body: text || null,
       error: error ?? (code ? `HTTP ${code}` : 'no response'),
+      transform_error: transformError,
       duration_ms: duration,
       next_attempt_at: new Date(Date.now() + backoff * 1000).toISOString(),
     }).eq('id', d.id)

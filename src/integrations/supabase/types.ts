@@ -2879,9 +2879,11 @@ export type Database = {
           id: string
           max_attempts: number
           next_attempt_at: string
+          replay_of: string | null
           response_body: string | null
           response_code: number | null
           status: string
+          transform_error: string | null
           updated_at: string
         }
         Insert: {
@@ -2897,9 +2899,11 @@ export type Database = {
           id?: string
           max_attempts?: number
           next_attempt_at?: string
+          replay_of?: string | null
           response_body?: string | null
           response_code?: number | null
           status?: string
+          transform_error?: string | null
           updated_at?: string
         }
         Update: {
@@ -2915,9 +2919,11 @@ export type Database = {
           id?: string
           max_attempts?: number
           next_attempt_at?: string
+          replay_of?: string | null
           response_body?: string | null
           response_code?: number | null
           status?: string
+          transform_error?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2975,6 +2981,7 @@ export type Database = {
           business_id: string
           created_at: string
           created_by: string | null
+          custom_headers: Json
           description: string | null
           disabled_reason: string | null
           events: string[]
@@ -2987,6 +2994,8 @@ export type Database = {
           secret_last4: string
           status: string
           throttle_per_minute: number | null
+          transformation_code: string | null
+          transformation_enabled: boolean
           updated_at: string
           url: string
         }
@@ -2994,6 +3003,7 @@ export type Database = {
           business_id: string
           created_at?: string
           created_by?: string | null
+          custom_headers?: Json
           description?: string | null
           disabled_reason?: string | null
           events?: string[]
@@ -3006,6 +3016,8 @@ export type Database = {
           secret_last4: string
           status?: string
           throttle_per_minute?: number | null
+          transformation_code?: string | null
+          transformation_enabled?: boolean
           updated_at?: string
           url: string
         }
@@ -3013,6 +3025,7 @@ export type Database = {
           business_id?: string
           created_at?: string
           created_by?: string | null
+          custom_headers?: Json
           description?: string | null
           disabled_reason?: string | null
           events?: string[]
@@ -3025,6 +3038,8 @@ export type Database = {
           secret_last4?: string
           status?: string
           throttle_per_minute?: number | null
+          transformation_code?: string | null
+          transformation_enabled?: boolean
           updated_at?: string
           url?: string
         }
