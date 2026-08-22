@@ -141,13 +141,8 @@ Deno.serve(async (req) => {
       text = (await res.text().catch(() => '')).slice(0, 2000)
     } catch (e) {
       error = String((e as Error).message || e)
-
-      clearTimeout(timer)
-      code = res.status
-      text = (await res.text().catch(() => '')).slice(0, 2000)
-    } catch (e) {
-      error = String((e as Error).message || e)
     }
+
 
     const duration = Date.now() - started
     const attempt = d.attempt + 1
