@@ -4,7 +4,7 @@
 // callback. Unknown ids MUST 404 rather than return a synthetic verdict.
 import { authenticateKey, admin, handleError, corsHeaders, jsonResponse, HttpError } from '../_shared/auth.ts'
 import { statusCheck } from '../_shared/gateway.ts'
-import { settleCollection } from '../_shared/settlement.ts'
+import { reverseCollection, settleCollection } from '../_shared/settlement.ts'
 
 
 Deno.serve(async (req) => {
