@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useAuth } from '../../../hooks/useAuth'
@@ -68,10 +68,19 @@ function Bubble({ message }) {
   )
 }
 
+const WIDTH_KEY = 'docsAssistantWidth'
+const MIN_W = 360
+const MAX_W = 720
+
 export default function AssistantPanel({ open, threadId, onClose, initialQuestion, onConsumedQuestion }) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [wide, setWide] = useState(false)
+  const [width, setWidth] = useState(() => {
+    if (typeof window === 'undefined') return 420
+    const v = Number(window.localStorage.getItem(WIDTH_KEY))
+    return Number.isFinite(v) && v >= MIN_W && v <= MAX_W ? v : 420
+  })
+  const [resizing, setResizing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [input, setInput] = useState('')
   const { threads, refresh } = useThreads(user?.id)
@@ -81,6 +90,41 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
   const sentRef = useRef('')
 
   const busy = status === 'loading' || status === 'streaming'
+
+  const applyWidth = useCallback((next) => {
+    const clamped = Math.min(MAX_W, Math.max(MIN_W, Math.round(next)))
+    setWidth(clamped)
+    try {
+      window.localStorage.setItem(WIDTH_KEY, String(clamped))
+    } catch {
+      /* storage unavailable */
+    }
+  }, [])
+
+  // Drag the left edge to resize the assistant column.
+  useEffect(() => {
+    if (!resizing) return
+    const move = (e) => {
+      const x = e.touches?.[0]?.clientX ?? e.clientX
+      if (typeof x === 'number') applyWidth(window.innerWidth - x)
+    }
+    const stop = () => setResizing(false)
+    window.addEventListener('mousemove', move)
+    window.addEventListener('touchmove', move, { passive: true })
+    window.addEventListener('mouseup', stop)
+    window.addEventListener('touchend', stop)
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('touchmove', move)
+      window.removeEventListener('mouseup', stop)
+      window.removeEventListener('touchend', stop)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [resizing, applyWidth])
+
 
   useEffect(() => {
     if (open && user) setTimeout(() => inputRef.current?.focus(), 60)
@@ -125,11 +169,26 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
 
   return (
     <aside
-      className={`fixed right-0 top-14 z-40 flex h-[calc(100vh-3.5rem)] flex-col border-l border-slate-200 bg-white shadow-[-24px_0_48px_-40px_rgba(15,23,42,0.4)] transition-[width] ${
-        wide ? 'w-full max-w-[720px]' : 'w-full max-w-[420px]'
-      }`}
+      style={{ '--docs-assistant-w': `${width}px` }}
+      className={`fixed inset-x-0 bottom-0 top-14 z-40 flex flex-col border-l border-slate-200 bg-white shadow-[-24px_0_48px_-40px_rgba(15,23,42,0.4)]
+        lg:sticky lg:inset-auto lg:top-14 lg:z-10 lg:h-[calc(100vh-3.5rem)] lg:w-[var(--docs-assistant-w)] lg:shrink-0 lg:self-start
+        ${resizing ? '' : 'lg:transition-[width] lg:duration-300 lg:ease-out'}`}
       aria-label="Documentation assistant"
     >
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize assistant"
+        onMouseDown={(e) => {
+          e.preventDefault()
+          setResizing(true)
+        }}
+        onTouchStart={() => setResizing(true)}
+        className="absolute left-0 top-0 hidden h-full w-1.5 -translate-x-1/2 cursor-col-resize lg:block"
+      >
+        <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent hover:bg-emerald-400" />
+      </div>
+
       <header className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
         <Spark className="text-emerald-600" />
         <span className="text-[15px] font-semibold text-slate-900">Assistant</span>
@@ -154,12 +213,13 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
         </button>
         <button
           type="button"
-          onClick={() => setWide((v) => !v)}
-          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-          aria-label={wide ? 'Collapse panel' : 'Expand panel'}
+          onClick={() => applyWidth(width >= 600 ? 420 : 700)}
+          className="hidden rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:block"
+          aria-label={width >= 600 ? 'Collapse panel' : 'Expand panel'}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 15 4 20m0 0h5m-5 0v-5M15 9l5-5m0 0h-5m5 0v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>
+
         <button
           type="button"
           onClick={onClose}

@@ -212,10 +212,11 @@ function Sidebar({ activeSlug, mobileOpen, onClose }) {
   )
 }
 
-function OnThisPage({ headings, activeId }) {
+function OnThisPage({ headings, activeId, assistantOpen }) {
   if (!headings?.length) return null
   return (
-    <aside className="hidden xl:block w-56 shrink-0 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto pt-10 pl-6">
+    <aside className={`${assistantOpen ? 'hidden 2xl:block' : 'hidden xl:block'} w-56 shrink-0 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto pt-10 pl-6`}>
+
       <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">
         On this page
       </div>
@@ -329,10 +330,10 @@ export default function DocsLayout() {
         onToggleNav={() => setNavOpen((v) => !v)}
         onAskAI={() => openAssistant()}
       />
-      <div className={`mx-auto max-w-[1400px] flex ${assistantRoute ? 'lg:pr-[420px]' : ''}`}>
+      <div className="flex w-full items-start">
         <Sidebar activeSlug={slug} mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
         <main ref={mainRef} className="flex-1 min-w-0 px-6 lg:px-12 py-10 lg:py-14">
-          <div className="max-w-2xl">
+          <div className="mx-auto max-w-2xl">
             <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 mb-3">
               {groupLabel}
             </div>
@@ -348,16 +349,17 @@ export default function DocsLayout() {
             <Pager slug={slug} />
           </div>
         </main>
-        <OnThisPage headings={page.headings} activeId={activeId} />
+        <OnThisPage headings={page.headings} activeId={activeId} assistantOpen={assistantRoute} />
+        <AssistantPanel
+          open={assistantRoute}
+          threadId={threadId}
+          initialQuestion={pendingQuestion}
+          onConsumedQuestion={() => setPendingQuestion('')}
+          onClose={() => navigate(`/docs/${slug}`)}
+        />
       </div>
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onAsk={openAssistant} />
-      <AssistantPanel
-        open={assistantRoute}
-        threadId={threadId}
-        initialQuestion={pendingQuestion}
-        onConsumedQuestion={() => setPendingQuestion('')}
-        onClose={() => navigate(`/docs/${slug}`)}
-      />
+
 
     </div>
   )
