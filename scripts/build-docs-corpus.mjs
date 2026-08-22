@@ -32,6 +32,8 @@ function toText(jsx) {
   s = s.replace(/\{\s*'([^']*)'\s*\}/g, ' $1 ')
   s = s.replace(/\{[^{}]*\}/g, ' ') // remaining JSX expressions
   s = s.replace(/<[^>]+>/g, ' ') // tags
+  s = s.replace(/export default function \w+\s*\([^)]*\)\s*\{/g, ' ')
+  s = s.replace(/^\s*(return \(|\)\s*\}?|\}|\(|\))\s*$/gm, '')
   s = s.replace(/&rsquo;|&#39;/g, "'").replace(/&amp;/g, '&').replace(/&mdash;/g, '—')
   s = s.replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n')
   return s.trim()
