@@ -29,18 +29,23 @@ Deno.serve(async (req) => {
     }
 
     let row = existing
-    if (row.status === 'pending') {
+    if (row.status === 'pending' || row.status === 'approved') {
       try {
         const check = await statusCheck(auth.gateway, auth.key.mode, {
           reference: id,
           providerRef: row.provider_reference,
         })
-        if (check.status !== 'pending') {
+        if (check.reversed) {
+          await reverseCollection(db, row, { code: check.code, reason: check.message, raw: check.data })
+          const { data: fresh } = await db.from('transactions').select(cols).eq('id', row.id).maybeSingle()
+          if (fresh) row = fresh
+        } else if (row.status === 'pending' && check.status !== 'pending') {
           await settleCollection(db, row, {
             status: check.status,
             code: check.code,
             reason: check.message,
             providerTransactionId: check.providerTransactionId,
+            providerFee: check.fee,
             raw: check.data,
           })
 
@@ -51,6 +56,7 @@ Deno.serve(async (req) => {
         console.log('transaction-status: status-check failed', String(err))
       }
     }
+
 
     return jsonResponse({
       transaction_id: id,
