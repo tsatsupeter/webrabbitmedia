@@ -11,6 +11,7 @@
 export const WEBHOOK_EVENT_TYPES = [
   'collection.approved',
   'collection.failed',
+  'collection.reversed',
   'payout.completed',
   'payout.failed',
   'sms_topup.approved',
