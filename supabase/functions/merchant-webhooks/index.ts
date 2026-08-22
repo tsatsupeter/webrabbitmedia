@@ -71,7 +71,9 @@ Deno.serve(async (req) => {
 
     // Delivery counters + time buckets for the Activity tab.
     if (action === 'activity') {
-      const days = Math.min(Math.max(Number(body?.days) || 7, 1), 30)
+      const days = body?.since
+        ? Math.min(Math.max(Math.ceil((Date.now() - new Date(String(body.since)).getTime()) / 86400000), 1), 30)
+        : Math.min(Math.max(Number(body?.days) || 7, 1), 30)
       const since = new Date(Date.now() - days * 86400000).toISOString()
       const { data } = await db.from('webhook_deliveries')
         .select('status,created_at,webhook_events!inner(mode)')
@@ -91,24 +93,48 @@ Deno.serve(async (req) => {
         else if (r.status === 'canceled') counts.canceled++
         else counts.pending++
       }
-      const series: { date: string; succeeded: number; failed: number }[] = []
+      const series: { date: string; bucket: string; succeeded: number; failed: number }[] = []
       for (let i = days - 1; i >= 0; i--) {
         const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
-        series.push({ date: d, ...(buckets[d] ?? { succeeded: 0, failed: 0 }) })
+        series.push({ date: d, bucket: d, ...(buckets[d] ?? { succeeded: 0, failed: 0 }) })
       }
-      return json({ counts, series, days }, 200)
+
+      const { count: eventCount } = await db.from('webhook_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', business_id).eq('mode', mode).gte('created_at', since)
+
+      const { data: failures } = await db.from('webhook_deliveries')
+        .select('id,attempt,max_attempts,response_code,error,created_at,webhook_events!inner(type,mode)')
+        .eq('business_id', business_id)
+        .eq('webhook_events.mode', mode)
+        .eq('status', 'failed')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      const recent_failures = (failures ?? []).map((f: Record<string, unknown>) => ({
+        id: f.id, attempt: f.attempt, max_attempts: f.max_attempts,
+        response_code: f.response_code, error: f.error, created_at: f.created_at,
+        type: (f.webhook_events as { type?: string } | null)?.type ?? null,
+      }))
+
+      const totals = { ...counts, events: eventCount ?? 0 }
+      return json({ counts, totals, series, days, recent_failures }, 200)
     }
 
-    // Message attempts for a single endpoint.
+    // Message attempts for a single endpoint or a single event.
     if (action === 'attempts') {
       const endpointId = String(body?.endpoint_id || '')
-      if (!endpointId) return json({ error: 'endpoint_id required' }, 400)
+      const eventId = String(body?.event_id || '')
+      if (!endpointId && !eventId) return json({ error: 'endpoint_id or event_id required' }, 400)
       const limit = Math.min(Math.max(Number(body?.limit) || 25, 1), 100)
       const offset = Math.max(Number(body?.offset) || 0, 0)
-      const { data, count, error } = await db.from('webhook_deliveries')
+      let aq = db.from('webhook_deliveries')
         .select('id,event_id,status,attempt,max_attempts,response_code,response_body,error,duration_ms,delivered_at,created_at,next_attempt_at,webhook_events!inner(type,mode,resource_id,payload,created_at)', { count: 'exact' })
         .eq('business_id', business_id)
-        .eq('endpoint_id', endpointId)
+      if (endpointId) aq = aq.eq('endpoint_id', endpointId)
+      if (eventId) aq = aq.eq('event_id', eventId)
+      const { data, count, error } = await aq
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
       if (error) return json({ error: error.message }, 500)
