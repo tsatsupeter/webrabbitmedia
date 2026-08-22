@@ -65,11 +65,12 @@ Deno.serve(async (req) => {
   }
   if (!row && providerIds.length) {
     const { data } = await db.from('transactions')
-      .select('id, business_id, gross_amount, status')
+      .select(TX_COLUMNS)
       .in('provider_reference', providerIds)
       .maybeSingle()
     row = data ?? null
   }
+
 
   // Payout (disbursement) callbacks carry our payout reference instead.
   if (!row && providerIds.length) {
