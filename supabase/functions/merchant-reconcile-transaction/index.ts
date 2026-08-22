@@ -5,7 +5,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { admin, corsHeaders, jsonResponse, handleError, HttpError } from '../_shared/auth.ts'
 import { gatewayFor, gatewayLabel, statusCheck } from '../_shared/gateway.ts'
-import { settleCollection } from '../_shared/settlement.ts'
+import { reverseCollection, settleCollection } from '../_shared/settlement.ts'
 
 
 Deno.serve(async (req) => {
