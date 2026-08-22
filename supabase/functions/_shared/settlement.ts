@@ -47,6 +47,27 @@ export async function settleCollection(
 
 
   await db.from('transactions').update(patch).eq('id', row.id)
+
+  // Merchant webhook — only on a real state change to a terminal status.
+  try {
+    const { data: fresh } = await db.from('transactions')
+      .select('provider_transaction_id, provider_reference, status, provider_code, provider_reason, subscriber_number, channel, gross_amount, fee_amount, net_amount, created_at, mode, business_id')
+      .eq('id', row.id)
+      .maybeSingle()
+    if (fresh) {
+      await emitEvent(db, {
+        business_id: fresh.business_id,
+        mode: fresh.mode,
+        type: input.status === 'approved' ? 'collection.approved' : 'collection.failed',
+        resource_type: 'transaction',
+        resource_id: fresh.provider_transaction_id ?? row.id,
+        data: transactionPayload(fresh),
+      })
+    }
+  } catch (e) {
+    console.log('settleCollection: webhook emit failed', String(e))
+  }
+
   return { changed: true, status: input.status }
 }
 
