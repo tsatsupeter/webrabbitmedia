@@ -121,6 +121,17 @@ function TopBar({ onSearch, onToggleNav, onAskAI }) {
           <span className="flex-1 text-left">Search docs…</span>
           <kbd className="text-[10px] font-mono border border-slate-200 bg-white rounded px-1.5 py-0.5">⌘K</kbd>
         </button>
+        <button
+          onClick={onAskAI}
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:border-emerald-300 hover:text-emerald-700 transition"
+          aria-label="Ask AI"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-emerald-600">
+            <path d="M12 3l1.9 4.9L19 9.8l-5.1 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9L12 3Z" fill="currentColor" />
+          </svg>
+          <span className="hidden sm:inline">Ask AI</span>
+        </button>
+
 
         {authLoading ? (
           <div className="h-9 w-[132px] rounded-lg bg-slate-100 animate-pulse" aria-hidden="true" />
