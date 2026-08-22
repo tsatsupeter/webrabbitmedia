@@ -5,6 +5,7 @@
 // once — `credited_at` is the idempotency guard shared by the status poller and
 // the two provider callbacks.
 import type { LedgerStatus } from './liberte.ts'
+import { emitTopupEvent } from './webhooks.ts'
 
 export type TopupRow = {
   id: string
