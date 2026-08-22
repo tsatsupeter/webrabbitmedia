@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     if (!claimed) continue
 
     const [{ data: endpoint }, { data: event }, { data: secretRow }] = await Promise.all([
-      db.from('webhook_endpoints').select('id, url, status, failure_streak').eq('id', d.endpoint_id).maybeSingle(),
+      db.from('webhook_endpoints').select('id, url, mode, status, failure_streak, throttle_per_minute, business_id').eq('id', d.endpoint_id).maybeSingle(),
       db.from('webhook_events').select('id, type, mode, created_at, payload, resource_id, resource_type').eq('id', d.event_id).maybeSingle(),
       db.from('webhook_endpoint_secrets').select('secret').eq('endpoint_id', d.endpoint_id).maybeSingle(),
     ])
@@ -62,6 +62,23 @@ Deno.serve(async (req) => {
       }).eq('id', d.id)
       failed++
       continue
+    }
+
+    // Endpoint throttling: hold the delivery when the merchant's per-minute cap
+    // has already been reached in the trailing 60 seconds.
+    if (endpoint.throttle_per_minute) {
+      const windowStart = new Date(Date.now() - 60_000).toISOString()
+      const { count } = await db
+        .from('webhook_deliveries')
+        .select('id', { count: 'exact', head: true })
+        .eq('endpoint_id', endpoint.id)
+        .gte('delivered_at', windowStart)
+      if ((count ?? 0) >= endpoint.throttle_per_minute) {
+        await db.from('webhook_deliveries')
+          .update({ status: 'pending', next_attempt_at: new Date(Date.now() + 60_000).toISOString() })
+          .eq('id', d.id)
+        continue
+      }
     }
 
     const body = JSON.stringify({
@@ -143,6 +160,9 @@ Deno.serve(async (req) => {
       patch.disabled_reason = 'Disabled automatically after 10 consecutive failed events'
     }
     await db.from('webhook_endpoints').update(patch).eq('id', endpoint.id)
+    if (patch.status === 'disabled') {
+      await alertEndpointDisabled(db, endpoint)
+    }
     failed++
   }
 
@@ -154,4 +174,34 @@ function json(data: unknown, status = 200) {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status,
   })
+}
+
+// Emails the addresses the merchant configured under Webhooks > Settings when
+// we auto-disable one of their endpoints. Never throws.
+// deno-lint-ignore no-explicit-any
+async function alertEndpointDisabled(db: any, endpoint: any) {
+  try {
+    const { data: settings } = await db.from('webhook_settings')
+      .select('alert_emails').eq('business_id', endpoint.business_id).eq('mode', endpoint.mode).maybeSingle()
+    const emails: string[] = settings?.alert_emails ?? []
+    if (!emails.length) return
+    const { data: secret } = await db.rpc('get_email_hook_secret')
+    if (!secret) return
+    await Promise.all(emails.map((to) =>
+      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-webrabbit-email-secret': String(secret) },
+        body: JSON.stringify({
+          event: 'webhook_endpoint_disabled',
+          business_id: endpoint.business_id,
+          to_email: to,
+          data: {
+            url: endpoint.url,
+            mode: endpoint.mode,
+            reason: 'Disabled automatically after 10 consecutive failed events.',
+          },
+        }),
+      }).catch(() => {})
+    ))
+  } catch (_e) { /* alerting must never break dispatch */ }
 }
