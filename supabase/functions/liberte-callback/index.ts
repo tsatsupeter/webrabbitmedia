@@ -117,15 +117,45 @@ Deno.serve(async (req) => {
     return jsonResponse({ received: true, matched: false }, 200)
   }
 
-  // 00 SUCCESS · 01 FAILED · 02 PENDING · 03 PROCESSING (03 stays pending).
-  const status = mapStatusCode(payload?.status_code, payload?.status)
+  // Never settle from the posted body: re-read the outcome from 360Pay with
+  // our own credentials. 00 SUCCESS · 01 FAILED · 02 PENDING · 03 PROCESSING.
+  const mode = (row.mode === 'live' ? 'live' : 'test') as Mode
+  const reference = String(row.provider_transaction_id ?? ours[0] ?? '')
+  let verified: Awaited<ReturnType<typeof statusCheck>> | null = null
+  if (reference) {
+    try {
+      verified = await statusCheck(mode, reference)
+    } catch (e) {
+      console.log('liberte-callback: status-check failed', String(e))
+    }
+  }
+
+  if (!verified || verified.notFound) {
+    // Cannot confirm with the provider — do not touch the ledger. 360Pay
+    // retries, and the merchant reconcile path polls status-check too.
+    console.log('liberte-callback: unverified callback ignored', { reference, posted: payload?.status_code })
+    return jsonResponse({ received: true, matched: true, verified: false, changed: false }, 200)
+  }
+
+  if (verified.reversed) {
+    const out = await reverseCollection(db, row, {
+      code: verified.code,
+      reason: verified.message ?? 'Reversed by provider',
+      raw: { callback: payload, status_check: verified.data },
+    })
+    return jsonResponse({ received: true, matched: true, verified: true, kind: 'reversal', ...out }, 200)
+  }
+
   const result = await settleCollection(db, row, {
-    status,
-    code: payload?.status_code != null ? String(payload.status_code) : null,
-    reason: payload?.transaction_message ?? payload?.status ?? null,
+    status: verified.status,
+    code: verified.code,
+    reason: verified.message,
     providerTransactionId: payload?.transaction_id ? String(payload.transaction_id) : null,
-    raw: payload,
+    providerFee: verified.fee ?? parseAmount(payload?.fee),
+    accountName: verified.accountName,
+    raw: { callback: payload, status_check: verified.data },
   })
 
-  return jsonResponse({ received: true, matched: true, ...result }, 200)
+  return jsonResponse({ received: true, matched: true, verified: true, ...result }, 200)
+
 })
