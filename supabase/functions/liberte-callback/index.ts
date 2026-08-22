@@ -7,15 +7,30 @@
 // external_transaction_id, account_name, account_number, transaction_reference,
 // transaction_currency, amount, fee, institution_code, transaction_message,
 // date_created.
+//
+// 360Pay does not sign callbacks, so this endpoint NEVER settles from the
+// posted body. The body is only used to find the row; the outcome is re-read
+// from POST /v1/payments/status-check with our own credentials. The callback
+// URL also carries LIBERTE_CALLBACK_TOKEN as a path segment as a first filter.
 import { admin, corsHeaders, jsonResponse } from '../_shared/auth.ts'
-import { mapStatusCode } from '../_shared/liberte.ts'
-import { settleCollection } from '../_shared/settlement.ts'
+import { callbackToken, mapStatusCode, parseAmount, statusCheck, type Mode } from '../_shared/liberte.ts'
+import { reverseCollection, settleCollection } from '../_shared/settlement.ts'
 import { findTopup, settleTopup } from '../_shared/topup.ts'
 import { emitPayoutEvent } from '../_shared/webhooks.ts'
+
+const TX_COLUMNS = 'id, business_id, gross_amount, status, mode, provider_transaction_id'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
+
+  // /functions/v1/liberte-callback[/<token>] — when a token is configured and
+  // the caller supplies one, it has to match.
+  const token = callbackToken()
+  const supplied = new URL(req.url).pathname.split('/').filter(Boolean).pop()
+  if (token && supplied && supplied !== 'liberte-callback' && supplied !== token) {
+    return jsonResponse({ received: true, matched: false, reason: 'invalid callback token' }, 404)
+  }
 
   let payload: any = {}
   try { payload = await req.json() } catch { payload = {} }
@@ -42,7 +57,8 @@ Deno.serve(async (req) => {
 
   if (ours.length) {
     const { data } = await db.from('transactions')
-      .select('id, business_id, gross_amount, status')
+      .select(TX_COLUMNS)
+
       .in('provider_transaction_id', ours)
       .maybeSingle()
     row = data ?? null
