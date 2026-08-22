@@ -69,17 +69,20 @@ function Bubble({ message }) {
 }
 
 const WIDTH_KEY = 'docsAssistantWidth'
-const MIN_W = 360
+const MIN_W = 288
 const MAX_W = 720
+const DEFAULT_W = 288
 
 export default function AssistantPanel({ open, threadId, onClose, initialQuestion, onConsumedQuestion }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [width, setWidth] = useState(() => {
-    if (typeof window === 'undefined') return 420
+    if (typeof window === 'undefined') return DEFAULT_W
     const v = Number(window.localStorage.getItem(WIDTH_KEY))
-    return Number.isFinite(v) && v >= MIN_W && v <= MAX_W ? v : 420
+    if (!Number.isFinite(v) || !v) return DEFAULT_W
+    return Math.min(MAX_W, Math.max(MIN_W, v))
   })
+
   const [resizing, setResizing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [input, setInput] = useState('')
@@ -170,8 +173,8 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
   return (
     <aside
       style={{ '--docs-assistant-w': `${width}px` }}
-      className={`fixed inset-x-0 bottom-0 top-14 z-40 flex flex-col border-l border-slate-200 bg-white shadow-[-24px_0_48px_-40px_rgba(15,23,42,0.4)]
-        lg:sticky lg:inset-auto lg:top-14 lg:z-10 lg:h-[calc(100vh-3.5rem)] lg:w-[var(--docs-assistant-w)] lg:shrink-0 lg:self-start
+      className={`fixed inset-x-0 bottom-0 top-14 z-40 flex flex-col border-l border-slate-200 bg-white
+        lg:sticky lg:inset-auto lg:top-0 lg:z-30 lg:h-screen lg:w-[var(--docs-assistant-w)] lg:shrink-0 lg:self-start
         ${resizing ? '' : 'lg:transition-[width] lg:duration-300 lg:ease-out'}`}
       aria-label="Documentation assistant"
     >
@@ -189,10 +192,11 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
         <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent hover:bg-emerald-400" />
       </div>
 
-      <header className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+      <header className="flex h-14 shrink-0 items-center gap-1 border-b border-slate-200 px-4">
         <Spark className="text-emerald-600" />
-        <span className="text-[15px] font-semibold text-slate-900">Assistant</span>
+        <span className="ml-1.5 text-[15px] font-semibold tracking-tight text-slate-900">Assistant</span>
         <div className="flex-1" />
+
         <button
           type="button"
           onClick={newChat}
@@ -213,7 +217,7 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
         </button>
         <button
           type="button"
-          onClick={() => applyWidth(width >= 600 ? 420 : 700)}
+          onClick={() => applyWidth(width >= 600 ? DEFAULT_W : 700)}
           className="hidden rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:block"
           aria-label={width >= 600 ? 'Collapse panel' : 'Expand panel'}
         >
@@ -297,7 +301,7 @@ export default function AssistantPanel({ open, threadId, onClose, initialQuestio
 
       {user && messages.length === 0 && (
         <div className="px-4 pb-2">
-          <div className="mb-2 text-[13px] font-medium text-slate-700">Suggestions</div>
+          <div className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Suggestions</div>
           <div className="space-y-1.5">
             {SUGGESTIONS.map((s) => (
               <button

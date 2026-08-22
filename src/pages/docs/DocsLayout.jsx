@@ -325,31 +325,35 @@ export default function DocsLayout() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 docs-root">
-      <TopBar
-        onSearch={() => setSearchOpen(true)}
-        onToggleNav={() => setNavOpen((v) => !v)}
-        onAskAI={() => openAssistant()}
-      />
       <div className="flex w-full items-start">
-        <Sidebar activeSlug={slug} mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
-        <main ref={mainRef} className="flex-1 min-w-0 px-6 lg:px-12 py-10 lg:py-14">
-          <div className="mx-auto max-w-2xl">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 mb-3">
-              {groupLabel}
-            </div>
-            <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight text-slate-900 mb-3">
-              {page.title}
-            </h1>
-            <p className="text-[17px] text-slate-600 leading-relaxed mb-10">{page.summary}</p>
+        <div className="flex-1 min-w-0">
+          <TopBar
+            onSearch={() => setSearchOpen(true)}
+            onToggleNav={() => setNavOpen((v) => !v)}
+            onAskAI={() => openAssistant()}
+          />
+          <div className="flex w-full items-start">
+            <Sidebar activeSlug={slug} mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
+            <main ref={mainRef} className="flex-1 min-w-0 px-6 lg:px-12 py-10 lg:py-14">
+              <div className="mx-auto max-w-2xl">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 mb-3">
+                  {groupLabel}
+                </div>
+                <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight text-slate-900 mb-3">
+                  {page.title}
+                </h1>
+                <p className="text-[17px] text-slate-600 leading-relaxed mb-10">{page.summary}</p>
 
-            <article className="docs-prose">
-              <Comp />
-            </article>
+                <article className="docs-prose">
+                  <Comp />
+                </article>
 
-            <Pager slug={slug} />
+                <Pager slug={slug} />
+              </div>
+            </main>
+            <OnThisPage headings={page.headings} activeId={activeId} assistantOpen={assistantRoute} />
           </div>
-        </main>
-        <OnThisPage headings={page.headings} activeId={activeId} assistantOpen={assistantRoute} />
+        </div>
         <AssistantPanel
           open={assistantRoute}
           threadId={threadId}
@@ -358,6 +362,7 @@ export default function DocsLayout() {
           onClose={() => navigate(`/docs/${slug}`)}
         />
       </div>
+
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onAsk={openAssistant} />
 
 
