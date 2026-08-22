@@ -322,8 +322,12 @@ export default function DocsLayout() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 docs-root">
-      <TopBar onSearch={() => setSearchOpen(true)} onToggleNav={() => setNavOpen((v) => !v)} />
-      <div className="mx-auto max-w-[1400px] flex">
+      <TopBar
+        onSearch={() => setSearchOpen(true)}
+        onToggleNav={() => setNavOpen((v) => !v)}
+        onAskAI={() => openAssistant()}
+      />
+      <div className={`mx-auto max-w-[1400px] flex ${assistantRoute ? 'lg:pr-[420px]' : ''}`}>
         <Sidebar activeSlug={slug} mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
         <main ref={mainRef} className="flex-1 min-w-0 px-6 lg:px-12 py-10 lg:py-14">
           <div className="max-w-2xl">
@@ -344,7 +348,15 @@ export default function DocsLayout() {
         </main>
         <OnThisPage headings={page.headings} activeId={activeId} />
       </div>
-      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onAsk={openAssistant} />
+      <AssistantPanel
+        open={assistantRoute}
+        threadId={threadId}
+        initialQuestion={pendingQuestion}
+        onConsumedQuestion={() => setPendingQuestion('')}
+        onClose={() => navigate(`/docs/${slug}`)}
+      />
+
     </div>
   )
 }
